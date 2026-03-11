@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class="cute-card progress-card" *ngIf="!isPatientMode">
-      <div class="card-header">
+      <div class="card-header" (click)="toggleProgressDropdown()">
         <div class="header-content">
           <div class="header-icon">
             <ion-icon name="analytics-outline"></ion-icon>
@@ -28,48 +28,53 @@
             <p>Your amazing achievements!</p>
           </div>
         </div>
-      </div>
-      
-      <div class="stats-container">
-        <div class="stat-card accuracy-card">
-          <div class="stat-icon">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ todayStats.accuracy }}%</span>
-            <span class="stat-label">Accuracy</span>
-          </div>
-        </div>
-        
-        <div class="stat-card cards-card">
-          <div class="stat-icon">
-            <ion-icon name="library-outline"></ion-icon>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ todayStats.cardsToday }}</span>
-            <span class="stat-label">Cards</span>
-          </div>
-        </div>
-        
-        <div class="stat-card time-card">
-          <div class="stat-icon">
-            <ion-icon name="time-outline"></ion-icon>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ todayStats.avgTime }}s</span>
-            <span class="stat-label">Avg Time</span>
-          </div>
+        <div class="expand-icon">
+          <ion-icon [name]="isProgressExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
         </div>
       </div>
       
-      <ion-button 
-        expand="block" 
-        fill="outline" 
-        class="cute-button"
-        routerLink="/progress">
-        <ion-icon slot="start" name="analytics-outline"></ion-icon>
-        View Full Report 
-      </ion-button>
+      <div class="progress-content" *ngIf="isProgressExpanded">
+        <div class="stats-container">
+          <div class="stat-card accuracy-card">
+            <div class="stat-icon">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ todayStats.accuracy }}%</span>
+              <span class="stat-label">Accuracy</span>
+            </div>
+          </div>
+          
+          <div class="stat-card cards-card">
+            <div class="stat-icon">
+              <ion-icon name="library-outline"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ todayStats.cardsToday }}</span>
+              <span class="stat-label">Cards</span>
+            </div>
+          </div>
+          
+          <div class="stat-card time-card">
+            <div class="stat-icon">
+              <ion-icon name="time-outline"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ todayStats.avgTime }}s</span>
+              <span class="stat-label">Avg Time</span>
+            </div>
+          </div>
+        </div>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          class="cute-button"
+          routerLink="/progress">
+          <ion-icon slot="start" name="analytics-outline"></ion-icon>
+          View Full Report 
+        </ion-button>
+      </div>
     </div>
     
     <div class="main-actions">
@@ -124,12 +129,12 @@
       <span class="nav-label">Home</span>
     </div>
     
-           <div class="nav-item" routerLink="/video-memories">
-             <div class="nav-icon">
-               <ion-icon name="videocam-outline"></ion-icon>
-             </div>
-             <span class="nav-label">Videos</span>
-           </div>
+    <div class="nav-item" routerLink="/progress">
+      <div class="nav-icon progress-icon">
+        <ion-icon name="trending-up-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Progress</span>
+    </div>
     
     <div class="nav-item caregiver-mode" (click)="onPatientModeToggle()">
       <div class="nav-icon caregiver-icon">
@@ -138,18 +143,18 @@
       <span class="nav-label">Caregiver</span>
     </div>
     
-    <div class="nav-item" routerLink="/progress">
-      <div class="nav-icon progress-icon">
-        <ion-icon name="trending-up-outline"></ion-icon>
-      </div>
-      <span class="nav-label">Progress</span>
-    </div>
-    
     <div class="nav-item" routerLink="/profile">
       <div class="nav-icon">
         <ion-icon name="person-outline"></ion-icon>
       </div>
       <span class="nav-label">Profile</span>
+    </div>
+
+    <div class="nav-item" routerLink="/patients-dashboard">
+      <div class="nav-icon">
+        <ion-icon name="people-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Patients</span>
     </div>
 
   </div>

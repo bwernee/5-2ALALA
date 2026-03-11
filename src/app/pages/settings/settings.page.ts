@@ -468,22 +468,55 @@ export class SettingsPage implements OnInit {
   }
 
   async logout() {
-    try {
-      await this.firebaseService.logout();
-    } catch (e) {
-      console.warn('Logout error (continuing redirect):', e);
-    }
+    const alert = await this.alertCtrl.create({
+      header: 'Logout',
+      message: 'Do you want to log out?',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Logout',
+          role: 'destructive',
+          handler: () => {
+            this.confirmLogout();
+          }
+        }
+      ],
+      backdropDismiss: false
+    });
+    await alert.present();
+  }
 
-    try {
-      localStorage.removeItem('userLoggedIn');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userData');
-      localStorage.removeItem('selectedPatientId');
-    } catch {}
+  private async confirmLogout() {
+    const confirmAlert = await this.alertCtrl.create({
+      header: 'Are you sure?',
+      message: 'You will be logged out of your account.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Yes, Logout',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.firebaseService.logout();
+            } catch (e) {
+              console.warn('Logout error (continuing redirect):', e);
+            }
 
-    
-    this.router.navigate(['/login']);
+            try {
+              localStorage.removeItem('userLoggedIn');
+              localStorage.removeItem('userEmail');
+              localStorage.removeItem('userId');
+              localStorage.removeItem('userData');
+              localStorage.removeItem('selectedPatientId');
+            } catch {}
+
+            this.router.navigate(['/login']);
+          }
+        }
+      ],
+      backdropDismiss: false
+    });
+    await confirmAlert.present();
   }
 
   async clearAllData() {
@@ -495,22 +528,42 @@ export class SettingsPage implements OnInit {
         {
           text: 'Clear',
           role: 'destructive',
+          handler: () => {
+            this.confirmClearAllData();
+          }
+        }
+      ],
+      backdropDismiss: false
+    });
+    await alert.present();
+  }
+
+  private async confirmClearAllData() {
+    const confirmAlert = await this.alertCtrl.create({
+      header: 'Are you sure?',
+      message: 'All your game progress will be permanently deleted.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Yes, Clear',
+          role: 'destructive',
           handler: async () => {
             localStorage.removeItem('peopleCards');
             localStorage.removeItem('placesCards');
             localStorage.removeItem('objectsCards');
             localStorage.removeItem('gameSessions');
-            localStorage.removeItem('patientDetails'); 
+            localStorage.removeItem('patientDetails');
             await this.toast('All data cleared', 'success');
           }
         }
-      ]
+      ],
+      backdropDismiss: false
     });
-    await alert.present();
+    await confirmAlert.present();
   }
 
-  private async toast(message: string, color: 'success' | 'warning' | 'danger' | 'primary' = 'primary') {
-    const t = await this.toastCtrl.create({ message, duration: 1700, color, position: 'bottom' });
+  private async toast(message: string, color?: 'success' | 'warning' | 'danger' | 'primary' | 'medium') {
+    const t = await this.toastCtrl.create({ message, duration: 1700, color: color || 'medium', position: 'top' });
     await t.present();
   }
 
@@ -643,10 +696,104 @@ export class SettingsPage implements OnInit {
     });
   }
 
-  onPatientModeToggle() {
-    this.isPatientMode = !this.isPatientMode;
-    localStorage.setItem('patientMode', this.isPatientMode.toString());
-    
+  async onPatientModeToggle() {
+    if (!this.isPatientMode) {
+      // Trying to enter patient mode
+      await this.enablePatientMode();
+      return;
+    }
+    // Already in patient mode - prompt to exit
+    await this.promptExitPatientMode();
+  }
+
+  private async enablePatientMode() {
+    try {
+      const currentUser = this.firebaseService.getCurrentUser();
+      if (!currentUser) {
+        await this.toast('User not authenticated', 'danger');
+        return;
+      }
+
+      const savedPin = await this.firebaseService.getCaregiverPassword(currentUser.uid);
+
+      if (!savedPin) {
+        const alert = await this.alertCtrl.create({
+          header: 'Set Caregiver Password',
+          message: 'To use Patient Mode, please create a caregiver password first. You can set it in the Caregiver Password section above.',
+          buttons: [
+            { text: 'OK', role: 'cancel' }
+          ],
+          backdropDismiss: false
+        });
+        await alert.present();
+        return;
+      }
+
+      // Password exists - show confirmation
+      const confirm = await this.alertCtrl.create({
+        header: 'Enter Patient Mode?',
+        message: 'Are you sure you want to switch to Patient Mode? You will need the caregiver password to exit.',
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Yes',
+            handler: () => {
+              // Set pending flag and navigate to home
+              try { localStorage.setItem('pendingPatientMode', 'true'); } catch {}
+              this.router.navigate(['/home']).catch(err => {
+                console.error('Navigation to home failed from settings:', err);
+              });
+            }
+          }
+        ],
+        backdropDismiss: false
+      });
+      await confirm.present();
+    } catch (err) {
+      console.error('Error enabling patient mode from settings:', err);
+    }
+  }
+
+  private async promptExitPatientMode() {
+    const currentUser = this.firebaseService.getCurrentUser();
+    if (!currentUser) {
+      await this.toast('User not authenticated', 'danger');
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Exit Patient Mode',
+      message: 'Enter caregiver password to switch back to Standard mode.',
+      inputs: [
+        {
+          name: 'pin',
+          type: 'password',
+          placeholder: 'Enter password',
+          attributes: { maxlength: 32 }
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Unlock',
+          handler: async (data) => {
+            const savedPin = await this.firebaseService.getCaregiverPassword(currentUser.uid);
+            if (data.pin === savedPin) {
+              this.isPatientMode = false;
+              localStorage.setItem('patientMode', 'false');
+              await this.toast('Patient Mode disabled', 'success');
+              window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: false }));
+              return true;
+            } else {
+              await this.toast('Incorrect password', 'danger');
+              return false;
+            }
+          }
+        }
+      ],
+      backdropDismiss: false
+    });
+    await alert.present();
   }
 
   startPasswordEdit() {

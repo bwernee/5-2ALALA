@@ -16,77 +16,57 @@
           <h1>Memory Categories</h1>
           <p>Choose a category to view your saved memories</p>
         </div>
-        
+        <ion-button class="add-category-btn" fill="clear" *ngIf="!isPatientMode" (click)="onAddCategory()" aria-label="Add Category">
+          <ion-icon name="add-outline"></ion-icon>
+        </ion-button>
       </div>
     </div>
     
     
-    <div class="add-category-section" *ngIf="!isPatientMode">
-      <ion-button 
-        expand="block" 
-        fill="outline" 
-        class="add-category-btn"
-        (click)="onAddCategory()">
-        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
-        Create New Category
-      </ion-button>
-    </div>
-
-    
-    <div class="categories-grid">
+    <div class="main-actions">
       
-      
-      <div class="category-card people-card" routerLink="/people">
-        <div class="card-background"></div>
-        <div class="card-content">
-          <div class="card-icon">
-            <ion-icon name="people-outline"></ion-icon>
-          </div>
-          <div class="card-info">
-            <h3>People</h3>
-            <p>Family & Friends</p>
-          </div>
-        </div>
+      <div class="action-card people-action" routerLink="/people">
         <div class="card-glow"></div>
+        <div class="action-icon">
+          <ion-icon name="people-outline"></ion-icon>
+        </div>
+        <div class="action-text">
+          <h2>People</h2>
+          <p>Family & Friends</p>
+        </div>
       </div>
 
       
-      <div class="category-card places-card" routerLink="/places">
-        <div class="card-background"></div>
-        <div class="card-content">
-          <div class="card-icon">
-            <ion-icon name="location-outline"></ion-icon>
-          </div>
-          <div class="card-info">
-            <h3>Places</h3>
-            <p>Special Locations</p>
-          </div>
-        </div>
+      <div class="action-card places-action" routerLink="/places">
         <div class="card-glow"></div>
+        <div class="action-icon">
+          <ion-icon name="location-outline"></ion-icon>
+        </div>
+        <div class="action-text">
+          <h2>Places</h2>
+          <p>Special Locations</p>
+        </div>
       </div>
 
       
-      <div class="category-card objects-card" routerLink="/objects">
-        <div class="card-background"></div>
-        <div class="card-content">
-          <div class="card-icon">
-            <ion-icon name="cube-outline"></ion-icon>
-          </div>
-          <div class="card-info">
-            <h3>Objects</h3>
-            <p>Meaningful Items</p>
-          </div>
-        </div>
+      <div class="action-card objects-action" routerLink="/objects">
         <div class="card-glow"></div>
+        <div class="action-icon">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <div class="action-text">
+          <h2>Objects</h2>
+          <p>Meaningful Items</p>
+        </div>
       </div>
 
       
       <div
-        class="category-card custom-card"
+        class="action-card custom-action"
         *ngFor="let c of userCategories"
         [routerLink]="['/category', c.id]"
         [state]="{ categoryName: c.name }">
-        
+        <div class="card-glow"></div>
         
         <div class="card-actions" *ngIf="!isPatientMode">
           <button
@@ -103,19 +83,64 @@
           </button>
         </div>
 
-        <div class="card-background"></div>
-        <div class="card-content">
-          <div class="card-icon">
-            <ion-icon [name]="getCategoryIcon(c)"></ion-icon>
-          </div>
-          <div class="card-info">
-            <h3>{{ c.name }}</h3>
-            <p>{{ c.description || 'Custom category' }}</p>
-          </div>
+        <div class="action-icon">
+          <ion-icon [name]="getCategoryIcon(c)"></ion-icon>
         </div>
-        <div class="card-glow"></div>
+        <div class="action-text">
+          <h2>{{ c.name }}</h2>
+          <p>{{ c.description || 'Custom category' }}</p>
+        </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div *ngIf="showAddCategoryModal" class="modal-overlay" (click)="closeAddCategoryModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" aria-label="Close" (click)="closeAddCategoryModal()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+      
+      <div class="modal-header">
+        <h1>New Category</h1>
+        <p>Name your category and optionally add a description</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>CATEGORY NAME</label>
+          <div class="input-wrapper">
+            <ion-icon name="folder-outline"></ion-icon>
+            <input
+              [(ngModel)]="newCategoryName"
+              placeholder="Category name (required)"
+              type="text"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>DESCRIPTION</label>
+          <div class="input-wrapper">
+            <ion-icon name="document-text-outline"></ion-icon>
+            <input
+              [(ngModel)]="newCategoryDescription"
+              placeholder="Description (optional)"
+              type="text"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="save-button" (click)="saveNewCategory()">
+          SAVE
+        </button>
+        <button class="back-button" (click)="closeAddCategoryModal()">
+          CANCEL
+        </button>
+      </div>
     </div>
   </div>
 

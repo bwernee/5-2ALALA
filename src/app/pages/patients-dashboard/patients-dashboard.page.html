@@ -1,14 +1,3 @@
-<ion-header class="lavender-toolbar">
-  <ion-toolbar>
-    <ion-title class="cute-title">Patients Dashboard</ion-title>
-    <ion-buttons slot="end">
-      <ion-button routerLink="/settings" class="cute-icon-btn" aria-label="Settings">
-        <ion-icon name="settings-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content class="lavender-content" [scrollY]="true" fullscreen>
   <div class="lavender-container">
     <!-- Welcome Section -->
@@ -22,7 +11,7 @@
           <p>Manage and access your patients</p>
         </div>
         <ion-button class="add-btn" fill="clear" (click)="addPatient()" aria-label="Add Patient">
-          <ion-icon name="add-circle-outline"></ion-icon>
+          <ion-icon name="add-outline"></ion-icon>
         </ion-button>
       </div>
     </div>
@@ -37,7 +26,7 @@
     <div *ngIf="!isLoading" class="patients-grid">
       <!-- Patient Cards -->
       <div 
-        *ngFor="let patient of patients" 
+        *ngFor="let patient of displayPatients" 
         class="patient-card"
         (click)="selectPatient(patient)">
         <div class="patient-card-content">
@@ -46,7 +35,7 @@
             <span *ngIf="!getPatientPhoto(patient)" class="patient-initials">{{ getPatientInitials(patient) }}</span>
           </div>
           <div class="patient-info">
-            <h3>{{ patient.name || 'Unnamed Patient' }}</h3>
+            <h3>{{ patient.name }}</h3>
             <div class="patient-details">
               <span *ngIf="patient.age" class="detail-item">
                 <ion-icon name="calendar-outline"></ion-icon>
@@ -65,7 +54,7 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="patients.length === 0" class="empty-state">
+      <div *ngIf="displayPatients.length === 0" class="empty-state">
         <div class="empty-icon">
           <ion-icon name="people-outline"></ion-icon>
         </div>
@@ -79,87 +68,120 @@
     </div>
   </div>
 
-  <ion-modal [isOpen]="showAddForm" (didDismiss)="cancelAddPatient()" class="patient-add-modal">
-    <ng-template>
-      <div class="add-form-wrapper">
-        <div class="add-form-card">
-          <div class="add-form-header">
-            <h1>Patient Details</h1>
-            <p>Please provide information about the patient</p>
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelAddPatient()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" aria-label="Close" (click)="cancelAddPatient()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+      
+      <div class="modal-header">
+        <h1>Patient Details</h1>
+        <p>Please provide information about the patient</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="patientName">PATIENT NAME</label>
+          <div class="input-wrapper">
+            <ion-icon name="person-outline"></ion-icon>
+            <input
+              id="patientName"
+              [(ngModel)]="newPatientName"
+              placeholder="Enter patient's full name"
+              type="text"
+            />
           </div>
+        </div>
 
-          <div class="add-form-body">
-            <div class="form-group">
-              <label for="patientName">Patient Name</label>
-              <ion-item class="input-item">
-                <ion-icon name="person-outline" slot="start"></ion-icon>
-                <ion-input
-                  id="patientName"
-                  [(ngModel)]="newPatientName"
-                  placeholder="Enter patient's full name"
-                  type="text"
-                  clearInput
-                ></ion-input>
-              </ion-item>
-            </div>
-
-            <div class="form-group">
-              <label for="patientAge">Age</label>
-              <ion-item class="input-item">
-                <ion-icon name="calendar-outline" slot="start"></ion-icon>
-                <ion-input
-                  id="patientAge"
-                  [(ngModel)]="newPatientAge"
-                  placeholder="Enter patient's age"
-                  type="number"
-                  min="0"
-                  max="150"
-                  clearInput
-                ></ion-input>
-              </ion-item>
-            </div>
-
-            <div class="form-group">
-              <label for="patientSex">Sex</label>
-              <ion-item class="input-item">
-                <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-                <ion-select
-                  id="patientSex"
-                  [(ngModel)]="newPatientSex"
-                  placeholder="Select patient's sex"
-                >
-                  <ion-select-option value="Male">Male</ion-select-option>
-                  <ion-select-option value="Female">Female</ion-select-option>
-                  <ion-select-option value="Other">Other</ion-select-option>
-                  <ion-select-option value="Prefer not to say">Prefer not to say</ion-select-option>
-                </ion-select>
-              </ion-item>
-            </div>
+        <div class="form-group">
+          <label for="patientAge">AGE</label>
+          <div class="input-wrapper">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <input
+              id="patientAge"
+              [(ngModel)]="newPatientAge"
+              placeholder="Enter patient's age"
+              type="number"
+              min="0"
+              max="150"
+            />
           </div>
+        </div>
 
-          <div class="add-form-buttons">
-            <ion-button
-              expand="block"
-              class="save-button"
-              (click)="saveNewPatient()"
-              [disabled]="isSavingPatient"
-            >
-              <ion-spinner *ngIf="isSavingPatient" name="crescent"></ion-spinner>
-              <span *ngIf="!isSavingPatient">SAVE & CONTINUE</span>
-            </ion-button>
-
-            <ion-button
-              expand="block"
-              fill="outline"
-              class="back-button"
-              (click)="cancelAddPatient()"
-              [disabled]="isSavingPatient"
-            >
-              BACK
-            </ion-button>
+        <div class="form-group">
+          <label for="patientSex">SEX</label>
+          <div class="input-wrapper">
+            <ion-icon name="person-circle-outline"></ion-icon>
+            <select id="patientSex" [(ngModel)]="newPatientSex">
+              <option value="" disabled selected>Select patient's sex</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
           </div>
         </div>
       </div>
-    </ng-template>
-  </ion-modal>
+
+      <div class="modal-buttons">
+        <button
+          class="save-button"
+          (click)="saveNewPatient()"
+          [disabled]="isSavingPatient"
+        >
+          <ion-spinner *ngIf="isSavingPatient" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingPatient">SAVE & CONTINUE</span>
+        </button>
+
+        <button
+          class="back-button"
+          (click)="cancelAddPatient()"
+          [disabled]="isSavingPatient"
+        >
+          BACK
+        </button>
+      </div>
+    </div>
+  </div>
 </ion-content>
+
+<div class="caregiver-bottom-nav" *ngIf="showFooter">
+  <div class="nav-container">
+    
+    <div class="nav-item" routerLink="/home">
+      <div class="nav-icon home-icon">
+        <ion-icon name="home"></ion-icon>
+      </div>
+      <span class="nav-label">Home</span>
+    </div>
+    
+    <div class="nav-item" routerLink="/progress">
+      <div class="nav-icon progress-icon">
+        <ion-icon name="trending-up-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Progress</span>
+    </div>
+    
+    <div class="nav-item caregiver-mode">
+      <div class="nav-icon caregiver-icon">
+        <ion-icon name="lock-open"></ion-icon>
+      </div>
+      <span class="nav-label">Caregiver</span>
+    </div>
+    
+    <div class="nav-item" routerLink="/profile">
+      <div class="nav-icon">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Profile</span>
+    </div>
+
+    <div class="nav-item active" routerLink="/patients-dashboard">
+      <div class="nav-icon">
+        <ion-icon name="people-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Patients</span>
+    </div>
+
+  </div>
+</div>

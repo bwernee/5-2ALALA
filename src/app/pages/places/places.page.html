@@ -16,10 +16,19 @@
           <p>Special Locations</p>
         </div>
         <ion-button class="add-btn" fill="clear" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategory: 'places' }" *ngIf="!isPatientMode" aria-label="Add Card">
-          <ion-icon name="add-circle-outline"></ion-icon>
+          <ion-icon name="add-outline"></ion-icon>
         </ion-button>
       </div>
     </div>
+  </div>
+
+  <div class="area-actions-top" *ngIf="currentCard && !isPatientMode">
+    <button type="button" class="action-btn edit-btn" (click)="editCurrentCard()">
+      Edit
+    </button>
+    <button type="button" class="action-btn delete-btn" (click)="deleteCurrentCard()">
+      Delete
+    </button>
   </div>
   
   <div class="page-body" style="padding-bottom: 80px;">
@@ -27,7 +36,7 @@
     <div *ngIf="!currentCard" class="empty-state">
       <ion-icon class="empty-icon" name="location-outline"></ion-icon>
       <h2 class="empty-title">No Places yet</h2>
-      <p class="empty-subtitle">Tap the + to add a place.</p>
+      <p class="empty-subtitle" *ngIf="!isPatientMode">Tap the + to add a place.</p>
       <ion-button class="empty-btn" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategory: 'places' }" *ngIf="!isPatientMode">
         <ion-icon name="add" slot="start"></ion-icon>
         Add Place
@@ -36,31 +45,12 @@
 
     
     <div *ngIf="currentCard" class="places-grid" aria-live="polite">
-      
+
       <div class="area area-name">
-        <div class="name-tag" [title]="currentCard.label || 'Unnamed'">
-          {{ currentCard.label || 'Unnamed' }}
-        </div>
-        
-        
-        <div class="name-actions" *ngIf="currentCard && !isPatientMode">
-          <button
-            type="button"
-            class="edit-chip"
-            aria-label="Edit"
-            (click)="editCurrentCard()"
-            title="Edit">
-            <ion-icon name="create-outline"></ion-icon>
-          </button>
-          <button
-            type="button"
-            class="delete-chip"
-            aria-label="Delete"
-            (click)="deleteCurrentCard()"
-            title="Delete"
-            *ngIf="!isPatientMode">
-            <ion-icon name="trash-outline"></ion-icon>
-          </button>
+        <div class="name-row">
+          <div class="name-tag" [title]="currentCard.label || 'Unnamed'">
+            {{ currentCard.label || 'Unnamed' }}
+          </div>
         </div>
       </div>
 
@@ -130,28 +120,75 @@
     </div>
   </div>
 
-  
-  <ion-modal [isOpen]="isImageModalOpen" (didDismiss)="closeImageModal()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>{{ currentCard?.label || 'Place' }}</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeImageModal()">
-              <ion-icon name="close"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="image-modal-content">
-        <div class="full-image-container">
-          <img 
-            [src]="currentCard?.image" 
-            [alt]="currentCard?.label || 'Place'"
-            class="full-image"
-          />
+  <div class="detail-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
+    <div class="detail-card" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeImageModal()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+      
+      <h3 class="card-title">{{ currentCard?.label || 'Place' }}</h3>
+      
+      <div class="image-container-modal">
+        <img [src]="currentCard?.image" [alt]="currentCard?.label || 'Place'" class="card-image" *ngIf="currentCard?.image" />
+      </div>
+      
+      <div class="card-actions" *ngIf="!isPatientMode">
+        <button type="button" class="action-btn-modal edit-btn" (click)="openEditModal()">
+          <ion-icon name="create-outline"></ion-icon>
+          Edit
+        </button>
+        <button type="button" class="action-btn-modal delete-btn" (click)="deleteCurrentCard()">
+          <ion-icon name="trash-outline"></ion-icon>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="edit-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="edit-card" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeEditModal()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+      
+      <h3 class="edit-title">Edit Place</h3>
+      
+      <div class="edit-image-section">
+        <div class="image-preview">
+          <img [src]="editCardImage" alt="Preview" *ngIf="editCardImage" />
+          <div class="no-image" *ngIf="!editCardImage">
+            <ion-icon name="image-outline"></ion-icon>
+          </div>
         </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+        <button type="button" class="change-image-btn" (click)="triggerImagePicker()">
+          <ion-icon name="camera-outline"></ion-icon>
+          Change Photo
+        </button>
+        <input 
+          type="file" 
+          accept="image/*" 
+          class="hidden-input" 
+          #editImageInput
+          (change)="onEditImageSelected($event)" />
+      </div>
+      
+      <div class="edit-form">
+        <label class="form-label">Name</label>
+        <input 
+          type="text" 
+          class="edit-input" 
+          [(ngModel)]="editCardLabel" 
+          placeholder="Enter name" />
+      </div>
+      
+      <div class="edit-actions">
+        <button type="button" class="action-btn-modal cancel-btn" (click)="closeEditModal()">
+          Cancel
+        </button>
+        <button type="button" class="action-btn-modal save-btn" (click)="saveCardEdit()">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
 </ion-content>

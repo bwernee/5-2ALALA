@@ -80,6 +80,15 @@ export class VideoMemoriesPage implements OnInit, AfterViewInit, OnDestroy {
   detailVideoCurrent = 0;
   detailVideoDuration = 0;
 
+  // Selection mode
+  isSelectionMode = false;
+  selectedVideos: Set<string> = new Set();
+
+  // Edit modal
+  showEditModal = false;
+  editVideoTitle = '';
+  videoBeingEdited: VideoView | null = null;
+
   constructor(
     private _plt: Platform,
     private cdr: ChangeDetectorRef,
@@ -1435,6 +1444,75 @@ export class VideoMemoriesPage implements OnInit, AfterViewInit, OnDestroy {
     this.detailVideoCurrent = value;
   }
 
+  // Selection mode methods
+  toggleSelectionMode() {
+    this.isSelectionMode = !this.isSelectionMode;
+    if (!this.isSelectionMode) {
+      this.selectedVideos.clear();
+    }
+    this.cdr.detectChanges();
+  }
+
+  toggleVideoSelection(videoId: string) {
+    if (this.selectedVideos.has(videoId)) {
+      this.selectedVideos.delete(videoId);
+    } else {
+      this.selectedVideos.add(videoId);
+    }
+    this.cdr.detectChanges();
+  }
+
+  selectAllVideos() {
+    this.videos.forEach(video => {
+      this.selectedVideos.add(video.id);
+    });
+    this.cdr.detectChanges();
+  }
+
+  async deleteSelectedVideos() {
+    if (this.selectedVideos.size === 0) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Videos',
+      message: `Delete ${this.selectedVideos.size} video(s)?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            const idsToDelete = Array.from(this.selectedVideos);
+            let deletedCount = 0;
+
+            for (const id of idsToDelete) {
+              try {
+                const success = await this.firebaseService.universalDeleteVideo(id);
+                if (success) {
+                  deletedCount++;
+                }
+              } catch (e) {
+                console.error('Error deleting video:', e);
+              }
+            }
+
+            this.selectedVideos.clear();
+            this.isSelectionMode = false;
+
+            const toast = await this.toastCtrl.create({
+              message: `${deletedCount} video(s) deleted successfully!`,
+              duration: 2000,
+              position: 'bottom'
+            });
+            await toast.present();
+
+            this.cdr.detectChanges();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   async deleteVideoFromGallery(index: number) {
     if (this.isPatientMode) return;
 
@@ -1527,48 +1605,44 @@ export class VideoMemoriesPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   
-  async editVideo(video: any) {
+  editVideo(video: any) {
     if (!video) return;
-    
-    const alert = await this.alertCtrl.create({
-      header: 'Edit Title',
-      inputs: [
-        {
-          name: 'label',
-          type: 'text',
-          placeholder: 'Video title',
-          value: video.label || ''
-        }
-      ],
-      buttons: [
-        {
-          text: 'Done',
-          handler: async (data) => {
-            try {
-              
-              video.label = data.label;
-              
-              
-              this.prepareProgress();
-              this.rebuildDisplay();
-              
-              
-              if (video.id) {
-                await this.firebaseService.updateVideoMetadata(video.id, {
-                  title: data.label
-                });
-              }
-              
-              await this.toast('Video updated', 'success');
-            } catch (err) {
-              console.error('Failed to update video:', err);
-              await this.toast('Failed to update video', 'danger');
-            }
-          }
-        }
-      ]
-    });
-    await alert.present();
+    this.videoBeingEdited = video;
+    this.editVideoTitle = video.label || '';
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.videoBeingEdited = null;
+    this.editVideoTitle = '';
+  }
+
+  async saveVideoEdit() {
+    if (!this.videoBeingEdited) return;
+
+    try {
+      this.videoBeingEdited.label = this.editVideoTitle;
+      
+      this.prepareProgress();
+      this.rebuildDisplay();
+      
+      if (this.videoBeingEdited.id) {
+        await this.firebaseService.updateVideoMetadata(this.videoBeingEdited.id, {
+          title: this.editVideoTitle
+        });
+      }
+      
+      if (this.selectedVideo && this.selectedVideo.id === this.videoBeingEdited.id) {
+        this.selectedVideo.label = this.editVideoTitle;
+      }
+      
+      await this.toast('Video updated', 'success');
+      this.closeEditModal();
+    } catch (err) {
+      console.error('Failed to update video:', err);
+      await this.toast('Failed to update video', 'danger');
+    }
   }
 
   

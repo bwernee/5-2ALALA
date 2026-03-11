@@ -30,9 +30,9 @@
     <ion-icon class="empty-icon" name="swap-horizontal-outline"></ion-icon>
     <h2 class="empty-title">No Cards yet</h2>
     <p class="empty-subtitle">Tap the + to add a memory.</p>
-    <ion-button class="empty-btn" routerLink="/home">
+    <ion-button class="empty-btn" (click)="goToAddFlashcard()">
       <ion-icon name="add" slot="start"></ion-icon>
-      Add Cards
+      Add Photo
     </ion-button>
   </div>
 

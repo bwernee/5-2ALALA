@@ -395,11 +395,11 @@
       <span class="nav-label">Home</span>
     </div>
     
-    <div class="nav-item" routerLink="/video-memories">
-      <div class="nav-icon">
-        <ion-icon name="videocam-outline"></ion-icon>
+    <div class="nav-item active" routerLink="/progress">
+      <div class="nav-icon progress-icon">
+        <ion-icon name="trending-up-outline"></ion-icon>
       </div>
-      <span class="nav-label">Videos</span>
+      <span class="nav-label">Progress</span>
     </div>
     
     <div class="nav-item caregiver-mode" (click)="onPatientModeToggle()">
@@ -409,18 +409,18 @@
       <span class="nav-label">Caregiver</span>
     </div>
     
-    <div class="nav-item active" routerLink="/progress">
-      <div class="nav-icon progress-icon">
-        <ion-icon name="trending-up-outline"></ion-icon>
-      </div>
-      <span class="nav-label">Progress</span>
-    </div>
-    
     <div class="nav-item" routerLink="/profile">
       <div class="nav-icon">
         <ion-icon name="person-outline"></ion-icon>
       </div>
       <span class="nav-label">Profile</span>
+    </div>
+
+    <div class="nav-item" routerLink="/patients-dashboard">
+      <div class="nav-icon">
+        <ion-icon name="people-outline"></ion-icon>
+      </div>
+      <span class="nav-label">Patients</span>
     </div>
 
   </div>
@@ -437,7 +437,5 @@
     </div>
   </div>
 </div>
-
-
 
 

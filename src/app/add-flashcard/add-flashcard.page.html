@@ -21,21 +21,31 @@
 <ion-content class="lavender-content" [scrollY]="true">
   <div class="lavender-form">
     
-    
-    <div class="category-badge" *ngIf="activeTarget === 'builtin'">
-      <div class="badge-content">
-        <div class="badge-icon">
-          <ion-icon name="folder-outline"></ion-icon>
-        </div>
-        <div class="badge-text">
-          <span class="badge-label">Category</span>
-          <span class="badge-value">{{ category | titlecase }}</span>
-        </div>
-      </div>
+    <div class="category-select-wrapper" *ngIf="fromCategoryMatch">
+      <ion-item class="lavender-item">
+        <ion-label>Category</ion-label>
+        <ion-select
+          interface="popover"
+          [(ngModel)]="selectedCategoryKey"
+          (ionChange)="onCategorySelectChange($event.detail.value)">
+          <ion-select-option
+            *ngFor="let opt of categorySelectOptions"
+            [value]="opt.key">
+            {{ opt.label }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <div class="category-select-wrapper" *ngIf="activeTarget === 'builtin' && !fromCategoryMatch">
+      <ion-item class="lavender-item category-fixed">
+        <ion-label>Category</ion-label>
+        <ion-label slot="end" class="category-value">{{ category | titlecase }}</ion-label>
+      </ion-item>
     </div>
 
     
-    <div class="custom-categories-lavender" *ngIf="activeTarget === 'custom'">
+    <div class="custom-categories-lavender" *ngIf="activeTarget === 'custom' && !fromCategoryMatch">
       <div class="categories-title">Choose Category</div>
       <div class="categories-grid">
         <div 
@@ -68,7 +78,7 @@
       </div>
       
       <div class="photo-container-lavender">
-        <div class="photo-frame-lavender" (click)="image ? null : takePhoto()">
+        <div class="photo-frame-lavender" [class.has-image]="image" (click)="image ? null : takePhoto()">
           <ng-container *ngIf="image; else photoPlaceholderLavender">
             <img [src]="image" alt="Preview" class="photo-preview-lavender" />
             <div class="photo-overlay-lavender">
@@ -117,20 +127,22 @@
       
       <div class="audio-controls-lavender">
         <ion-button 
+          expand="block"
           class="record-button-lavender"
           [class.recording]="isRecording"
           (click)="recordAudio()"
           fill="outline">
-          <ion-icon [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
+          <ion-icon slot="start" [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
           {{ isRecording ? 'Stop Recording' : 'Start Recording' }}
         </ion-button>
         
         <ion-button 
+          expand="block"
           fill="outline" 
           (click)="selectAudio()"
           *ngIf="!isRecording"
           class="upload-btn">
-          <ion-icon name="musical-notes"></ion-icon>
+          <ion-icon slot="start" name="musical-notes"></ion-icon>
           Upload Audio
         </ion-button>
       </div>
@@ -182,6 +194,18 @@
           </div>
         </div>
       </div>
+    </div>
+
+    
+    <div class="save-section">
+      <ion-button 
+        expand="block" 
+        class="save-flashcard-btn"
+        (click)="saveFlashcard()" 
+        [disabled]="isSaving || !name || (!isEditMode && !image) || (activeTarget==='custom' && !selectedCustomCategoryId)">
+        <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+        {{ isSaving ? 'Saving...' : 'Save Flashcard' }}
+      </ion-button>
     </div>
 
     

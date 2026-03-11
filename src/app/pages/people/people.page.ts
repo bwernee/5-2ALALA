@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import { Location } from '@angular/common';
 import type { Unsubscribe } from '@firebase/firestore';
@@ -40,6 +40,12 @@ export class PeoplePage implements OnInit, OnDestroy {
   
   isImageModalOpen = false;
 
+  // Edit modal
+  showEditModal = false;
+  editCardLabel = '';
+  editCardImage = '';
+  @ViewChild('editImageInput') editImageInput!: ElementRef<HTMLInputElement>;
+
   
   private audioContext: AudioContext | null = null;
 
@@ -54,7 +60,8 @@ export class PeoplePage implements OnInit, OnDestroy {
 
   constructor(
     private router: Router, 
-    private alertCtrl: AlertController, 
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
     private firebaseService: FirebaseService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
@@ -481,15 +488,83 @@ export class PeoplePage implements OnInit, OnDestroy {
 
   async editCurrentCard() {
     if (!this.currentCard) return;
+    this.openEditModal();
+  }
 
-    
-    this.router.navigate(['/add-flashcard'], {
-      queryParams: {
-        defaultCategory: 'people',
-        editCardId: this.currentCard.id,
-        editLabel: this.currentCard.label
+  openEditModal() {
+    if (!this.currentCard) return;
+    this.editCardLabel = this.currentCard.label || '';
+    this.editCardImage = this.currentCard.image || '';
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editCardLabel = '';
+    this.editCardImage = '';
+  }
+
+  triggerImagePicker() {
+    this.editImageInput?.nativeElement?.click();
+  }
+
+  onEditImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.editCardImage = e.target?.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async saveCardEdit() {
+    if (!this.currentCard) return;
+
+    try {
+      this.currentCard.label = this.editCardLabel;
+      this.currentCard.image = this.editCardImage;
+
+      // Update in localStorage
+      const uid = this.firebaseService.getCurrentUser()?.uid || 'anon';
+      const storageKey = `peopleCards_${uid}`;
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const cardIndex = existing.findIndex((item: any) => item.id === this.currentCard!.id);
+      if (cardIndex !== -1) {
+        existing[cardIndex].label = this.editCardLabel;
+        existing[cardIndex].image = this.editCardImage;
+        localStorage.setItem(storageKey, JSON.stringify(existing));
       }
+
+      // Update in Firebase if applicable
+      if (this.currentCard.id) {
+        await this.firebaseService.updateFlashcard(this.currentCard.id, {
+          label: this.editCardLabel,
+          image: this.editCardImage
+        });
+      }
+
+      this.cdr.detectChanges();
+      await this.toast('Person updated successfully', 'success');
+      this.closeEditModal();
+      this.closeImageModal();
+    } catch (err) {
+      console.error('Failed to update card:', err);
+      await this.toast('Failed to update', 'danger');
+    }
+  }
+
+  private async toast(message: string, color: string = 'primary') {
+    const t = await this.toastCtrl.create({
+      message,
+      duration: 2000,
+      color,
+      position: 'top'
     });
+    await t.present();
   }
 
   

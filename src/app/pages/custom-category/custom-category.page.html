@@ -27,7 +27,7 @@
     <div *ngIf="!currentCard" class="empty-state">
       <ion-icon class="empty-icon" name="grid-outline"></ion-icon>
       <h2 class="empty-title">No Items yet</h2>
-      <p class="empty-subtitle">Tap the + to add an item.</p>
+      <p class="empty-subtitle" *ngIf="!isPatientMode">Tap the + to add an item.</p>
       <ion-button class="empty-btn" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategoryId: id }" *ngIf="!isPatientMode">
         <ion-icon name="add" slot="start"></ion-icon>
         Add Item

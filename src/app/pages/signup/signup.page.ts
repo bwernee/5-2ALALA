@@ -108,7 +108,9 @@ export class SignupPage {
       } catch {}
 
       
-      this.router.navigate(['/patients-dashboard']);
+      this.router.navigate(['/patients-dashboard'], {
+        queryParams: { first: '1' }
+      });
 
     } catch (error: any) {
       console.error('Signup error:', error);

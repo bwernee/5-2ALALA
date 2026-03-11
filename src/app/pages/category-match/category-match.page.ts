@@ -434,7 +434,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     this.showGameComplete = false;
     this.showResult = false;
     this.shouldCompleteAfterResult = false;
-    this.router.navigate(['/home']);
+    this.router.navigate(['/brain-games']);
   }
 
   playAgain() {
@@ -442,7 +442,13 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/home']);
+    this.router.navigate(['/brain-games']);
+  }
+
+  goToAddFlashcard() {
+    this.router.navigate(['/add-flashcard'], {
+      queryParams: { from: 'category-match' }
+    });
   }
 
   

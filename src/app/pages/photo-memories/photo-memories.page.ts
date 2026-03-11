@@ -1,5 +1,6 @@
-import { Component, OnDestroy, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { Location } from '@angular/common';
 import type { Unsubscribe } from '@firebase/firestore';
@@ -72,6 +73,15 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
   isSelectionMode = false;
   selectedCards = new Set<string>();
 
+  // Edit modal
+  showEditModal = false;
+  editCardLabel = '';
+  editCardImage = '';
+  editCardCategory = '';
+  cardBeingEdited: UnifiedCard | null = null;
+  customCategories: { id: string; name: string }[] = [];
+  @ViewChild('editImageInput') editImageInput!: ElementRef<HTMLInputElement>;
+
   
   private touchStartX = 0;
   private touchStartY = 0;
@@ -86,6 +96,7 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
    constructor(
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
+    private router: Router,
     private firebaseService: FirebaseService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
@@ -526,6 +537,114 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
     
   }
 
+  editCard(card: UnifiedCard) {
+    this.cardBeingEdited = card;
+    this.editCardLabel = card.label || '';
+    this.editCardImage = card.image || '';
+    this.editCardCategory = this.getCardCategoryValue(card);
+    this.loadCustomCategories();
+    this.showEditModal = true;
+  }
+
+  private getCardCategoryValue(card: UnifiedCard): string {
+    if (card.origin.kind === 'custom') {
+      return card.origin.customId;
+    }
+    return card.category;
+  }
+
+  private loadCustomCategories() {
+    try {
+      const stored = localStorage.getItem(CATEGORIES_KEY);
+      this.customCategories = stored ? JSON.parse(stored) : [];
+    } catch {
+      this.customCategories = [];
+    }
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.cardBeingEdited = null;
+    this.editCardLabel = '';
+    this.editCardImage = '';
+    this.editCardCategory = '';
+  }
+
+  triggerImagePicker() {
+    this.editImageInput?.nativeElement?.click();
+  }
+
+  onEditImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.editCardImage = e.target?.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async saveCardEdit() {
+    if (!this.cardBeingEdited) return;
+
+    try {
+      const updates: any = {
+        label: this.editCardLabel,
+        image: this.editCardImage,
+        category: this.editCardCategory
+      };
+
+      // Update local card object
+      this.cardBeingEdited.label = this.editCardLabel;
+      this.cardBeingEdited.image = this.editCardImage;
+
+      // Determine if category changed
+      const isBuiltinCategory = ['people', 'places', 'objects'].includes(this.editCardCategory);
+      const oldCategory = this.cardBeingEdited.category;
+      const categoryChanged = oldCategory !== this.editCardCategory;
+
+      if (isBuiltinCategory) {
+        this.cardBeingEdited.category = this.editCardCategory as Category;
+      }
+
+      // Update in Firebase if it's a firebase card
+      if (this.cardBeingEdited.origin.kind === 'firebase') {
+        await this.firebaseService.updateFlashcard(this.cardBeingEdited.origin.id, updates);
+      } else if (this.cardBeingEdited.origin.kind === 'builtin') {
+        // Update in localStorage for builtin cards
+        const storageKey = `${this.cardBeingEdited.origin.key}_${this.firebaseService.getCurrentUser()?.uid || 'anon'}`;
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const cardIndex = existing.findIndex((item: any) => item.id === this.cardBeingEdited!.id);
+        if (cardIndex !== -1) {
+          existing[cardIndex].label = this.editCardLabel;
+          existing[cardIndex].image = this.editCardImage;
+          if (categoryChanged && isBuiltinCategory) {
+            existing[cardIndex].category = this.editCardCategory;
+          }
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+        }
+      }
+
+      // Update the selected card if it's the same
+      if (this.selectedCard && this.selectedCard.id === this.cardBeingEdited.id) {
+        this.selectedCard.label = this.editCardLabel;
+        this.selectedCard.image = this.editCardImage;
+        if (isBuiltinCategory) {
+          this.selectedCard.category = this.editCardCategory as Category;
+        }
+      }
+
+      this.cdr.detectChanges();
+      await this.toast('Memory updated successfully', 'success');
+      this.closeEditModal();
+    } catch (err) {
+      console.error('Failed to update card:', err);
+      await this.toast('Failed to update memory', 'danger');
+    }
+  }
   
   async deleteCard(card: UnifiedCard, event: Event) {
     event.stopPropagation();
@@ -870,6 +989,12 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  goToAddFlashcard() {
+    this.router.navigate(['/add-flashcard'], {
+      queryParams: { from: 'category-match' }
+    });
   }
 
   goBack() {

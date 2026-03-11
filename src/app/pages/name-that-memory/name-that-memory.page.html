@@ -32,9 +32,9 @@
     <ion-icon class="empty-icon" name="bulb-outline"></ion-icon>
     <h2 class="empty-title">No Cards yet</h2>
     <p class="empty-subtitle">Tap the + to add a memory.</p>
-    <ion-button class="empty-btn" routerLink="/home">
+    <ion-button class="empty-btn" (click)="goToAddFlashcard()">
       <ion-icon name="add" slot="start"></ion-icon>
-      Add Cards
+      Add Photo
     </ion-button>
   </div>
 
@@ -89,86 +89,61 @@
 </ion-content>
 
 
-<div *ngIf="isCategoryPickerOpen" class="picker-overlay" role="dialog" aria-modal="true">
-  <div class="picker-card" tabindex="-1">
-    
-    <div class="picker-topbar">
-      <button class="icon-round" aria-label="Back" (click)="closePickerToHome()">
-        <ion-icon name="chevron-back-outline"></ion-icon>
-      </button>
-
-      <div class="picker-title">
-        <span class="emoji"></span>
-        <div class="txt">
-          <h2>Choose a Category</h2>
-          <p>Select what you want to play</p>
-        </div>
-      </div>
-    </div>
-
-    
-    <div class="picker-grid">
-      
-      <div class="game-card people-game" (click)="chooseBuiltin('people')">
-        <div class="ribbon">Built‑in</div>
-        <div class="card-glow"></div>
-        <div class="game-icon">
+<div *ngIf="isCategoryPickerOpen" class="picker-overlay" role="dialog" aria-modal="true" (click)="dismissPickerToBrainGames()">
+  <div class="picker-modal" tabindex="-1" (click)="$event.stopPropagation()">
+    <button class="picker-close" type="button" aria-label="Close" (click)="dismissPickerToBrainGames()">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+    <div class="picker-stack">
+      <div class="picker-card builtin-card people-card" (click)="chooseBuiltin('people')">
+        <div class="picker-icon">
           <ion-icon name="people-outline"></ion-icon>
         </div>
-        <h3>People</h3>
-        <p>Family & Friends</p>
-        <div class="stats">
-          <ion-icon name="albums-outline"></ion-icon>
-          <span>{{ counts.people || 0 }} cards</span>
+        <div class="picker-text">
+          <h3>People</h3>
+          <p>{{ counts.people || 0 }} cards</p>
         </div>
       </div>
 
-      <div class="game-card places-game" (click)="chooseBuiltin('places')">
-        <div class="ribbon">Built‑in</div>
-        <div class="card-glow"></div>
-        <div class="game-icon"></div>
-        <h3>Places</h3>
-        <p>Special Locations</p>
-        <div class="stats">
-          <ion-icon name="albums-outline"></ion-icon>
-          <span>{{ counts.places || 0 }} cards</span>
+      <div class="picker-card builtin-card places-card" (click)="chooseBuiltin('places')">
+        <div class="picker-icon">
+          <ion-icon name="location-outline"></ion-icon>
+        </div>
+        <div class="picker-text">
+          <h3>Places</h3>
+          <p>{{ counts.places || 0 }} cards</p>
         </div>
       </div>
 
-      <div class="game-card objects-game" (click)="chooseBuiltin('objects')">
-        <div class="ribbon">Built‑in</div>
-        <div class="card-glow"></div>
-        <div class="game-icon"></div>
-        <h3>Objects</h3>
-        <p>Meaningful Items</p>
-        <div class="stats">
-          <ion-icon name="albums-outline"></ion-icon>
-          <span>{{ counts.objects || 0 }} cards</span>
+      <div class="picker-card builtin-card objects-card" (click)="chooseBuiltin('objects')">
+        <div class="picker-icon">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <div class="picker-text">
+          <h3>Objects</h3>
+          <p>{{ counts.objects || 0 }} cards</p>
         </div>
       </div>
 
-      
-      <div
-        class="game-card custom-game"
-        *ngFor="let c of userCategories"
-        (click)="chooseCustom(c.id)"
-        [attr.data-id]="c.id">
-        <div class="ribbon alt">Custom</div>
-        <div class="card-glow"></div>
-        <div class="game-icon">
-          <ion-icon [name]="getCategoryIcon(c)"></ion-icon>
+      <ng-container *ngIf="userCategories?.length">
+        <div class="picker-divider-text">
+          More categories
         </div>
-        <h3>{{ c.name }}</h3>
-        <p>{{ c.description || 'Custom category' }}</p>
-        <div class="stats">
-          <ion-icon name="albums-outline"></ion-icon>
-          <span>{{ (counts.custom[c.id] || 0) }} cards</span>
-        </div>
-      </div>
-    </div>
 
-    <div class="picker-footer-hint">
-      Tip: add cards from Home. New categories appear here automatically.
+        <div
+          class="picker-card custom-card"
+          *ngFor="let c of userCategories"
+          (click)="chooseCustom(c.id)"
+          [attr.data-id]="c.id">
+          <div class="picker-icon">
+            <ion-icon [name]="getCategoryIcon(c)"></ion-icon>
+          </div>
+          <div class="picker-text">
+            <h3>{{ c.name }}</h3>
+            <p>{{ (counts.custom[c.id] || 0) }} cards</p>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
 </div>

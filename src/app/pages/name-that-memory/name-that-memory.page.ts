@@ -168,6 +168,11 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
     this.router.navigate(['/home']);
   }
 
+  dismissPickerToBrainGames() {
+    this.closeCategoryPicker();
+    this.router.navigate(['/brain-games']);
+  }
+
   chooseBuiltin(builtin: 'people' | 'places' | 'objects') {
     this.selectedFilter = { type: 'builtin', value: builtin };
     this.closeCategoryPicker();
@@ -559,6 +564,30 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
     this.showResult = false;
     this.shouldCompleteAfterResult = false;
     this.router.navigate(['/home']);
+  }
+
+  goToAddFlashcard() {
+    const filter = this.selectedFilter;
+
+    if (filter && filter.type === 'builtin') {
+      this.router.navigate(['/add-flashcard'], {
+        queryParams: { defaultCategory: filter.value }
+      });
+      return;
+    }
+
+    if (filter && filter.type === 'custom') {
+      const cat = this.userCategories.find(c => c.id === filter.value);
+      this.router.navigate(['/add-flashcard'], {
+        state: {
+          defaultCategoryId: filter.value,
+          defaultCategoryName: cat?.name ?? null
+        }
+      });
+      return;
+    }
+
+    this.router.navigate(['/add-flashcard']);
   }
 
   playAgain() {

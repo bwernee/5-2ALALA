@@ -23,6 +23,110 @@ ion-card, .glass-card, .game-card {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
 }
 
+// Global alert styling to match Name That Memory theme
+ion-alert {
+  --backdrop-opacity: 0.4;
+  
+  .alert-wrapper {
+    background: radial-gradient(circle at top, rgba(255,255,255,0.15), transparent 55%),
+                rgba(15, 23, 42, 0.85) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.7) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px !important;
+  }
+  
+  .alert-head {
+    padding: 16px 16px 8px !important;
+    
+    .alert-title {
+      color: white !important;
+      font-weight: 700 !important;
+      font-size: 18px !important;
+    }
+    
+    .alert-sub-title {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+  }
+  
+  .alert-message {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 8px 16px 16px !important;
+    font-size: 14px !important;
+  }
+  
+  .alert-input-wrapper {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    
+    .alert-input {
+      color: white !important;
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+      }
+    }
+  }
+  
+  .alert-button-group {
+    padding: 8px 8px 8px !important;
+    
+    .alert-button {
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      min-height: 44px !important;
+      
+      &.alert-button-role-cancel {
+        color: rgba(255, 255, 255, 0.7) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+      
+      &:not(.alert-button-role-cancel) {
+        color: white !important;
+        background: #794494 !important;
+      }
+      
+      &.alert-button-role-destructive {
+        background: #dc2626 !important;
+        color: white !important;
+      }
+    }
+  }
+}
+
+// Global action sheet styling
+ion-action-sheet {
+  .action-sheet-wrapper {
+    background: radial-gradient(circle at top, rgba(255,255,255,0.15), transparent 55%),
+                rgba(15, 23, 42, 0.9) !important;
+    backdrop-filter: blur(20px);
+  }
+  
+  .action-sheet-group {
+    background: transparent !important;
+    
+    .action-sheet-title {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    .action-sheet-button {
+      color: white !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      
+      &.action-sheet-destructive {
+        color: #ef4444 !important;
+      }
+      
+      &.action-sheet-cancel {
+        background: rgba(255, 255, 255, 0.15) !important;
+        font-weight: 600;
+      }
+    }
+  }
+}
 
 @import "@ionic/angular/css/core.css";
 

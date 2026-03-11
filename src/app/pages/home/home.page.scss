@@ -383,13 +383,23 @@
 
 .progress-card {
   .card-header {
-    padding: 20px 20px 0 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 20px;
+    
+    &:hover {
+      background-color: rgba(121, 68, 148, 0.05);
+    }
     
     .header-content {
-  display: flex;
+      display: flex;
       align-items: center;
-  gap: 16px;
-      margin-bottom: 20px;
+      gap: 16px;
+      flex: 1;
       
       .header-icon {
         position: relative;
@@ -397,11 +407,10 @@
         height: 48px;
         background: linear-gradient(135deg, #794494, #794494);
         border-radius: 50%;
-  display: flex;
-  align-items: center;
+        display: flex;
+        align-items: center;
         justify-content: center;
         box-shadow: 0 8px 24px rgba(121, 68, 148, 0.3);
-        
         
         ion-icon {
           color: white;
@@ -427,13 +436,33 @@
         }
       }
     }
+    
+    .expand-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(121, 68, 148, 0.1);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      
+      ion-icon {
+        font-size: 20px;
+        color: #794494;
+      }
+    }
+  }
+  
+  .progress-content {
+    padding: 0 20px 20px 20px;
   }
   
   .stats-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    padding: 0 20px 20px 20px;
+    margin-bottom: 16px;
     
     .stat-card {
   display: flex;
@@ -860,7 +889,11 @@
   }
   
   .progress-card .card-header {
-    padding: 16px 16px 0 16px;
+    padding: 16px;
+  }
+  
+  .progress-card .progress-content {
+    padding: 0 16px 16px 16px;
   }
   
   .stats-container {
@@ -942,7 +975,11 @@
   }
   
   .progress-card .card-header {
-    padding: 12px 12px 0 12px;
+    padding: 12px;
+  }
+  
+  .progress-card .progress-content {
+    padding: 0 12px 12px 12px;
   }
   
   .stats-container {

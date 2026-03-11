@@ -26,6 +26,11 @@ const CATEGORIES_KEY = 'alala_custom_categories_v1';
 export class MemoryCategoriesPage implements OnInit, OnDestroy {
   isPatientMode = false;
   userCategories: UserCategory[] = [];
+  
+  // Add category modal
+  showAddCategoryModal = false;
+  newCategoryName = '';
+  newCategoryDescription = '';
 
   constructor(
     private router: Router,
@@ -45,57 +50,49 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
   }
 
   
-  async onAddCategory() {
-    const alert = await this.alertCtrl.create({
-      header: 'New Category',
-      message: 'Name your category and optionally add a description.',
-      inputs: [
-        { name: 'name', type: 'text', placeholder: 'Category name (required)' },
-        { name: 'description', type: 'text', placeholder: 'Description (optional)' },
-      ],
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Save',
-          handler: (data) => {
-            const name = (data?.name || '').trim();
-            const description = (data?.description || '').trim();
+  onAddCategory() {
+    this.newCategoryName = '';
+    this.newCategoryDescription = '';
+    this.showAddCategoryModal = true;
+  }
 
-            if (!name) {
-              this.presentToast('Please enter a category name.', 'warning');
-              return false;
-            }
-            if (this.userCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-              this.presentToast('Category already exists.', 'warning');
-              return false;
-            }
+  closeAddCategoryModal() {
+    this.showAddCategoryModal = false;
+    this.newCategoryName = '';
+    this.newCategoryDescription = '';
+  }
 
-            const category: UserCategory = {
-              id: this.uuid(),
-              name,
-              description: description || undefined,
-              createdAt: Date.now(),
-            };
+  saveNewCategory() {
+    const name = this.newCategoryName.trim();
+    const description = this.newCategoryDescription.trim();
 
-            this.userCategories.push(category);
-            this.saveCategories();
+    if (!name) {
+      this.presentToast('Please enter a category name.', 'warning');
+      return;
+    }
+    if (this.userCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      this.presentToast('Category already exists.', 'warning');
+      return;
+    }
 
-            
-            window.dispatchEvent(new CustomEvent('categories-updated', { detail: this.userCategories }));
+    const category: UserCategory = {
+      id: this.uuid(),
+      name,
+      description: description || undefined,
+      createdAt: Date.now(),
+    };
 
-            this.presentToast('Category added', 'success');
+    this.userCategories.push(category);
+    this.saveCategories();
 
-            
-            this.router.navigate(['/category', category.id], {
-              state: { categoryName: category.name }
-            });
+    window.dispatchEvent(new CustomEvent('categories-updated', { detail: this.userCategories }));
 
-            return true;
-          }
-        }
-      ]
+    this.presentToast('Category added', 'success');
+    this.closeAddCategoryModal();
+
+    this.router.navigate(['/category', category.id], {
+      state: { categoryName: category.name }
     });
-    await alert.present();
   }
 
   async onEditCategory(cat: UserCategory, ev?: Event) {

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-brain-games',
@@ -12,14 +11,14 @@ export class BrainGamesPage implements OnInit {
 
   isPatientMode: boolean = false;
 
-  constructor(private router: Router, private location: Location) {}
+  constructor(private router: Router) {}
 
   ngOnInit() {
     this.loadPatientMode();
   }
 
   goBack() {
-    this.location.back();
+    this.router.navigate(['/home']);
   }
 
   loadPatientMode() {

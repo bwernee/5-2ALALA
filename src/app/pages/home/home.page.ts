@@ -13,6 +13,7 @@ import type { Unsubscribe } from '@firebase/firestore';
 })
 export class HomePage implements OnInit, OnDestroy {
   isPatientMode = false;
+  isProgressExpanded = false;
 
   
   userPhoto = '';
@@ -24,6 +25,10 @@ export class HomePage implements OnInit, OnDestroy {
     cardsToday: 0,
     avgTime: 0
   };
+
+  toggleProgressDropdown() {
+    this.isProgressExpanded = !this.isProgressExpanded;
+  }
 
   
   private profileListener?: (e: any) => void;
@@ -70,10 +75,27 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter() {
-    
     this.loadTodayStats();
-    
     this.loadUserProfile();
+
+    
+    try {
+      const pending = localStorage.getItem('pendingPatientMode') === 'true';
+      if (pending && !this.isPatientMode) {
+        // Directly enable patient mode without confirmation (already confirmed in Settings/Profile/Progress)
+        this.activatePatientModeDirectly();
+      }
+      if (pending) {
+        localStorage.removeItem('pendingPatientMode');
+      }
+    } catch {}
+  }
+
+  private activatePatientModeDirectly() {
+    this.isPatientMode = true;
+    localStorage.setItem('patientMode', 'true');
+    this.presentToast('Patient Mode enabled');
+    window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
   }
 
   async loadTodayStats() {
@@ -304,11 +326,24 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     
-    this.isPatientMode = true;
-    localStorage.setItem('patientMode', 'true');
-    this.presentToast('Patient Mode enabled');
-    
-    window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
+    const confirm = await this.alertCtrl.create({
+      header: 'Enter Patient Mode?',
+      message: 'Are you sure you want to switch to Patient Mode? You will need the caregiver password to exit.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Yes',
+          handler: () => {
+            this.isPatientMode = true;
+            localStorage.setItem('patientMode', 'true');
+            this.presentToast('Patient Mode enabled');
+            window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
+          }
+        }
+      ],
+      backdropDismiss: false
+    });
+    await confirm.present();
   }
 
   
@@ -421,13 +456,13 @@ export class HomePage implements OnInit, OnDestroy {
 
   private async presentToast(
     message: string,
-    color: 'success' | 'warning' | 'danger' | 'primary' = 'primary'
+    color?: 'success' | 'warning' | 'danger' | 'primary' | 'medium'
   ) {
     const toast = await this.toastCtrl.create({
       message,
       duration: 1700,
-      color,
-      position: 'bottom'
+      color: color || 'medium',
+      position: 'top'
     });
     await toast.present();
   }

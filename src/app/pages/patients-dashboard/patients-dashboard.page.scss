@@ -48,105 +48,188 @@
   padding-bottom: 100px;
 }
 
-.add-form-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  padding: 16px;
-}
-
-.add-form-card {
+// Modal Overlay Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 480px;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(148, 163, 184, 0.35);
-  padding: 24px 24px 20px;
-  border: 1px solid #e5e7eb;
+  height: 100%;
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
 }
 
-.add-form-header {
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 24px 28px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 240, 255, 0.92) 100%);
+  box-shadow: 0 24px 60px rgba(121, 68, 148, 0.25);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #794494;
+  z-index: 2;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+.modal-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 
   h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    color: #111827;
+    color: #2d1b69;
   }
 
   p {
-    margin: 4px 0 0 0;
+    margin: 8px 0 0 0;
     font-size: 14px;
     color: #6b7280;
   }
 }
 
-.add-form-body {
+.modal-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: #794494;
   }
 }
 
-.input-item {
-  --background: #f9fafb;
-  --border-radius: 14px;
-  --inner-border-width: 0;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  border: 1px solid #e5e7eb;
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(121, 68, 148, 0.08);
+  border: 1px solid rgba(121, 68, 148, 0.2);
+  border-radius: 16px;
+  padding: 14px 16px;
 
   ion-icon {
-    color: #9ca3af;
+    font-size: 20px;
+    color: #794494;
+    flex-shrink: 0;
+  }
+
+  input, select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: #2d1b69;
+    font-family: inherit;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  select {
+    appearance: none;
+    cursor: pointer;
+    
+    option {
+      background: white;
+      color: #2d1b69;
+    }
   }
 }
 
-.add-form-buttons {
+.modal-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .save-button {
-  --background: #794494;
-  --border-radius: 16px;
-  --box-shadow: 0 8px 20px rgba(121, 68, 148, 0.35);
-  --color: #ffffff;
-  font-weight: 600;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 20px;
+  background: #794494;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(121, 68, 148, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(121, 68, 148, 0.45);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .back-button {
-  --border-radius: 16px;
-  --border-color: #794494;
-  --color: #794494;
+  width: 100%;
+  padding: 16px 24px;
+  border: 2px solid rgba(121, 68, 148, 0.3);
+  border-radius: 20px;
+  background: transparent;
+  color: #794494;
+  font-size: 14px;
   font-weight: 600;
-}
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
-.patient-add-modal::part(backdrop) {
-  --background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(10px);
-}
+  &:hover {
+    background: rgba(121, 68, 148, 0.08);
+    border-color: #794494;
+  }
 
-.patient-add-modal::part(content) {
-  --background: transparent;
-  --box-shadow: none;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .welcome-section {
@@ -200,14 +283,17 @@
     .add-btn {
       --color: #794494;
       --background: transparent;
-      width: 52px;
-      height: 52px;
-      min-width: 52px;
+      --background-hover: rgba(121, 68, 148, 0.1);
+      --padding-start: 8px;
+      --padding-end: 8px;
+      width: auto;
+      height: 44px;
+      min-width: 44px;
       flex-shrink: 0;
       margin: 0;
-      
+
       ion-icon {
-        font-size: 32px;
+        font-size: 28px;
         color: #794494;
       }
     }

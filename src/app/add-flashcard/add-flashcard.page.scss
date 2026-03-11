@@ -58,8 +58,20 @@
   flex-direction: column;
   min-height: calc(100vh - 56px);
   padding: 16px;
-  gap: 12px;
-  padding-bottom: 80px; 
+  gap: 10px;
+  padding-bottom: 24px;
+}
+
+.category-select-wrapper {
+  margin-bottom: 4px;
+  
+  .category-fixed {
+    .category-value {
+      color: #794494;
+      font-weight: 600;
+      font-size: 16px;
+    }
+  }
 }
 
 
@@ -242,14 +254,14 @@
 .photo-container-lavender {
   display: flex;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .photo-frame-lavender {
   position: relative;
-  width: 140px;
-  height: 140px;
-  border-radius: 16px;
+  width: 100%;
+  min-height: 80px;
+  border-radius: 12px;
   overflow: hidden;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 2px solid #e5e7eb;
@@ -258,20 +270,27 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   
   &:hover {
-    transform: scale(1.02);
     border-color: #8b5cf6;
     box-shadow: 0 4px 16px rgba(121, 68, 148, 0.2);
   }
   
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.99);
+  }
+  
+  &.has-image {
+    min-height: auto;
+    height: auto;
   }
 }
 
 .photo-preview-lavender {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+  background: #f8fafc;
 }
 
 .photo-overlay-lavender {
@@ -315,7 +334,7 @@
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   gap: 12px;
@@ -323,26 +342,27 @@
   .placeholder-icon {
     background: linear-gradient(135deg, #794494, #794494);
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     
     ion-icon {
       color: white;
-      font-size: 24px;
+      font-size: 20px;
     }
   }
   
   .placeholder-text {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    align-items: flex-start;
+    gap: 2px;
     
     .main-text {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: #2d1b69;
     }
@@ -357,27 +377,27 @@
 
 .photo-actions-lavender {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   
   .action-btn {
-    flex: 1;
     --border-radius: 12px;
     --border-width: 2px;
     --border-color: #e5e7eb;
     --color: #2d1b69;
     font-weight: 500;
     height: 44px;
+    margin: 0;
     transition: all 0.3s ease;
     
     &:hover {
       --border-color: #794494;
       --background: #faf8ff;
-      transform: translateY(-1px);
     }
   }
   
   .camera-btn {
-    --border-color: #8b5cf6;
+    --border-color: #794494;
     --color: #794494;
   }
   
@@ -390,24 +410,24 @@
 
 .audio-controls-lavender {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 12px;
   
   ion-button {
-    flex: 1;
-    --border-radius: 10px;
+    --border-radius: 12px;
     --border-width: 2px;
     --border-color: #e5e7eb;
     --color: #2d1b69;
     font-weight: 500;
-    height: 40px;
+    height: 44px;
     font-size: 14px;
+    margin: 0;
     transition: all 0.3s ease;
     
     &:hover {
       --border-color: #794494;
       --background: #faf8ff;
-      transform: translateY(-1px);
     }
     
     &.recording {
@@ -419,13 +439,38 @@
   }
   
   .record-button-lavender {
-    --border-color: #8b5cf6;
+    --border-color: #794494;
     --color: #794494;
   }
   
   .upload-btn {
     --border-color: #794494;
     --color: #794494;
+  }
+}
+
+.save-section {
+  margin-top: 8px;
+  
+  .save-flashcard-btn {
+    --background: linear-gradient(135deg, #794494 0%, #794494 100%);
+    --color: white;
+    --border-radius: 12px;
+    height: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.3);
+    margin: 0;
+    
+    &:hover:not([disabled]) {
+      box-shadow: 0 6px 20px rgba(121, 68, 148, 0.4);
+    }
+    
+    &[disabled] {
+      --background: #e5e7eb;
+      --color: #9ca3af;
+      box-shadow: none;
+    }
   }
 }
 
@@ -578,8 +623,7 @@
   }
   
   .photo-frame-lavender {
-    width: 120px;
-    height: 120px;
+    min-height: 70px;
   }
   
   .input-card, .photo-card, .audio-card {
@@ -598,26 +642,38 @@
       font-size: 15px;
     }
   }
+  
+  .photo-actions-lavender .action-btn,
+  .audio-controls-lavender ion-button {
+    height: 40px;
+  }
+  
+  .save-section .save-flashcard-btn {
+    height: 46px;
+  }
 }
 
 @media (max-height: 600px) {
   .lavender-form {
     padding: 10px;
     gap: 8px;
-    padding-bottom: 50px;
+    padding-bottom: 20px;
   }
   
   .photo-frame-lavender {
-    width: 100px;
-    height: 100px;
+    min-height: 60px;
+  }
+  
+  .photo-preview-lavender {
+    max-height: 150px;
   }
   
   .placeholder-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
     
     ion-icon {
-      font-size: 18px !important;
+      font-size: 16px !important;
     }
   }
   
@@ -629,8 +685,9 @@
     font-size: 10px !important;
   }
   
+  .photo-actions-lavender .action-btn,
   .audio-controls-lavender ion-button {
-    height: 36px;
+    height: 38px;
     font-size: 13px;
   }
   
@@ -645,18 +702,26 @@
       font-size: 14px;
     }
   }
+  
+  .save-section .save-flashcard-btn {
+    height: 44px;
+    font-size: 15px;
+  }
 }
 
 @media (max-height: 500px) {
   .lavender-form {
     padding: 8px;
     gap: 6px;
-    padding-bottom: 40px;
+    padding-bottom: 16px;
   }
   
   .photo-frame-lavender {
-    width: 80px;
-    height: 80px;
+    min-height: 50px;
+  }
+  
+  .photo-preview-lavender {
+    max-height: 120px;
   }
   
   .placeholder-icon {
@@ -676,8 +741,9 @@
     font-size: 9px !important;
   }
   
+  .photo-actions-lavender .action-btn,
   .audio-controls-lavender ion-button {
-    height: 32px;
+    height: 34px;
     font-size: 12px;
   }
   
@@ -700,6 +766,11 @@
       width: 32px;
       height: 32px;
     }
+  }
+  
+  .save-section .save-flashcard-btn {
+    height: 40px;
+    font-size: 14px;
   }
 }
 

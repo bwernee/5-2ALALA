@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
-import { AlertController, ToastController, LoadingController, ActionSheetController } from '@ionic/angular';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AlertController, ToastController, LoadingController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import type { Unsubscribe } from '@firebase/firestore';
 
@@ -20,6 +20,7 @@ interface Patient {
 })
 export class PatientsDashboardPage implements OnInit, OnDestroy {
   patients: Patient[] = [];
+  displayPatients: Patient[] = [];
   isLoading = false;
   private patientsUnsub?: Unsubscribe;
 
@@ -30,16 +31,21 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
   newPatientSex = '';
   isSavingPatient = false;
 
+  showFooter = true;
+
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
-    private actionSheetCtrl: ActionSheetController,
     private firebaseService: FirebaseService
   ) {}
 
   ngOnInit() {
+    const firstVisit = this.route.snapshot.queryParamMap.get('first') === '1';
+    this.showFooter = !firstVisit;
+
     this.loadPatients();
     this.subscribeToPatients();
   }
@@ -55,9 +61,9 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
     try {
       const patientsList = await this.firebaseService.getPatients();
       console.log('Loaded patients:', patientsList);
-      this.patients = patientsList;
+      this.setPatients(patientsList);
       
-      if (this.patients.length === 0) {
+      if (this.displayPatients.length === 0) {
         console.log('No patients found for this caregiver');
       }
     } catch (error: any) {
@@ -71,8 +77,13 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
 
   subscribeToPatients() {
     this.patientsUnsub = this.firebaseService.subscribeToPatients((patients) => {
-      this.patients = patients;
+      this.setPatients(patients);
     });
+  }
+
+  private setPatients(patients: Patient[]) {
+    this.patients = patients || [];
+    this.displayPatients = this.patients.filter(p => !!(p.name || '').toString().trim());
   }
 
   addPatient() {
@@ -128,37 +139,6 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
       this.newPatientName = '';
       this.newPatientAge = '';
       this.newPatientSex = '';
-
-      // Offer: go to patient homepage or add another patient
-      const actionSheet = await this.actionSheetCtrl.create({
-        header: `${name} has been added`,
-        subHeader: 'What would you like to do?',
-        buttons: [
-          {
-            text: `Go to ${name}'s homepage`,
-            icon: 'home-outline',
-            handler: () => {
-              this.router.navigate(['/home']).catch((err) => {
-                console.error('Navigation error:', err);
-                this.presentToast('Failed to open homepage', 'danger');
-              });
-            }
-          },
-          {
-            text: 'Add another patient',
-            icon: 'person-add-outline',
-            handler: () => {
-              this.showAddForm = true;
-            }
-          },
-          {
-            text: 'Stay here',
-            icon: 'close-outline',
-            role: 'cancel'
-          }
-        ]
-      });
-      await actionSheet.present();
     } catch (error: any) {
       console.error('Error adding patient:', error);
       this.presentToast(error?.message || 'Failed to add patient', 'danger');

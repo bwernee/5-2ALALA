@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FirebaseService } from '../../services/firebase.service';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { AlertController } from '@ionic/angular';
 
 interface CaregiverInfo {
   name: string;
@@ -35,7 +36,8 @@ export class ProfilePage implements OnInit {
     private location: Location,
     private firebaseService: FirebaseService,
     private firestore: Firestore,
-    private router: Router
+    private router: Router,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -48,11 +50,107 @@ export class ProfilePage implements OnInit {
     this.location.back();
   }
 
-  onPatientModeToggle() {
-    window.dispatchEvent(new CustomEvent('caregiver-toggle'));
-    this.router.navigate(['/home']).catch(err => {
-      console.error('Navigation to home failed from profile page:', err);
+  async onPatientModeToggle() {
+    if (!this.isPatientMode) {
+      // Trying to enter patient mode
+      await this.enablePatientMode();
+      return;
+    }
+    // Already in patient mode - prompt to exit
+    await this.promptExitPatientMode();
+  }
+
+  private async enablePatientMode() {
+    try {
+      const currentUser = this.firebaseService.getCurrentUser();
+      if (!currentUser) {
+        this.router.navigate(['/settings']).catch(err => {
+          console.error('Navigation to settings failed from profile page:', err);
+        });
+        return;
+      }
+
+      const savedPin = await this.firebaseService.getCaregiverPassword(currentUser.uid);
+
+      if (!savedPin) {
+        const alert = await this.alertCtrl.create({
+          header: 'Set Caregiver Password',
+          message:
+            'To use Patient Mode, please create a caregiver password first. You will need it to exit Patient Mode.',
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Go to Settings',
+              handler: () => this.router.navigate(['/settings'])
+            }
+          ],
+          backdropDismiss: false
+        });
+        await alert.present();
+        return;
+      }
+
+      // Password exists - show confirmation
+      const confirm = await this.alertCtrl.create({
+        header: 'Enter Patient Mode?',
+        message: 'Are you sure you want to switch to Patient Mode? You will need the caregiver password to exit.',
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Yes',
+            handler: () => {
+              // Set pending flag and navigate to home
+              try { localStorage.setItem('pendingPatientMode', 'true'); } catch {}
+              this.router.navigate(['/home']).catch(err => {
+                console.error('Navigation to home failed from profile page:', err);
+              });
+            }
+          }
+        ],
+        backdropDismiss: false
+      });
+      await confirm.present();
+    } catch (err) {
+      console.error('Error enabling patient mode from profile page:', err);
+    }
+  }
+
+  private async promptExitPatientMode() {
+    const currentUser = this.firebaseService.getCurrentUser();
+    if (!currentUser) {
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Exit Patient Mode',
+      message: 'Enter caregiver password to switch back to Standard mode.',
+      inputs: [
+        {
+          name: 'pin',
+          type: 'password',
+          placeholder: 'Enter password',
+          attributes: { maxlength: 32 }
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Unlock',
+          handler: async (data) => {
+            const savedPin = await this.firebaseService.getCaregiverPassword(currentUser.uid);
+            if (data.pin === savedPin) {
+              this.isPatientMode = false;
+              localStorage.setItem('patientMode', 'false');
+              window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: false }));
+              return true;
+            }
+            return false;
+          }
+        }
+      ],
+      backdropDismiss: false
     });
+    await alert.present();
   }
 
   private async loadProfileData() {

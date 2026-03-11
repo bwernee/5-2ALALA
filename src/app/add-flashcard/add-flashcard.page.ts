@@ -66,6 +66,9 @@ export class AddFlashcardPage implements OnInit {
   defaultCategoryId: string | null = null;
   defaultCategoryName: string | null = null;
 
+  fromCategoryMatch = false;
+  categorySelectOptions: { key: string; label: string }[] = [];
+  selectedCategoryKey: string | null = null;
   
   isEditMode = false;
   editCardId: string | null = null;
@@ -111,6 +114,8 @@ export class AddFlashcardPage implements OnInit {
     this.defaultCategoryId = (stateId || qpId || null);
     this.defaultCategoryName = stateName || null;
 
+    this.fromCategoryMatch = this.route.snapshot.queryParamMap.get('from') === 'category-match';
+
     
     this.customCategories = this.getAllCategories();
 
@@ -147,6 +152,65 @@ export class AddFlashcardPage implements OnInit {
         
         this.loadExistingCardData();
       }
+    }
+
+    this.setupCategorySelectOptions();
+  }
+
+  private setupCategorySelectOptions() {
+    if (!this.fromCategoryMatch) return;
+
+    const opts: { key: string; label: string }[] = [];
+
+    const builtinOrder: BuiltinCat[] = ['people', 'places', 'objects'];
+    builtinOrder.forEach(cat => {
+      opts.push({
+        key: `builtin:${cat}`,
+        label: cat.charAt(0).toUpperCase() + cat.slice(1)
+      });
+    });
+
+    this.customCategories.forEach(c => {
+      opts.push({
+        key: `custom:${c.id}`,
+        label: c.name
+      });
+    });
+
+    this.categorySelectOptions = opts;
+
+    let currentKey: string | null = null;
+    if (this.activeTarget === 'custom' && this.selectedCustomCategoryId) {
+      currentKey = `custom:${this.selectedCustomCategoryId}`;
+    } else {
+      currentKey = `builtin:${this.category}`;
+    }
+
+    if (!opts.some(o => o.key === currentKey) && opts.length) {
+      currentKey = opts[0].key;
+    }
+
+    this.selectedCategoryKey = currentKey;
+  }
+
+  onCategorySelectChange(key: string) {
+    this.selectedCategoryKey = key;
+    if (!key) return;
+
+    if (key.startsWith('builtin:')) {
+      const cat = key.split(':')[1] as BuiltinCat;
+      if (['people', 'objects', 'places'].includes(cat)) {
+        this.activeTarget = 'builtin';
+        this.category = cat;
+        this.selectedCustomCategoryId = null;
+      }
+      return;
+    }
+
+    if (key.startsWith('custom:')) {
+      const id = key.split(':')[1];
+      this.activeTarget = 'custom';
+      this.selectedCustomCategoryId = id || null;
     }
   }
 
