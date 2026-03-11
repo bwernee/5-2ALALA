@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
-import { ToastController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 
 
 @Component({
@@ -60,7 +60,8 @@ export class ProgressPage implements OnInit {
     private firebaseService: FirebaseService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private alertCtrl: AlertController
   ) {}
 
   async ngOnInit() {
@@ -97,9 +98,18 @@ export class ProgressPage implements OnInit {
 
   onPatientModeToggle() {
     window.dispatchEvent(new CustomEvent('caregiver-toggle'));
-    this.router.navigate(['/home']).catch(err => {
-      console.error('Navigation to home failed from progress page:', err);
-    });
+  }
+
+  navigateToPatientsDashboard() {
+    this.router.navigate(['/patients-dashboard']);
+  }
+
+  navigateToHome() {
+    this.router.navigate(['/home']);
+  }
+
+  navigateToProfile() {
+    this.router.navigate(['/profile']);
   }
 
   async loadChartJS() {

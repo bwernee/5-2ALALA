@@ -312,6 +312,7 @@ export class HomePage implements OnInit, OnDestroy {
         header: 'Set Caregiver Password',
         message:
           'To use Patient Mode, please create a caregiver password first. You will need it to exit Patient Mode.',
+        cssClass: 'caregiver-password-alert',
         buttons: [
           { text: 'Cancel', role: 'cancel' },
           {
