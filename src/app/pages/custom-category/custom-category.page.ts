@@ -45,6 +45,7 @@ const CARDS_PREFIX   = 'alala_cards_';
 export class CustomCategoryPage implements OnInit, OnDestroy {
   @ViewChild('photoInput') photoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('videoInput') videoInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('editImageInput') editImageInput!: ElementRef<HTMLInputElement>;
 
   id = '';
   title = 'Category';
@@ -56,21 +57,24 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
 
   isPatientMode = localStorage.getItem('patientMode') === 'true';
 
-  
   displayCards: DisplayCard[] = [];
   currentCard: DisplayCard | null = null;
   currentIndex = 0;
 
-  
   currentAudio: HTMLAudioElement | null = null;
   isPlaying = false;
   currentTime = 0;
   duration = 0;
   private rafId: number | null = null;
 
-  
   skipCount = 0;
   skippedCardIds: string[] = [];
+
+  // Modal states
+  isImageModalOpen = false;
+  showEditModal = false;
+  editCardLabel = '';
+  editCardImage = '';
 
   private modeListener = (e: any) => {
     this.isPatientMode = !!e?.detail;
@@ -98,29 +102,40 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
     private firebaseService: FirebaseService
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     window.addEventListener('patientMode-changed', this.modeListener);
+    
     window.addEventListener('flashcard-updated', this.onFlashcardUpdated);
     window.addEventListener('flashcard-added', this.onFlashcardAdded);
-
     
+
     this.id = this.route.snapshot.paramMap.get('id') || '';
 
-    
     const state = this.router.getCurrentNavigation()?.extras?.state as { categoryName?: string } | undefined;
     if (state?.categoryName) {
       this.title = state.categoryName;
     }
 
-    
-    const cat = this.findCategoryById(this.id);
-    if (cat) {
-      this.title = cat.name || this.title;
-      this.description = cat.description;
-      this.emoji = cat.emoji || this.emoji;
+    // Try to load category info from Firebase first
+    try {
+      const categories = await this.firebaseService.getCustomCategories();
+      const cat = categories.find(c => c.id === this.id);
+      if (cat) {
+        this.title = cat.name || this.title;
+        this.description = cat.description;
+        this.emoji = cat.emoji || this.emoji;
+      }
+    } catch (e) {
+      // Fallback to localStorage
+      const cat = this.findCategoryById(this.id);
+      if (cat) {
+        this.title = cat.name || this.title;
+        this.description = cat.description;
+        this.emoji = cat.emoji || this.emoji;
+      }
     }
 
-    this.loadDisplayCards();
+    await this.loadDisplayCards();
   }
 
   ionViewWillEnter() {
@@ -151,21 +166,49 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
     return `${CARDS_PREFIX}${this.id}`;
   }
 
-  private loadDisplayCards() {
-    const raw = this.getRawCards();
-    
-    const photos = raw.filter(c => c.type === 'photo');
-    
-    
-    const sortedPhotos = photos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    
-    this.displayCards = sortedPhotos.map(c => ({
-      id: c.id,
-      label: c.label || 'Untitled',
-      image: c.src,
-      audio: c.audio || null,
-      duration: c.duration || 0
-    }));
+  private async loadDisplayCards() {
+    // Try loading from Firebase first (synced across devices)
+    try {
+      const firebaseCards = await this.firebaseService.getCustomCategoryCards(this.id);
+      
+      if (firebaseCards.length > 0) {
+        this.displayCards = firebaseCards.map(c => ({
+          id: c.id,
+          label: c.label || 'Untitled',
+          image: c.image,
+          audio: c.audio || null,
+          duration: c.duration || 0
+        }));
+      } else {
+        // Fallback to localStorage
+        const raw = this.getRawCards();
+        const photos = raw.filter(c => c.type === 'photo');
+        const sortedPhotos = photos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        
+        this.displayCards = sortedPhotos.map(c => ({
+          id: c.id,
+          label: c.label || 'Untitled',
+          image: c.src,
+          audio: c.audio || null,
+          duration: c.duration || 0
+        }));
+      }
+    } catch (e) {
+      console.warn('Failed to load from Firebase, falling back to localStorage:', e);
+      // Fallback to localStorage
+      const raw = this.getRawCards();
+      const photos = raw.filter(c => c.type === 'photo');
+      const sortedPhotos = photos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      
+      this.displayCards = sortedPhotos.map(c => ({
+        id: c.id,
+        label: c.label || 'Untitled',
+      
+        image: c.src,
+        audio: c.audio || null,
+        duration: c.duration || 0
+      }));
+    }
 
     console.log('Custom Category loaded cards:', this.displayCards.map(c => ({ 
       label: c.label, 
@@ -175,7 +218,6 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
     })));
 
     if (this.displayCards.length > 0) {
-      
       this.setCard(0);
     } else {
       this.currentCard = null;
@@ -463,5 +505,87 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
   ) {
     const toast = await this.toastCtrl.create({ message, duration: 1600, color, position: 'bottom' });
     await toast.present();
+  }
+
+  // Image Modal Methods
+  openImageModal() {
+    this.isImageModalOpen = true;
+  }
+
+  closeImageModal() {
+    this.isImageModalOpen = false;
+  }
+
+  // Edit Modal Methods
+  openEditModal() {
+    if (!this.currentCard) return;
+    this.editCardLabel = this.currentCard.label || '';
+    this.editCardImage = this.currentCard.image || '';
+    this.closeImageModal();
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editCardLabel = '';
+    this.editCardImage = '';
+  }
+
+  triggerImagePicker() {
+    this.editImageInput?.nativeElement?.click();
+  }
+
+  onEditImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.editCardImage = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async saveCardEdit() {
+    if (!this.currentCard) return;
+
+    try {
+      // Update in Firebase
+      await this.firebaseService.updateStructuredFlashcard(
+        this.currentCard.id,
+        this.id,
+        {
+          label: this.editCardLabel,
+          src: this.editCardImage
+        }
+      );
+
+      // Update in local storage
+      const raw = this.getRawCards();
+      const cardIndex = raw.findIndex(c => c.id === this.currentCard!.id);
+      if (cardIndex >= 0) {
+        raw[cardIndex].label = this.editCardLabel;
+        raw[cardIndex].src = this.editCardImage;
+        this.saveRawCards(raw);
+      }
+
+      // Update current card
+      this.currentCard.label = this.editCardLabel;
+      this.currentCard.image = this.editCardImage;
+
+      // Reload and close
+      await this.loadDisplayCards();
+      this.closeEditModal();
+      this.presentToast('Changes saved', 'success');
+
+      // Dispatch event
+      window.dispatchEvent(new CustomEvent('flashcard-updated', {
+        detail: { cardId: this.currentCard.id, category: this.id }
+      }));
+    } catch (err) {
+      console.error('Failed to save edit:', err);
+      this.presentToast('Failed to save changes', 'danger');
+    }
   }
 }

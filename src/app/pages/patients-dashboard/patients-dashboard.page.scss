@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 .lavender-content {
-  --ion-background-color: #faf8ff;
-  --ion-text-color: #2d1b69;
+  --ion-background-color: var(--app-bg-1);
+  --ion-text-color: var(--app-text);
   font-family: 'Poppins', sans-serif;
   min-height: 100vh;
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  background: var(--app-bg-gradient);
   position: relative;
 }
 
 .lavender-toolbar {
-  --background: linear-gradient(135deg, #794494 0%, #794494 50%, #794494 100%);
+  --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
   --color: white;
   --border-width: 0;
-  box-shadow: 0 4px 20px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--app-primary-rgb), 0.3);
   
   .cute-title {
     font-weight: 600;
@@ -72,7 +72,7 @@
   padding: 32px 24px 28px;
   border-radius: 28px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 240, 255, 0.92) 100%);
-  box-shadow: 0 24px 60px rgba(121, 68, 148, 0.25);
+  box-shadow: 0 24px 60px rgba(var(--app-primary-rgb), 0.25);
 }
 
 .modal-close {
@@ -86,7 +86,7 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: #794494;
+  color: var(--app-primary);
   z-index: 2;
   cursor: pointer;
 
@@ -103,7 +103,7 @@
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-    color: #2d1b69;
+    color: var(--app-text);
   }
 
   p {
@@ -130,7 +130,7 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #794494;
+    color: var(--app-primary);
   }
 }
 
@@ -138,14 +138,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(121, 68, 148, 0.08);
-  border: 1px solid rgba(121, 68, 148, 0.2);
+  background: rgba(var(--app-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.2);
   border-radius: 16px;
   padding: 14px 16px;
 
   ion-icon {
     font-size: 20px;
-    color: #794494;
+    color: var(--app-primary);
     flex-shrink: 0;
   }
 
@@ -155,7 +155,7 @@
     border: none;
     outline: none;
     font-size: 15px;
-    color: #2d1b69;
+    color: var(--app-text);
     font-family: inherit;
 
     &::placeholder {
@@ -169,7 +169,7 @@
     
     option {
       background: white;
-      color: #2d1b69;
+      color: var(--app-text);
     }
   }
 }
@@ -185,18 +185,18 @@
   padding: 16px 24px;
   border: none;
   border-radius: 20px;
-  background: #794494;
+  background: var(--app-primary);
   color: white;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 12px 28px rgba(121, 68, 148, 0.35);
+  box-shadow: 0 12px 28px rgba(var(--app-primary-rgb), 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 36px rgba(121, 68, 148, 0.45);
+    box-shadow: 0 16px 36px rgba(var(--app-primary-rgb), 0.45);
   }
 
   &:active {
@@ -212,18 +212,18 @@
 .back-button {
   width: 100%;
   padding: 16px 24px;
-  border: 2px solid rgba(121, 68, 148, 0.3);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.3);
   border-radius: 20px;
   background: transparent;
-  color: #794494;
+  color: var(--app-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: rgba(121, 68, 148, 0.08);
-    border-color: #794494;
+    background: rgba(var(--app-primary-rgb), 0.08);
+    border-color: var(--app-primary);
   }
 
   &:disabled {
@@ -236,24 +236,24 @@
   flex-shrink: 0;
   
   .welcome-content {
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-    border: 2px solid #c7d2fe;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
     border-radius: 20px;
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
     
     .welcome-icon {
       width: 56px;
       height: 56px;
-      background: linear-gradient(135deg, #794494 0%, #9c6bb0 100%);
+      background: linear-gradient(135deg, var(--app-primary) 0%, #9c6bb0 100%);
       border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+      box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
       
       ion-icon {
         font-size: 28px;
@@ -268,7 +268,7 @@
         margin: 0;
         font-size: 24px;
         font-weight: 700;
-        color: #2d1b69;
+        color: var(--app-text);
         margin-bottom: 4px;
       }
       
@@ -281,9 +281,9 @@
     }
 
     .add-btn {
-      --color: #794494;
+      --color: var(--app-primary);
       --background: transparent;
-      --background-hover: rgba(121, 68, 148, 0.1);
+      --background-hover: rgba(var(--app-primary-rgb), 0.1);
       --padding-start: 8px;
       --padding-end: 8px;
       width: auto;
@@ -294,7 +294,7 @@
 
       ion-icon {
         font-size: 28px;
-        color: #794494;
+        color: var(--app-primary);
       }
     }
   }
@@ -309,7 +309,7 @@
   gap: 16px;
   
   ion-spinner {
-    --color: #794494;
+    --color: var(--app-primary);
   }
   
   p {
@@ -332,16 +332,16 @@
 .patient-card {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
   overflow: hidden;
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(121, 68, 148, 0.25);
-    border-color: rgba(121, 68, 148, 0.3);
+    box-shadow: 0 12px 40px rgba(var(--app-primary-rgb), 0.25);
+    border-color: rgba(var(--app-primary-rgb), 0.3);
   }
   
   &:active {
@@ -350,12 +350,12 @@
   
   &.add-patient-card {
     border-style: dashed;
-    border-color: rgba(121, 68, 148, 0.3);
-    background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 100%);
+    border-color: rgba(var(--app-primary-rgb), 0.3);
+    background: linear-gradient(135deg, var(--app-bg-1) 0%, var(--app-bg-2) 100%);
     
     &:hover {
-      border-color: rgba(121, 68, 148, 0.5);
-      background: linear-gradient(135deg, #f3f0ff 0%, #ede8ff 100%);
+      border-color: rgba(var(--app-primary-rgb), 0.5);
+      background: linear-gradient(135deg, var(--app-bg-2) 0%, var(--app-bg-3) 100%);
     }
   }
 }
@@ -374,11 +374,11 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #794494 0%, #9c6bb0 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, #9c6bb0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.3);
   overflow: hidden;
   position: relative;
   
@@ -393,12 +393,12 @@
   }
   
   &.add-avatar {
-    background: rgba(121, 68, 148, 0.1);
-    border: 2px dashed rgba(121, 68, 148, 0.4);
+    background: rgba(var(--app-primary-rgb), 0.1);
+    border: 2px dashed rgba(var(--app-primary-rgb), 0.4);
     
     ion-icon {
       font-size: 32px;
-      color: #794494;
+      color: var(--app-primary);
     }
   }
   
@@ -418,7 +418,7 @@
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 600;
-    color: #2d1b69;
+    color: var(--app-text);
     line-height: 1.3;
   }
   
@@ -456,7 +456,7 @@
 .add-patient-card {
   .patient-info {
     h3 {
-      color: #794494;
+      color: var(--app-primary);
     }
     
     p {
@@ -479,7 +479,7 @@
   .empty-icon {
     width: 120px;
     height: 120px;
-    background: linear-gradient(135deg, rgba(121, 68, 148, 0.1) 0%, rgba(121, 68, 148, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(var(--app-primary-rgb), 0.1) 0%, rgba(var(--app-primary-rgb), 0.05) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -488,7 +488,7 @@
     
     ion-icon {
       font-size: 64px;
-      color: #794494;
+      color: var(--app-primary);
       opacity: 0.5;
     }
   }
@@ -497,7 +497,7 @@
     margin: 0 0 8px 0;
     font-size: 24px;
     font-weight: 700;
-    color: #2d1b69;
+    color: var(--app-text);
   }
   
   p {
@@ -507,7 +507,7 @@
   }
   
   .add-first-patient-btn {
-    --background: linear-gradient(135deg, #794494 0%, #9c6bb0 100%);
+    --background: linear-gradient(135deg, var(--app-primary) 0%, #9c6bb0 100%);
     --color: white;
     --border-radius: 16px;
     --padding-start: 24px;
@@ -515,7 +515,7 @@
     --padding-top: 12px;
     --padding-bottom: 12px;
     font-weight: 600;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.3);
     
     ion-icon {
       margin-right: 8px;

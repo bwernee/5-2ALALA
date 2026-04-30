@@ -1,20 +1,24 @@
 <ion-content class="lavender-content" [scrollY]="true" fullscreen>
   <div class="lavender-container">
     <!-- Welcome Section -->
-    <div class="welcome-section">
-      <div class="welcome-content">
+    <app-global-header>
+      <div gh-left>
         <div class="welcome-icon">
           <ion-icon name="people-outline"></ion-icon>
         </div>
-        <div class="welcome-text">
-          <h1>My Patients</h1>
-          <p>Manage and access your patients</p>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">My Patients</h1>
+          <p class="app-header__subtitle">Manage and access your patients</p>
         </div>
+      </div>
+      <div gh-right>
         <ion-button class="add-btn" fill="clear" (click)="addPatient()" aria-label="Add Patient">
           <ion-icon name="add-outline"></ion-icon>
         </ion-button>
       </div>
-    </div>
+    </app-global-header>
 
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-container">

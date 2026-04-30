@@ -1,19 +1,23 @@
-<ion-content class="progress-screen">
-  <div class="lavender-container">
-    <div class="welcome-section">
-      <div class="welcome-content">
-        <div class="welcome-icon">
+<ion-content class="lavender-content progress-screen">
+  <div class="lavender-container app-container">
+    <app-global-header>
+      <div gh-left>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
           <ion-icon name="analytics-outline"></ion-icon>
         </div>
-        <div class="welcome-text">
-          <h1>Progress</h1>
-          <p>Your magical memory companion</p>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Progress</h1>
+          <p class="app-header__subtitle">Your magical memory companion</p>
         </div>
-        <ion-button routerLink="/settings" class="settings-btn" fill="clear" *ngIf="!isPatientMode" aria-label="Settings">
+      </div>
+      <div gh-right>
+        <ion-button routerLink="/settings" class="settings-btn app-header__settings" fill="clear" *ngIf="!isPatientMode" aria-label="Settings">
           <ion-icon name="settings-outline"></ion-icon>
         </ion-button>
       </div>
-    </div>
+    </app-global-header>
   
   <div class="loading-container" *ngIf="isLoading">
     <ion-spinner name="crescent"></ion-spinner>
@@ -24,7 +28,7 @@
   <div *ngIf="!isLoading">
     
     <div class="period-selector">
-      <ion-segment [(ngModel)]="selectedPeriod" (ionChange)="onPeriodChange()">
+      <ion-segment class="app-segment" [(ngModel)]="selectedPeriod" (ionChange)="onPeriodChange()">
         <ion-segment-button value="today">
           <ion-label>Today</ion-label>
         </ion-segment-button>
@@ -314,8 +318,17 @@
     
     <div class="chart-section">
       <h2>Accuracy Over Time - {{ selectedPeriod === 'today' ? 'Today' : (selectedPeriod === 'week' ? 'Week View' : (selectedPeriod === 'month' ? 'Month View' : 'Progress')) }}</h2>
-      <div class="chart-container" *ngIf="chartLoaded">
+      <div class="chart-container" *ngIf="chartLoaded && (hasDataForPeriod || selectedPeriod !== 'custom')">
         <canvas #accuracyChart></canvas>
+      </div>
+      <div class="chart-fallback" *ngIf="chartLoaded && !hasDataForPeriod && selectedPeriod === 'custom'">
+        <div class="fallback-message">
+          <ion-icon name="analytics-outline"></ion-icon>
+          <p>No Data</p>
+          <p class="small-text" *ngIf="customStartDate && customEndDate">
+            No sessions found for {{ customStartDate }} - {{ customEndDate }}
+          </p>
+        </div>
       </div>
       <div class="chart-fallback" *ngIf="!chartLoaded">
         <div class="fallback-message">
@@ -385,57 +398,56 @@
   </div>
 
 
-<div class="caregiver-bottom-nav" *ngIf="!isPatientMode">
-  <div class="nav-container">
- 
-    <div class="nav-item" (click)="navigateToHome()">
-      <div class="nav-icon home-icon">
+<div class="caregiver-bottom-nav app-bottom-nav" *ngIf="!isPatientMode">
+  <div class="nav-container app-bottom-nav__inner">
+
+    <div class="nav-item app-bottom-nav__item" (click)="navigateToHome()">
+      <div class="nav-icon home-icon app-bottom-nav__icon">
         <ion-icon name="home"></ion-icon>
       </div>
-      <span class="nav-label">Home</span>
+      <span class="nav-label app-bottom-nav__label">Home</span>
     </div>
-    
-    <div class="nav-item active">
-      <div class="nav-icon progress-icon">
+
+    <div class="nav-item active app-bottom-nav__item app-bottom-nav__item--active">
+      <div class="nav-icon progress-icon app-bottom-nav__icon">
         <ion-icon name="trending-up-outline"></ion-icon>
       </div>
-      <span class="nav-label">Progress</span>
+      <span class="nav-label app-bottom-nav__label">Progress</span>
     </div>
-    
-    <div class="nav-item caregiver-mode" (click)="onPatientModeToggle()">
-      <div class="nav-icon caregiver-icon">
+
+    <div class="nav-item caregiver-mode app-bottom-nav__item" (click)="onPatientModeToggle()">
+      <div class="nav-icon caregiver-icon app-bottom-nav__icon">
         <ion-icon [name]="isPatientMode ? 'lock-closed' : 'lock-open'"></ion-icon>
       </div>
-      <span class="nav-label">Caregiver</span>
+      <span class="nav-label app-bottom-nav__label">Caregiver</span>
     </div>
-    
-    <div class="nav-item" (click)="navigateToProfile()">
-      <div class="nav-icon">
+
+    <div class="nav-item app-bottom-nav__item" (click)="navigateToProfile()">
+      <div class="nav-icon app-bottom-nav__icon">
         <ion-icon name="person-outline"></ion-icon>
       </div>
-      <span class="nav-label">Profile</span>
+      <span class="nav-label app-bottom-nav__label">Profile</span>
     </div>
 
-    <div class="nav-item" (click)="navigateToPatientsDashboard()">
-      <div class="nav-icon">
+    <div class="nav-item app-bottom-nav__item" (click)="navigateToPatientsDashboard()">
+      <div class="nav-icon app-bottom-nav__icon">
         <ion-icon name="people-outline"></ion-icon>
       </div>
-      <span class="nav-label">Patients</span>
+      <span class="nav-label app-bottom-nav__label">Patients</span>
     </div>
 
   </div>
 </div>
 
 
-<div class="patient-bottom-nav" *ngIf="isPatientMode">
-  <div class="nav-container">
-    <div class="nav-item caregiver-mode" (click)="onPatientModeToggle()">
-      <div class="nav-icon caregiver-icon">
+<div class="patient-bottom-nav app-bottom-nav" *ngIf="isPatientMode">
+  <div class="nav-container app-bottom-nav__inner">
+    <div class="nav-item caregiver-mode app-bottom-nav__item" (click)="onPatientModeToggle()">
+      <div class="nav-icon caregiver-icon app-bottom-nav__icon">
         <ion-icon [name]="isPatientMode ? 'lock-closed' : 'lock-open'"></ion-icon>
       </div>
-      <span class="nav-label">Caregiver</span>
+      <span class="nav-label app-bottom-nav__label">Caregiver</span>
     </div>
   </div>
 </div>
-
 

@@ -2,65 +2,82 @@
 
 
 .lavender-content {
-  --background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  --background: var(--app-bg-gradient);
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  background: var(--app-bg-gradient);
+  --overflow: scroll !important;
+  height: 100% !important;
+}
+
+ion-content.lavender-content::part(scroll) {
+  overflow: auto !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .lavender-container {
-  padding: 16px;
+  padding: 12px;
+  padding-bottom: 140px !important;
   background: transparent;
-  min-height: calc(100vh - 56px - 80px); 
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  height: auto !important;
+  min-height: auto !important;
 }
 
 .welcome-section {
   flex-shrink: 0;
   
   .welcome-content {
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-    border: 2px solid #c7d2fe;
-    border-radius: 20px;
-    padding: 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+    border-radius: 16px;
+    padding: 12px 14px;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
+    min-height: auto;
+    flex-wrap: nowrap !important;
   }
   
   .welcome-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex; 
-    align-items: center; 
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
+    order: 1;
     
     ion-icon {
       color: white;
-      font-size: 24px;
+      font-size: 18px;
     }
   }
   
   .welcome-text {
     flex: 1;
     min-width: 0;
+    order: 2;
     
     h1 {
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
-      color: #2d1b69;
-      margin: 0 0 4px 0;
+      color: var(--app-text);
+      margin: 0 0 2px 0;
       line-height: 1.2;
     }
     
     p {
-      font-size: 14px;
+      font-size: 11px;
       color: #6b7280;
       margin: 0; 
       font-weight: 500;
@@ -68,17 +85,18 @@
   }
   
   .settings-btn {
-    --color: #794494;
+    --color: var(--app-primary);
     --background: transparent;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 3;
     
     ion-icon {
-      font-size: 32px;
-      color: #794494;
+      font-size: 28px;
+      color: var(--app-primary);
     }
   }
 }
@@ -86,18 +104,18 @@
 .cute-card {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
   overflow: hidden;
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   position: relative;
 }
 
 
 .lavender-toolbar {
-  --background: linear-gradient(135deg, #794494 0%, #794494 50%, #794494 100%);
+  --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
   --color: white;
   --border-width: 0;
-  box-shadow: 0 4px 20px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--app-primary-rgb), 0.3);
 }
 
 .lavender-title {
@@ -128,8 +146,8 @@
   background: white;
   padding: 20px;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -139,11 +157,11 @@
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #794494, #794494);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid rgba(121, 68, 148, 0.2);
+  border: 3px solid rgba(var(--app-primary-rgb), 0.2);
   
   ion-icon {
     font-size: 35px;
@@ -157,14 +175,14 @@
   .patient-name {
     font-size: 1.4rem;
     font-weight: 600;
-    color: #2d1b69;
+    color: var(--app-text);
     margin: 0 0 4px 0;
     line-height: 1.2;
   }
   
   .patient-id {
     font-size: 0.9rem;
-    color: #794494;
+    color: var(--app-primary);
     margin: 0 0 8px 0;
     font-weight: 500;
   }
@@ -192,15 +210,15 @@
 .cute-card {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
   overflow: hidden;
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   position: relative;
 }
 
 .card-header {
   padding: 20px 20px 16px 20px;
-  border-bottom: 1px solid rgba(121, 68, 148, 0.1);
+  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.1);
   
   .header-content {
     display: flex;
@@ -211,7 +229,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #794494, #794494);
+      background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -228,14 +246,14 @@
       h2 {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #2d1b69;
+        color: var(--app-text);
         margin: 0 0 4px 0;
         letter-spacing: 0.3px;
       }
       
       p {
         font-size: 0.85rem;
-        color: #794494;
+        color: var(--app-primary);
         margin: 0;
         font-weight: 500;
       }
@@ -268,7 +286,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: linear-gradient(45deg, #794494, #794494);
+      background: linear-gradient(45deg, var(--app-primary), var(--app-primary));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -294,7 +312,7 @@
       
       .detail-value {
         font-size: 1rem;
-        color: #2d1b69;
+        color: var(--app-text);
         font-weight: 600;
       }
     }
@@ -352,7 +370,7 @@
       
       .detail-value {
         font-size: 1rem;
-        color: #2d1b69;
+        color: var(--app-text);
         font-weight: 600;
       }
     }
@@ -365,7 +383,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   z-index: 1000;
   padding: 8px 0;
@@ -405,7 +423,7 @@
           animation: glow 2s ease-in-out infinite alternate;
           
           ion-icon {
-            color: #794494;
+            color: var(--app-primary);
           }
         }
       }
@@ -455,8 +473,8 @@
 @media (max-width: 768px) {
   .lavender-container {
     padding: 12px;
+    padding-bottom: 120px !important;
     gap: 12px;
-    min-height: calc(100vh - 56px - 70px);
   }
   
   .patient-header {
@@ -546,7 +564,7 @@
   .lavender-container {
     gap: 10px;
     padding: 10px;
-    min-height: calc(100vh - 56px - 60px);
+    padding-bottom: 100px !important;
   }
   
   .patient-header {
@@ -647,7 +665,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   z-index: 1000;
   padding: 8px 0;
@@ -687,7 +705,7 @@
           animation: glow 2s ease-in-out infinite alternate;
           
           ion-icon {
-            color: #794494;
+            color: var(--app-primary);
           }
         }
       }
@@ -795,7 +813,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   z-index: 1000;
   padding: 8px 0;

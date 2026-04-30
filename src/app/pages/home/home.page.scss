@@ -9,16 +9,20 @@
   position: relative;
   --overflow: scroll !important;
   overflow: auto !important;
+  height: 100% !important;
 }
 
 ion-content.lavender-content {
   --overflow: scroll !important;
+  height: 100% !important;
 }
 
 ion-content.lavender-content::part(scroll) {
   overflow: auto !important;
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch !important;
+  height: auto !important;
+  min-height: 100% !important;
 }
 
 
@@ -73,12 +77,13 @@ ion-content.lavender-content::part(scroll) {
 .lavender-container {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 12px;
+  padding: 12px;
+  gap: 10px;
   position: relative;
   z-index: 2;
-  padding-bottom: 120px;
+  padding-bottom: 140px !important;
   min-height: auto;
+  height: auto !important;
 }
 
 
@@ -107,33 +112,39 @@ ion-content.lavender-content::part(scroll) {
   .welcome-content {
     background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
     border: 2px solid #c7d2fe;
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 12px 14px;
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 10px;
     box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    min-height: auto;
+    flex-wrap: nowrap !important;
   }
   
   .welcome-icon {
     background: linear-gradient(135deg, #794494, #794494);
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex; 
-    align-items: center; 
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
     justify-content: center;
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+    order: 1;
     
     ion-icon {
       color: white;
-      font-size: 24px;
+      font-size: 18px;
     }
 
     .logo-image {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       object-fit: contain;
     }
   }
@@ -141,17 +152,18 @@ ion-content.lavender-content::part(scroll) {
   .welcome-text {
     flex: 1;
     min-width: 0;
+    order: 2;
     
     h1 {
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
       color: #2d1b69;
-      margin: 0 0 4px 0;
+      margin: 0 0 2px 0;
       line-height: 1.2;
     }
     
     p {
-      font-size: 14px;
+      font-size: 11px;
       color: #6b7280;
       margin: 0; 
       font-weight: 500;
@@ -161,14 +173,15 @@ ion-content.lavender-content::part(scroll) {
   .settings-btn {
     --color: #794494;
     --background: transparent;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 3;
     
     ion-icon {
-      font-size: 32px;
+      font-size: 28px;
       color: #794494;
     }
   }
@@ -179,22 +192,22 @@ ion-content.lavender-content::part(scroll) {
 .main-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .action-card {
   position: relative;
   background: white;
-  border-radius: 24px;
-  padding: 32px 24px;
+  border-radius: 20px;
+  padding: 28px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 24px rgba(121, 68, 148, 0.12);
-  border: 3px solid transparent;
+  box-shadow: 0 8px 24px rgba(121, 68, 148, 0.15);
+  border: 2px solid transparent;
   overflow: hidden;
 }
 
@@ -221,54 +234,57 @@ ion-content.lavender-content::part(scroll) {
 .primary-action {
   background: linear-gradient(135deg, #794494 0%, #794494 100%);
   color: white;
-  box-shadow: 0 12px 40px rgba(121, 68, 148, 0.3);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 32px rgba(121, 68, 148, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   min-height: 140px;
 }
 
 .primary-action .action-icon {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+  margin-bottom: 14px;
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
 }
 
 .primary-action .action-icon ion-icon {
-  font-size: 36px;
+  font-size: 32px;
   color: white;
 }
 
 .primary-action .action-text h2 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: white;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .primary-action .action-text p {
-  font-size: 15px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
   font-weight: 500;
 }
 
 .action-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .memory-action, .media-action {
   min-height: 120px;
   padding: 24px 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: white;
+  color: #2d1b69;
+  box-shadow: 0 8px 24px rgba(121, 68, 148, 0.15);
+  border: 2px solid rgba(121, 68, 148, 0.1);
 }
 
 .memory-action .action-icon {
@@ -280,7 +296,7 @@ ion-content.lavender-content::part(scroll) {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  box-shadow: 0 8px 24px rgba(121, 68, 148, 0.25);
+  box-shadow: 0 8px 20px rgba(121, 68, 148, 0.25);
 }
 
 .memory-action .action-icon ion-icon {
@@ -289,8 +305,8 @@ ion-content.lavender-content::part(scroll) {
 }
 
 .memory-action .action-text h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #2d1b69;
   margin: 0 0 6px 0;
 }
@@ -311,7 +327,7 @@ ion-content.lavender-content::part(scroll) {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  box-shadow: 0 8px 24px rgba(121, 68, 148, 0.25);
+  box-shadow: 0 8px 20px rgba(121, 68, 148, 0.25);
 }
 
 .media-action .action-icon ion-icon {
@@ -320,8 +336,8 @@ ion-content.lavender-content::part(scroll) {
 }
 
 .media-action .action-text h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #2d1b69;
   margin: 0 0 6px 0;
 }
@@ -372,24 +388,59 @@ ion-content.lavender-content::part(scroll) {
 
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 14px;
   }
   
   .primary-action {
-    min-height: 120px;
+    min-height: 130px;
+    padding: 24px 18px;
   }
   
   .primary-action .action-icon {
-    width: 60px;
-    height: 60px;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 12px;
   }
   
   .primary-action .action-icon ion-icon {
-    font-size: 30px;
+    font-size: 28px;
+  }
+  
+  .primary-action .action-text h2 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  
+  .primary-action .action-text p {
+    font-size: 13px;
   }
   
   .memory-action, .media-action {
-    min-height: 100px;
+    min-height: 110px;
+    padding: 20px 18px;
+  }
+  
+  .memory-action .action-icon,
+  .media-action .action-icon {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 10px;
+  }
+  
+  .memory-action .action-icon ion-icon,
+  .media-action .action-icon ion-icon {
+    font-size: 26px;
+  }
+  
+  .memory-action .action-text h3,
+  .media-action .action-text h3 {
+    font-size: 18px;
+  }
+  
+  .memory-action .action-text p,
+  .media-action .action-text p {
+    font-size: 12px;
   }
 }
 
@@ -398,13 +449,13 @@ ion-content.lavender-content::part(scroll) {
 
 .progress-card {
   .card-header {
-    padding: 20px;
+    padding: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    border-radius: 20px;
+    border-radius: 16px;
     
     &:hover {
       background-color: rgba(121, 68, 148, 0.05);
@@ -413,23 +464,23 @@ ion-content.lavender-content::part(scroll) {
     .header-content {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       flex: 1;
       
       .header-icon {
         position: relative;
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
         background: linear-gradient(135deg, #794494, #794494);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 24px rgba(121, 68, 148, 0.3);
+        box-shadow: 0 6px 16px rgba(121, 68, 148, 0.25);
         
         ion-icon {
           color: white;
-          font-size: 22px;
+          font-size: 18px;
         }
       }
       
@@ -437,14 +488,14 @@ ion-content.lavender-content::part(scroll) {
         flex: 1;
         
         h2 {
-          font-size: 20px;
+          font-size: 16px;
           font-weight: 600;
           color: #2d1b69;
-          margin: 0 0 6px 0;
+          margin: 0 0 4px 0;
         }
         
         p {
-          font-size: 15px;
+          font-size: 12px;
           color: #6b7280;
           margin: 0;
           font-weight: 400;
@@ -453,8 +504,8 @@ ion-content.lavender-content::part(scroll) {
     }
     
     .expand-icon {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -463,24 +514,25 @@ ion-content.lavender-content::part(scroll) {
       transition: all 0.3s ease;
       
       ion-icon {
-        font-size: 20px;
+        font-size: 16px;
         color: #794494;
       }
     }
   }
   
   .progress-content {
-    padding: 0 16px 16px 16px;
+    padding: 0 12px 12px 12px;
   }
   
   .cute-button {
-    --border-radius: 16px;
+    --border-radius: 14px;
     --border-width: 2px;
     --border-color: #794494;
     --color: #794494;
     --background: rgba(121, 68, 148, 0.05);
     font-weight: 500;
-    height: 48px;
+    font-size: 13px;
+    height: 40px;
     margin: 0;
     
     &:hover {
@@ -497,8 +549,8 @@ ion-content.lavender-content::part(scroll) {
   flex-wrap: nowrap !important;
   justify-content: space-between !important;
   align-items: stretch !important;
-  gap: 8px !important;
-  margin-bottom: 16px !important;
+  gap: 6px !important;
+  margin-bottom: 12px !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -509,32 +561,32 @@ ion-content.lavender-content::part(scroll) {
   align-items: center !important;
   justify-content: center !important;
   flex: 1 !important;
-  min-height: 100px !important;
+  min-height: 80px !important;
   height: auto !important;
-  padding: 14px 8px !important;
+  padding: 10px 6px !important;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   border: 2px solid rgba(121, 68, 148, 0.1) !important;
   box-sizing: border-box !important;
   overflow: visible !important;
 }
 
 .progress-card .progress-content .stats-container .stat-card .stat-icon {
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  min-height: 34px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
   border-radius: 50% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-bottom: 8px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  margin-bottom: 6px !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1) !important;
   flex-shrink: 0 !important;
 }
 
 .progress-card .progress-content .stats-container .stat-card .stat-icon ion-icon {
-  font-size: 17px !important;
+  font-size: 14px !important;
   color: white !important;
 }
 
@@ -562,7 +614,7 @@ ion-content.lavender-content::part(scroll) {
 .progress-card .progress-content .stats-container .stat-card .stat-content .stat-number,
 .progress-card .progress-content .stats-container .stat-card .stat-content span.stat-number {
   display: block !important;
-  font-size: 15px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   color: #2d1b69 !important;
   line-height: 1.2 !important;
@@ -573,7 +625,7 @@ ion-content.lavender-content::part(scroll) {
 .progress-card .progress-content .stats-container .stat-card .stat-content .stat-label,
 .progress-card .progress-content .stats-container .stat-card .stat-content span.stat-label {
   display: block !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   color: #6b7280 !important;
   font-weight: 500 !important;
   margin-top: 2px !important;
@@ -597,23 +649,22 @@ ion-content.lavender-content::part(scroll) {
   .card-content {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding: 20px;
+    gap: 14px;
+    padding: 14px;
   }
   
   .feature-icon {
     position: relative;
-  width: 48px; 
-  height: 48px;
+    width: 40px; 
+    height: 40px;
     border-radius: 50%;
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     
-  
-  ion-icon {
-      font-size: 22px;
+    ion-icon {
+      font-size: 18px;
     }
   }
   
@@ -636,15 +687,15 @@ ion-content.lavender-content::part(scroll) {
     flex: 1;
     
     h3 {
-      font-size: 18px;
+      font-size: 14px;
       font-weight: 600;
       color: #2d1b69;
-      margin: 0 0 6px 0;
+      margin: 0 0 4px 0;
       line-height: 1.2;
     }
     
     p {
-      font-size: 14px;
+      font-size: 11px;
       color: #6b7280;
       margin: 0;
       font-weight: 400;
@@ -655,7 +706,7 @@ ion-content.lavender-content::part(scroll) {
   .feature-action {
     ion-icon {
       color: #794494;
-      font-size: 20px;
+      font-size: 18px;
       transition: all 0.3s ease;
     }
   }

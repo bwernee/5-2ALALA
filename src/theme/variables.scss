@@ -1,2 +1,49 @@
-// For information on how to create your own theme, please see:
+/* Ionic Variables and Global Theme — ALALA design system (Home-based) */
 
+:root {
+  /* Core palette */
+  --app-primary: #6b2c91;
+  --app-primary-rgb: 107, 44, 145;
+  --app-primary-dark: #4a1f66;
+  --app-primary-dark-rgb: 74, 31, 102;
+  --app-primary-tint: #7a36a5;
+  --app-primary-shade: #5c2782;
+
+  --app-surface: #ffffff;
+  --app-text: #4a1f66;
+  --app-muted: #6b5a7a;
+
+  --app-bg-1: #f6f1e9;
+  --app-bg-2: #efe8dd;
+  --app-bg-3: #e8dfd0;
+  --app-bg-gradient: linear-gradient(180deg, #faf6ef 0%, #f6f1e9 45%, #efe8dd 100%);
+
+  /* Primary surfaces (cards / CTAs) */
+  --app-gradient-button: linear-gradient(180deg, #7a36a5 0%, #5c2782 100%);
+  --app-gradient-button-hover: linear-gradient(180deg, #8647b0 0%, #6b2c91 100%);
+  --app-gradient-nav: linear-gradient(180deg, #6b2c91 0%, #4a1f66 100%);
+
+  --app-shadow-soft: 0 10px 28px rgba(var(--app-primary-rgb), 0.18);
+  --app-shadow-card: 0 8px 24px rgba(var(--app-primary-rgb), 0.12);
+  --app-radius-lg: 24px;
+  --app-radius-md: 20px;
+  --app-radius-sm: 14px;
+
+  /* Modal / overlay (readable on cream app) */
+  --app-overlay: rgba(74, 31, 102, 0.35);
+  --app-overlay-blur: 12px;
+  --app-modal-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, #f6f1e9 100%);
+  --app-modal-radius: 24px;
+  --app-modal-shadow: 0 24px 60px rgba(var(--app-primary-rgb), 0.22);
+
+  /* Ionic color system */
+  --ion-color-primary: var(--app-primary);
+  --ion-color-primary-rgb: 107, 44, 145;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #5c2782;
+  --ion-color-primary-tint: #7a36a5;
+
+  --ion-background-color: var(--app-bg-1);
+  --ion-text-color: var(--app-text);
+}

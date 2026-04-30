@@ -1,25 +1,31 @@
-<ion-content class="game-home-screen" [fullscreen]="true">
+<ion-content class="lavender-content game-home-screen" [fullscreen]="true">
 
-  <div class="lavender-container">
-    <div class="welcome-section">
-      <div class="welcome-content">
-        <ion-buttons slot="start">
-          <ion-button class="back-btn" fill="clear" (click)="goBack()">
-            <ion-icon name="arrow-back-outline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <div class="welcome-icon">
+  <div class="lavender-container app-container">
+    <app-global-header>
+      <div gh-left>
+        <div class="app-header__leading">
+          <ion-buttons>
+            <ion-button class="back-btn" fill="clear" (click)="goBack()">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </div>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
           <ion-icon name="people-outline"></ion-icon>
         </div>
-        <div class="welcome-text">
-          <h1>People</h1>
-          <p>Family & Friends</p>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">People</h1>
+          <p class="app-header__subtitle">Family & Friends</p>
         </div>
-        <ion-button class="add-btn" fill="clear" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategory: 'people' }" *ngIf="!isPatientMode" aria-label="Add Card">
+      </div>
+      <div gh-right>
+        <ion-button class="add-btn app-header__settings" fill="clear" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategory: 'people' }" *ngIf="!isPatientMode" aria-label="Add Card">
           <ion-icon name="add-outline"></ion-icon>
         </ion-button>
       </div>
-    </div>
+    </app-global-header>
   </div>
 
   <div class="area-actions-top" *ngIf="currentCard && !isPatientMode">

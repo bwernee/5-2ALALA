@@ -1,15 +1,18 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
+:host {
+  overflow-x: hidden !important;
+}
 
 .lavender-header {
-  --background: #794494 !important;
+  --background: var(--app-primary) !important;
   --color: white !important;
   --border-width: 0;
-  box-shadow: 0 4px 20px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--app-primary-rgb), 0.3);
   
   ion-toolbar {
-    --background: #794494 !important;
+    --background: var(--app-primary) !important;
     --color: white !important;
   }
   
@@ -22,7 +25,7 @@
 }
 
 .back-btn {
-  --color: #794494;
+  --color: var(--app-primary);
   --background: transparent;
   width: 48px;
   height: 48px;
@@ -32,7 +35,7 @@
   
   ion-icon {
     font-size: 24px;
-    color: #794494;
+    color: var(--app-primary);
   }
 }
 
@@ -41,58 +44,86 @@
   display: flex;
   flex-direction: column;
   height: calc(100vh - 56px);
-  padding: 16px;
-  gap: 12px;
+  padding: 12px;
+  gap: 10px;
   position: relative;
   z-index: 2;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .welcome-section {
   flex-shrink: 0;
   
   .welcome-content {
-    background: linear-gradient(135deg, #e9e1ff 0%, #f4f0ff 100%);
-    border: 2px solid #d7ccff;
-    border-radius: 20px;
-    padding: 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+    border-radius: 16px;
+    padding: 12px 14px;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
+    min-height: auto;
+    flex-wrap: nowrap !important;
+  }
+  
+  ion-buttons {
+    margin: 0;
+    order: 1;
+  }
+  
+  .back-btn {
+    --color: var(--app-primary);
+    --background: transparent;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    margin: 0;
+    
+    ion-icon {
+      font-size: 22px;
+      color: var(--app-primary);
+    }
   }
   
   .welcome-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex; 
-    align-items: center; 
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
+    order: 2;
     
     ion-icon {
       color: white;
-      font-size: 24px;
+      font-size: 18px;
     }
   }
   
   .welcome-text {
     flex: 1;
     min-width: 0;
+    order: 3;
     
     h1 {
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
-      color: #2d1b69;
-      margin: 0 0 4px 0;
+      color: var(--app-text);
+      margin: 0 0 2px 0;
       line-height: 1.2;
     }
     
     p {
-      font-size: 14px;
+      font-size: 11px;
       color: #6b7280;
       margin: 0; 
       font-weight: 500;
@@ -100,35 +131,37 @@
   }
   
   .add-btn {
-    --color: #794494;
+    --color: var(--app-primary);
     --background: transparent;
-    --background-hover: rgba(121, 68, 148, 0.1);
-    --padding-start: 8px;
-    --padding-end: 8px;
-    width: auto;
+    --background-hover: rgba(var(--app-primary-rgb), 0.1);
+    --padding-start: 4px;
+    --padding-end: 4px;
+    width: 44px;
     height: 44px;
     min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 4;
     
     ion-icon {
       font-size: 28px;
-      color: #794494;
+      color: var(--app-primary);
     }
   }
 
   .settings-btn {
-    --color: #794494;
+    --color: var(--app-primary);
     --background: transparent;
     width: 44px;
     height: 44px;
     min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 4;
     
     ion-icon {
-      font-size: 24px;
-      color: #794494;
+      font-size: 28px;
+      color: var(--app-primary);
     }
   }
 }
@@ -142,7 +175,7 @@
 .main-title {
   font-size: 28px;
   font-weight: 700;
-  color: #2d1b69;
+  color: var(--app-text);
   margin: 0 0 8px 0;
   display: flex;
   align-items: center;
@@ -152,12 +185,12 @@
 
 .title-icon {
   font-size: 24px;
-  color: #794494;
+  color: var(--app-primary);
 }
 
 .title-sparkle {
   font-size: 20px;
-  color: #794494;
+  color: var(--app-primary);
 }
 
 .main-subtitle {
@@ -171,9 +204,9 @@
 .cute-card {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
   overflow: hidden;
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   position: relative;
   margin-bottom: 16px;
 }
@@ -188,16 +221,16 @@
 .video-item {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(121, 68, 148, 0.15);
+  box-shadow: 0 8px 32px rgba(var(--app-primary-rgb), 0.15);
   overflow: hidden;
-  border: 2px solid rgba(121, 68, 148, 0.1);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.1);
   position: relative;
   margin-bottom: 16px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(121, 68, 148, 0.2);
+    box-shadow: 0 12px 40px rgba(var(--app-primary-rgb), 0.2);
   }
 }
 
@@ -206,6 +239,7 @@
   padding: 0;
   max-width: 100%;
   margin: 0 auto;
+  overflow-x: hidden !important;
 }
 
 // Selection mode styles
@@ -258,11 +292,11 @@
     }
 
     .select-all-btn {
-      --color: #794494;
-      border-color: #794494;
+      --color: var(--app-primary);
+      border-color: var(--app-primary);
       
       &:hover {
-        --background: rgba(121, 68, 148, 0.1);
+        --background: rgba(var(--app-primary-rgb), 0.1);
       }
       &:active {
         transform: scale(0.98);
@@ -286,12 +320,12 @@
     text-align: center;
     font-size: 13px;
     font-weight: 600;
-    color: #2d1b69;
+    color: var(--app-text);
   }
 }
 
 .select-multiple-fab {
-  --background: #794494;
+  --background: var(--app-primary);
   --background-activated: #5e3575;
   --color: white;
 }
@@ -301,7 +335,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(121, 68, 148, 0.4);
+    background: rgba(var(--app-primary-rgb), 0.4);
     pointer-events: none;
   }
   
@@ -312,7 +346,7 @@
     right: 8px;
     width: 24px;
     height: 24px;
-    background: #794494;
+    background: var(--app-primary);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -330,7 +364,7 @@
   gap: 2px; 
   padding: 0; 
   width: 100%;
-  
+  overflow-x: hidden !important;
   
   grid-auto-rows: minmax(0, 1fr); 
   align-items: stretch; 
@@ -397,25 +431,25 @@
 
 
 .cute-btn {
-  --background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   --color: white;
   --border-radius: 16px;
-  --box-shadow: 0 4px 16px rgba(121, 68, 148, 0.3);
+  --box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.3);
   font-weight: 600;
   height: 48px;
   margin: 8px 0;
   transition: all 0.2s ease;
   
   &:hover {
-    --background: linear-gradient(135deg, #794494 0%, #9333ea 100%);
+    --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-tint) 100%);
     transform: translateY(-2px);
-    --box-shadow: 0 6px 20px rgba(121, 68, 148, 0.4);
+    --box-shadow: 0 6px 20px rgba(var(--app-primary-rgb), 0.4);
   }
 }
 
 .icon-btn {
-  --background: rgba(121, 68, 148, 0.1);
-  --color: #794494;
+  --background: rgba(var(--app-primary-rgb), 0.1);
+  --color: var(--app-primary);
   --border-radius: 50%;
   width: 44px;
   height: 44px;
@@ -427,7 +461,7 @@
   }
   
   &:hover {
-    --background: rgba(121, 68, 148, 0.2);
+    --background: rgba(var(--app-primary-rgb), 0.2);
     transform: scale(1.05);
   }
 }
@@ -461,38 +495,38 @@
   
   .empty-icon {
     font-size: 80px;
-    color: #794494;
+    color: var(--app-primary);
     margin-bottom: 24px;
   }
   
   .empty-title {
     font-size: 28px;
     font-weight: 700;
-    color: #794494;
+    color: var(--app-primary);
     margin-bottom: 12px;
   }
   
   .empty-subtitle {
     font-size: 16px;
-    color: #794494;
+    color: var(--app-primary);
     margin-bottom: 32px;
     opacity: 0.85;
   }
   
   .empty-btn {
     --color: white;
-    --background: linear-gradient(135deg, #794494 0%, #794494 100%);
+    --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
     --border-radius: 24px;
     --padding-start: 32px;
     --padding-end: 32px;
     font-weight: 600;
     height: 48px;
-    box-shadow: 0 8px 24px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 8px 24px rgba(var(--app-primary-rgb), 0.3);
     
     &:hover {
-      --background: linear-gradient(135deg, #794494 0%, #9333ea 100%);
+      --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-tint) 100%);
       transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(121, 68, 148, 0.4);
+      box-shadow: 0 12px 32px rgba(var(--app-primary-rgb), 0.4);
     }
   }
 }
@@ -520,7 +554,7 @@
     border-radius: 50%;
     border: none;
     background: rgba(255, 255, 255, 0.9);
-    color: #2d1b69;
+    color: var(--app-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -555,7 +589,7 @@
     padding: 24px 20px 20px;
     border-radius: 24px;
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 240, 255, 0.92) 100%);
-    box-shadow: 0 24px 60px rgba(121, 68, 148, 0.25);
+    box-shadow: 0 24px 60px rgba(var(--app-primary-rgb), 0.25);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -590,7 +624,7 @@
   .card-title {
     font-size: 18px;
     font-weight: 700;
-    color: #2d1b69;
+    color: var(--app-text);
     margin: 8px 0 16px;
     text-align: center;
     width: 100%;
@@ -652,7 +686,7 @@
   .video-counter {
     font-size: 14px;
     font-weight: 600;
-    color: #794494;
+    color: var(--app-primary);
     margin-top: 8px;
   }
 
@@ -683,11 +717,11 @@
     }
 
     &.edit-btn {
-      border-color: #794494;
-      color: #794494;
+      border-color: var(--app-primary);
+      color: var(--app-primary);
 
       &:hover {
-        background: rgba(121, 68, 148, 0.1);
+        background: rgba(var(--app-primary-rgb), 0.1);
       }
       &:active {
         transform: scale(0.98);
@@ -766,7 +800,7 @@
     padding: 24px 20px 20px;
     border-radius: 24px;
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 240, 255, 0.92) 100%);
-    box-shadow: 0 24px 60px rgba(121, 68, 148, 0.25);
+    box-shadow: 0 24px 60px rgba(var(--app-primary-rgb), 0.25);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -801,7 +835,7 @@
   .edit-title {
     font-size: 20px;
     font-weight: 700;
-    color: #2d1b69;
+    color: var(--app-text);
     margin: 8px 0 24px;
     text-align: center;
   }
@@ -818,14 +852,14 @@
     border-radius: 12px;
     font-size: 16px;
     font-family: 'Poppins', sans-serif;
-    color: #2d1b69;
+    color: var(--app-text);
     background: white;
     transition: all 0.2s ease;
 
     &:focus {
       outline: none;
-      border-color: #794494;
-      box-shadow: 0 0 0 3px rgba(121, 68, 148, 0.1);
+      border-color: var(--app-primary);
+      box-shadow: 0 0 0 3px rgba(var(--app-primary-rgb), 0.1);
     }
 
     &::placeholder {
@@ -868,13 +902,13 @@
     }
 
     &.save-btn {
-      background: #794494;
-      border-color: #794494;
+      background: var(--app-primary);
+      border-color: var(--app-primary);
       color: white;
 
       &:hover {
-        background: #6b3a82;
-        border-color: #6b3a82;
+        background: var(--app-primary-shade);
+        border-color: var(--app-primary-shade);
       }
       &:active {
         transform: scale(0.98);
@@ -908,13 +942,20 @@
 
 
 .lavender-content {
-  --ion-background-color: #faf8ff;
-  --ion-text-color: #2d1b69;
+  --ion-background-color: var(--app-bg-1);
+  --ion-text-color: var(--app-text);
   font-family: 'Poppins', sans-serif;
   height: 100vh;
-  overflow: hidden;
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  background: var(--app-bg-gradient);
   position: relative;
+}
+
+ion-content.lavender-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 
@@ -1425,7 +1466,7 @@
 
 .reel-range {
   --bar-background: rgba(255,255,255,0.35);
-  --bar-background-active: linear-gradient(90deg, #794494, #794494);
+  --bar-background-active: linear-gradient(90deg, var(--app-primary), var(--app-primary));
   --knob-background: #ffffff;
   --knob-size: 18px;
   --bar-height: 6px;
@@ -1495,7 +1536,7 @@ ion-back-button:active,
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   z-index: 1000;
   padding: 8px 0;
@@ -1535,7 +1576,7 @@ ion-back-button:active,
           animation: glow 2s ease-in-out infinite alternate;
           
           ion-icon {
-            color: #794494;
+            color: var(--app-primary);
           }
         }
       }
@@ -1612,7 +1653,7 @@ ion-back-button:active,
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   z-index: 1000;
   padding: 8px 0;

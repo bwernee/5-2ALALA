@@ -66,7 +66,7 @@ export class LoginPage {
       }
       
     } catch (error: any) {
-      alert(error.message || 'Login failed. Please try again.');
+      alert('Wrong email or password. Please try again.');
     } finally {
       this.isLoading = false;
     }

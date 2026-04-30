@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { PhotoMemoriesPageRoutingModule } from './photo-memories-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { PhotoMemoriesPage } from './photo-memories.page';
 
@@ -13,6 +14,7 @@ import { PhotoMemoriesPage } from './photo-memories.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     PhotoMemoriesPageRoutingModule
   ],
   declarations: [PhotoMemoriesPage]

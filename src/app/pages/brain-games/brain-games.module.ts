@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { BrainGamesPageRoutingModule } from './brain-games-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 import { BrainGamesPage } from './brain-games.page';
 
 @NgModule({
@@ -11,6 +12,7 @@ import { BrainGamesPage } from './brain-games.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     BrainGamesPageRoutingModule
   ],
   declarations: [BrainGamesPage]

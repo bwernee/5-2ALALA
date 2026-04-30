@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 
 .app-header ion-toolbar {
@@ -38,7 +38,9 @@ ion-header ion-title {
 
 
 .login-content {
-  --background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  font-family: 'Poppins', sans-serif;
+  --background: var(--app-bg-gradient);
+  --background: var(--app-bg-gradient);
 }
 
 .login-container {
@@ -93,18 +95,18 @@ ion-header ion-title {
   position: relative;
   
   .welcome-content {
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-    border: 2px solid #c7d2fe;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
     border-radius: 20px;
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
   }
   
   .welcome-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
     width: 48px;
     height: 48px;
@@ -112,7 +114,7 @@ ion-header ion-title {
     align-items: center; 
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
     
     ion-icon {
       color: white;
@@ -127,7 +129,7 @@ ion-header ion-title {
     h1 {
       font-size: 20px;
       font-weight: 700;
-      color: #2d1b69;
+      color: var(--app-text);
       margin: 0 0 4px 0;
       line-height: 1.2;
     }
@@ -175,7 +177,7 @@ ion-header ion-title {
   .app-name {
     font-size: 42px;
     font-weight: 700;
-    color: #794494;
+    color: var(--app-primary);
     margin: 0;
     text-shadow: none;
     letter-spacing: 2px;
@@ -228,7 +230,7 @@ ion-header ion-title {
       border: 1px solid rgba(0, 0, 0, 0.05);
 
       ion-icon {
-        color: #794494;
+        color: var(--app-primary);
         margin-right: 12px;
       }
 
@@ -240,8 +242,8 @@ ion-header ion-title {
     }
 
     .login-btn {
-      --background: #794494;
-      --border-color: #794494;
+      --background: var(--app-primary);
+      --border-color: var(--app-primary);
       --color: white;
       --border-radius: 16px;
       height: 56px;
@@ -256,8 +258,8 @@ ion-header ion-title {
 
     .login-btn.button-outline {
       --background: transparent;
-      --border-color: #794494;
-      --color: #794494;
+      --border-color: var(--app-primary);
+      --color: var(--app-primary);
       box-shadow: none;
     }
 
@@ -294,8 +296,8 @@ ion-header ion-title {
       }
 
       .signup-btn {
-        --background: #794494;
-        --border-color: #794494;
+        --background: var(--app-primary);
+        --border-color: var(--app-primary);
         --color: white;
         --border-radius: 16px;
         height: 56px;
@@ -306,5 +308,5 @@ ion-header ion-title {
 }
 
 .login-form ion-button[fill="clear"] {
-  --color: #794494;
+  --color: var(--app-primary);
 }

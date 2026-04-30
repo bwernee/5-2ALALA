@@ -2,18 +2,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 .lavender-content {
-  --ion-background-color: #faf8ff;
-  --ion-text-color: #2d1b69;
-  font-family: 'Inter', sans-serif;
+  --ion-background-color: var(--app-bg-1);
+  --ion-text-color: var(--app-text);
+  font-family: 'Poppins', sans-serif;
   height: 100vh;
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  background: var(--app-bg-gradient);
+  overflow-x: hidden !important;
 }
 
 .lavender-header {
-  --background: linear-gradient(135deg, #794494 0%, #794494 50%, #794494 100%);
+  --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
   --color: white;
   --border-width: 0;
-  box-shadow: 0 4px 20px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--app-primary-rgb), 0.3);
   
   .lavender-title {
     font-weight: 600;
@@ -40,8 +41,9 @@
   flex-direction: column;
   height: calc(100vh - 56px);
   padding: 16px;
-  gap: 16px;
+  gap: 20px;
   overflow-y: auto;
+  overflow-x: hidden !important;
 }
 
 
@@ -49,53 +51,74 @@
   flex-shrink: 0;
   
   .welcome-content {
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-    border: 2px solid #c7d2fe;
-    border-radius: 20px;
-    padding: 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+    border-radius: 16px;
+    padding: 12px 14px;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
-    transition: none;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
+    min-height: auto;
+    flex-wrap: nowrap !important;
+  }
+  
+  ion-buttons {
+    margin: 0;
+    order: 1;
+  }
+  
+  .back-btn {
+    --color: var(--app-primary);
+    --background: transparent;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    margin: 0;
     
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(121, 68, 148, 0.25);
+    ion-icon {
+      font-size: 22px;
+      color: var(--app-primary);
     }
   }
   
   .welcome-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex; 
-    align-items: center; 
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
+    order: 2;
     
     ion-icon {
       color: white;
-      font-size: 24px;
+      font-size: 18px;
     }
   }
   
   .welcome-text {
     flex: 1;
     min-width: 0;
+    order: 3;
     
     h1 {
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
-      color: #2d1b69;
-      margin: 0 0 4px 0;
+      color: var(--app-text);
+      margin: 0 0 2px 0;
       line-height: 1.2;
     }
     
     p {
-      font-size: 14px;
+      font-size: 11px;
       color: #6b7280;
       margin: 0; 
       font-weight: 500;
@@ -103,36 +126,37 @@
   }
   
   .settings-btn {
-    --color: #794494;
-    --background: rgba(121, 68, 148, 0.1);
-    --border-radius: 50%;
+    --color: var(--app-primary);
+    --background: transparent;
     width: 44px;
     height: 44px;
     min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 4;
     
     ion-icon {
-      font-size: 24px;
-      color: #794494;
+      font-size: 28px;
+      color: var(--app-primary);
     }
   }
   
   .add-category-btn {
-    --color: #794494;
+    --color: var(--app-primary);
     --background: transparent;
-    --background-hover: rgba(121, 68, 148, 0.1);
-    --padding-start: 8px;
-    --padding-end: 8px;
-    width: auto;
+    --background-hover: rgba(var(--app-primary-rgb), 0.1);
+    --padding-start: 4px;
+    --padding-end: 4px;
+    width: 44px;
     height: 44px;
     min-width: 44px;
     flex-shrink: 0;
     margin: 0;
+    order: 4;
     
     ion-icon {
       font-size: 28px;
-      color: #794494;
+      color: var(--app-primary);
     }
   }
 }
@@ -142,7 +166,7 @@
 .main-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
   overflow-y: auto;
   padding: 4px;
@@ -150,21 +174,21 @@
 
 .action-card {
   position: relative;
-  background: linear-gradient(135deg, #794494 0%, #794494 100%);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
   color: white;
-  border-radius: 24px;
-  padding: 32px 24px;
+  border-radius: 18px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 12px 40px rgba(121, 68, 148, 0.3);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(var(--app-primary-rgb), 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   width: 100%;
-  min-height: 140px;
+  min-height: 100px;
 
   &:active {
     transform: scale(0.98);
@@ -188,34 +212,34 @@
 }
 
 .action-icon {
-  width: 72px;
-  height: 72px;
+  width: 52px;
+  height: 52px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+  margin-bottom: 10px;
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
 
   ion-icon {
-    font-size: 36px;
+    font-size: 26px;
     color: white;
   }
 }
 
 .action-text {
   h2 {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
     color: white;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   p {
-    font-size: 15px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
     font-weight: 500;
@@ -235,58 +259,10 @@
   opacity: 1;
 }
 
-/* Card Actions for Custom Categories */
-.card-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  gap: 8px;
+/* Custom category row — actions sit in column at end of purple card */
+.app-action-card.custom-action .card-actions {
+  position: static;
   z-index: 3;
-
-  .action-btn {
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    &:hover {
-      transform: scale(1.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    ion-icon {
-      font-size: 16px;
-    }
-
-    &.edit-btn {
-      ion-icon {
-        color: #794494;
-      }
-
-      &:hover {
-        background: #e0e7ff;
-      }
-    }
-
-    &.delete-btn {
-      ion-icon {
-        color: #dc2626;
-      }
-
-      &:hover {
-        background: #fef2f2;
-      }
-    }
-  }
 }
 
 
@@ -400,17 +376,17 @@
 }
 
 .main-actions::-webkit-scrollbar-track {
-  background: rgba(121, 68, 148, 0.1);
+  background: rgba(var(--app-primary-rgb), 0.1);
   border-radius: 3px;
 }
 
 .main-actions::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #794494, #794494);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
   border-radius: 3px;
 }
 
 .main-actions::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #794494, #794494);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
 }
 
 
@@ -420,8 +396,8 @@
   left: 0;
   right: 0;
   background: white;
-  border-top: 1px solid rgba(121, 68, 148, 0.1);
-  box-shadow: 0 -4px 20px rgba(121, 68, 148, 0.1);
+  border-top: 1px solid rgba(var(--app-primary-rgb), 0.1);
+  box-shadow: 0 -4px 20px rgba(var(--app-primary-rgb), 0.1);
   z-index: 1000;
   padding: 8px 0;
   
@@ -446,21 +422,21 @@
       transition: all 0.3s ease;
       
       &:hover {
-        color: #794494;
-        background: rgba(121, 68, 148, 0.1);
+        color: var(--app-primary);
+        background: rgba(var(--app-primary-rgb), 0.1);
       }
       
       &.active {
-        color: #794494;
-        background: rgba(121, 68, 148, 0.1);
+        color: var(--app-primary);
+        background: rgba(var(--app-primary-rgb), 0.1);
         
         .nav-icon {
-          background: rgba(121, 68, 148, 0.2);
-          box-shadow: 0 0 20px rgba(121, 68, 148, 0.3);
+          background: rgba(var(--app-primary-rgb), 0.2);
+          box-shadow: 0 0 20px rgba(var(--app-primary-rgb), 0.3);
           animation: glow 2s ease-in-out infinite alternate;
           
           ion-icon {
-            color: #794494;
+            color: var(--app-primary);
           }
         }
       }
@@ -481,14 +457,14 @@
         .nav-icon {
           width: 50px;
           height: 50px;
-          background: rgba(121, 68, 148, 0.1);
-          border: 2px solid rgba(121, 68, 148, 0.2);
+          background: rgba(var(--app-primary-rgb), 0.1);
+          border: 2px solid rgba(var(--app-primary-rgb), 0.2);
           border-radius: 50%;
           
           ion-icon {
             font-size: 24px;
             font-weight: bold;
-            color: #794494;
+            color: var(--app-primary);
           }
         }
         
@@ -505,12 +481,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(121, 68, 148, 0.1);
+        background: rgba(var(--app-primary-rgb), 0.1);
         border-radius: 50%;
         transition: all 0.3s ease;
         
         ion-icon {
-          color: #794494;
+          color: var(--app-primary);
           font-size: 18px;
           transition: all 0.3s ease;
         }
@@ -531,8 +507,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #794494 0%, #794494 50%, #794494 100%);
-  box-shadow: 0 -4px 20px rgba(121, 68, 148, 0.3);
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
+  box-shadow: 0 -4px 20px rgba(var(--app-primary-rgb), 0.3);
   z-index: 1000;
   padding: 8px 0;
   
@@ -625,7 +601,7 @@
   padding: 32px 24px 28px;
   border-radius: 28px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 240, 255, 0.92) 100%);
-  box-shadow: 0 24px 60px rgba(121, 68, 148, 0.25);
+  box-shadow: 0 24px 60px rgba(var(--app-primary-rgb), 0.25);
 }
 
 .modal-close {
@@ -639,7 +615,7 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: #794494;
+  color: var(--app-primary);
   z-index: 2;
   cursor: pointer;
 
@@ -656,7 +632,7 @@
     margin: 0;
     font-size: 22px;
     font-weight: 700;
-    color: #2d1b69;
+    color: var(--app-text);
   }
 
   p {
@@ -683,7 +659,7 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #794494;
+    color: var(--app-primary);
   }
 }
 
@@ -691,14 +667,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(121, 68, 148, 0.08);
-  border: 1px solid rgba(121, 68, 148, 0.2);
+  background: rgba(var(--app-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.2);
   border-radius: 16px;
   padding: 14px 16px;
 
   ion-icon {
     font-size: 20px;
-    color: #794494;
+    color: var(--app-primary);
     flex-shrink: 0;
   }
 
@@ -708,7 +684,7 @@
     border: none;
     outline: none;
     font-size: 15px;
-    color: #2d1b69;
+    color: var(--app-text);
     font-family: inherit;
 
     &::placeholder {
@@ -728,18 +704,18 @@
   padding: 14px 24px;
   border: none;
   border-radius: 16px;
-  background: #794494;
+  background: var(--app-primary);
   color: white;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(121, 68, 148, 0.35);
+  box-shadow: 0 8px 20px rgba(var(--app-primary-rgb), 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(121, 68, 148, 0.45);
+    box-shadow: 0 12px 28px rgba(var(--app-primary-rgb), 0.45);
   }
 
   &:active {
@@ -750,17 +726,17 @@
 .back-button {
   width: 100%;
   padding: 14px 24px;
-  border: 2px solid rgba(121, 68, 148, 0.3);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.3);
   border-radius: 16px;
   background: transparent;
-  color: #794494;
+  color: var(--app-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: rgba(121, 68, 148, 0.08);
-    border-color: #794494;
+    background: rgba(var(--app-primary-rgb), 0.08);
+    border-color: var(--app-primary);
   }
 }

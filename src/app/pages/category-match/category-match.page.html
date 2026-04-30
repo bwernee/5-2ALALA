@@ -1,24 +1,83 @@
+<div *ngIf="isCategoryPickerOpen" class="picker-overlay" role="dialog" aria-modal="true" (click)="dismissPickerToBrainGames()">
+  <div class="picker-modal" tabindex="-1" (click)="$event.stopPropagation()">
+    <button class="picker-close" type="button" aria-label="Close" (click)="dismissPickerToBrainGames()">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+    <div class="picker-stack">
+      <div class="picker-card builtin-card people-card" (click)="chooseBuiltin('people')">
+        <div class="picker-icon">
+          <ion-icon name="people-outline"></ion-icon>
+        </div>
+        <div class="picker-text">
+          <h3>People</h3>
+          <p>{{ counts.people || 0 }} cards</p>
+        </div>
+      </div>
+
+      <div class="picker-card builtin-card places-card" (click)="chooseBuiltin('places')">
+        <div class="picker-icon">
+          <ion-icon name="location-outline"></ion-icon>
+        </div>
+        <div class="picker-text">
+          <h3>Places</h3>
+          <p>{{ counts.places || 0 }} cards</p>
+        </div>
+      </div>
+
+      <div class="picker-card builtin-card objects-card" (click)="chooseBuiltin('objects')">
+        <div class="picker-icon">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <div class="picker-text">
+          <h3>Objects</h3>
+          <p>{{ counts.objects || 0 }} cards</p>
+        </div>
+      </div>
+
+      <ng-container *ngIf="userCategories?.length">
+        <div class="picker-divider-text">
+          More categories
+        </div>
+
+        <div class="custom-category-dropdown">
+          <select class="category-select" (change)="onCustomCategorySelect($event)">
+            <option value="" disabled selected>Select a category...</option>
+            <option *ngFor="let c of userCategories" [value]="c.id">
+              {{ c.name }} ({{ counts.custom[c.id] || 0 }} cards)
+            </option>
+          </select>
+          <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
 <ion-content class="game-home-screen" [fullscreen]="true">
 
-  <div class="welcome-section">
-    <div class="welcome-content">
-      <ion-buttons slot="start">
-        <ion-button class="back-btn" fill="clear" (click)="goBack()">
-          <ion-icon name="arrow-back-outline"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-      <div class="welcome-icon">
-        <ion-icon name="swap-horizontal-outline"></ion-icon>
+  <div class="lavender-container app-container">
+    <app-global-header>
+      <div gh-left>
+        <div class="app-header__leading">
+          <ion-buttons>
+            <ion-button class="back-btn" fill="clear" (click)="goBack()">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </div>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+        </div>
       </div>
-      <div class="welcome-text">
-        <h1>Category Match</h1>
-        <p>Sort items by category</p>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Category Match</h1>
+          <p class="app-header__subtitle">Sort items by category</p>
+        </div>
       </div>
-      
-    </div>
-  </div>  
+    </app-global-header>
+  </div>
 
-  
   <div class="progress-container" *ngIf="totalQuestions > 0">
     <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="progressPct" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-fill" [style.width.%]="progressPct"></div>

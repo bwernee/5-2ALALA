@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { FlashcardGamesPageRoutingModule } from './flashcard-games-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { FlashcardGamesPage } from './flashcard-games.page';
 
@@ -13,6 +14,7 @@ import { FlashcardGamesPage } from './flashcard-games.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     FlashcardGamesPageRoutingModule
   ],
   declarations: [FlashcardGamesPage]

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { MemoryCategoriesPageRoutingModule } from './memory-categories-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 import { MemoryCategoriesPage } from './memory-categories.page';
 
 @NgModule({
@@ -11,6 +12,7 @@ import { MemoryCategoriesPage } from './memory-categories.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     MemoryCategoriesPageRoutingModule
   ],
   declarations: [MemoryCategoriesPage]

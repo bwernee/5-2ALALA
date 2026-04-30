@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { NameThatMemoryPageRoutingModule } from './name-that-memory-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { NameThatMemoryPage } from './name-that-memory.page';
 
@@ -13,6 +14,7 @@ import { NameThatMemoryPage } from './name-that-memory.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     NameThatMemoryPageRoutingModule
   ],
   declarations: [NameThatMemoryPage]

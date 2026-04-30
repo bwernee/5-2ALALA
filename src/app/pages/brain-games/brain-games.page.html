@@ -2,9 +2,9 @@
 
   <div class="lavender-container">
     
-    <div class="welcome-section">
-      <div class="welcome-content">
-        <ion-buttons slot="start">
+    <app-global-header>
+      <div gh-left>
+        <ion-buttons>
           <ion-button class="back-btn" fill="clear" (click)="goBack()">
             <ion-icon name="arrow-back-outline"></ion-icon>
           </ion-button>
@@ -12,12 +12,14 @@
         <div class="welcome-icon">
           <ion-icon name="game-controller-outline"></ion-icon>
         </div>
-        <div class="welcome-text">
-          <h1>Brain Games</h1>
-          <p>Fun cognitive exercises to boost your memory</p>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Brain Games</h1>
+          <p class="app-header__subtitle">Fun cognitive exercises to boost your memory</p>
         </div>
       </div>
-    </div>
+    </app-global-header>
 
     
     <div class="main-actions">

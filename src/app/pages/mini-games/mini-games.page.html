@@ -1,73 +1,74 @@
-<ion-header>
-  <ion-toolbar color="transparent">
-    <ion-buttons slot="start">
-      <ion-button routerLink="/home" fill="clear" color="light">
-        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-    <ion-title color="light" class="header-title">Mini Games</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="lavender-content mini-games-screen" [scrollY]="true" fullscreen>
 
-<ion-content class="mini-games-screen" fullscreen>
-  <div class="header-spacer"></div>
-  
-  <div class="section-label"> Choose your brain exercise</div>
-  
-  <div class="games-grid">
-    
-    <div class="game-card matching-game" routerLink="/memory-matching">
-      <div class="card-glow"></div>
-      <div class="game-icon"></div>
-      <h3>Memory Matching</h3>
-      <p>Match pairs of cards</p>
-      <div class="difficulty-badge easy">Easy</div>
-      <button class="play-button">
-        <ion-icon name="play"></ion-icon>
-        Play Now
-      </button>
+  <div class="lavender-container app-container">
+
+    <app-global-header>
+      <div gh-left>
+        <div class="app-header__leading">
+          <ion-buttons>
+            <ion-button class="back-btn" fill="clear" routerLink="/home">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </div>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
+          <ion-icon name="game-controller-outline"></ion-icon>
+        </div>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Mini Games</h1>
+          <p class="app-header__subtitle">Choose your brain exercise</p>
+        </div>
+      </div>
+    </app-global-header>
+
+    <div class="app-cards">
+      <div class="app-card" routerLink="/memory-matching">
+        <div class="app-card-icon">
+          <ion-icon name="grid-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">Memory Matching</h2>
+          <p class="app-card-content__subtitle">Match pairs of cards</p>
+          <span class="difficulty-badge easy">Easy</span>
+          <button type="button" class="play-button">
+            <ion-icon name="play"></ion-icon>
+            Play Now
+          </button>
+        </div>
+      </div>
+
+      <div class="app-card" routerLink="/color-sequence">
+        <div class="app-card-icon">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">Color Sequence</h2>
+          <p class="app-card-content__subtitle">Remember the pattern</p>
+          <span class="difficulty-badge medium">Medium</span>
+          <button type="button" class="play-button">
+            <ion-icon name="play"></ion-icon>
+            Play Now
+          </button>
+        </div>
+      </div>
+
+      <div class="app-card" routerLink="/word-association">
+        <div class="app-card-icon">
+          <ion-icon name="text-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">Word Association</h2>
+          <p class="app-card-content__subtitle">Connect related words</p>
+          <span class="difficulty-badge easy">Easy</span>
+          <button type="button" class="play-button">
+            <ion-icon name="play"></ion-icon>
+            Play Now
+          </button>
+        </div>
+      </div>
     </div>
 
-    
-    <div class="game-card sequence-game" routerLink="/color-sequence">
-      <div class="card-glow"></div>
-      <div class="game-icon"></div>
-      <h3>Color Sequence</h3>
-      <p>Remember the pattern</p>
-      <div class="difficulty-badge medium">Medium</div>
-      <button class="play-button">
-        <ion-icon name="play"></ion-icon>
-        Play Now
-      </button>
-    </div>
-
-    
-    <div class="game-card word-game" routerLink="/word-association">
-      <div class="card-glow"></div>
-      <div class="game-icon"></div>
-      <h3>Word Association</h3>
-      <p>Connect related words</p>
-      <div class="difficulty-badge easy">Easy</div>
-      <button class="play-button">
-        <ion-icon name="play"></ion-icon>
-        Play Now
-      </button>
-    </div>
-  </div>
-
-  
-  <div class="floating-elements">
-    <div class="floating-emoji emoji-1">
-      <ion-icon name="game-controller-outline"></ion-icon>
-    </div>
-    <div class="floating-emoji emoji-2">
-      <ion-icon name="puzzle-outline"></ion-icon>
-    </div>
-    <div class="floating-emoji emoji-3">
-      <ion-icon name="star-outline"></ion-icon>
-    </div>
-    <div class="floating-emoji emoji-4">
-      <ion-icon name="trophy-outline"></ion-icon>
-    </div>
   </div>
 </ion-content>

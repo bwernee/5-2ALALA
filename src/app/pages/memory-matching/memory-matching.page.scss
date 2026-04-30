@@ -2,8 +2,8 @@
 
 .matching-game-screen {
   --ion-background-color: transparent;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3ecff 50%, #f9f2ff 100%);
-  font-family: 'Nunito', sans-serif;
+  background: var(--app-bg-gradient);
+  font-family: 'Poppins', sans-serif;
   min-height: 100vh;
   padding: 20px;
   position: relative;

@@ -38,45 +38,7 @@ export class MediaService {
 
   async chooseFromGallery(): Promise<string> {
     try {
-      
-      
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const result = await FilePicker.pickFiles({ 
-            types: ['image/*']
-          });
-          
-          if (result.files?.length) {
-            const file = result.files[0];
-            
-            
-            if ((file as any).data) {
-              
-              const dataUrl = (file as any).data.startsWith('data:')
-                ? (file as any).data
-                : `data:${file.mimeType || 'image/jpeg'};base64,${(file as any).data}`;
-              return dataUrl;
-            }
-            
-            if ((file as any).blob) {
-              
-              const blob: Blob = (file as any).blob;
-              const dataUrl = await this.blobToDataUrl(blob);
-              return dataUrl;
-            }
-            
-            if (file.path) {
-              
-              const webviewUrl = Capacitor.convertFileSrc(file.path);
-              return webviewUrl;
-            }
-          }
-        } catch (filePickerError) {
-          console.warn('FilePicker failed, falling back to Camera plugin:', filePickerError);
-        }
-      }
-      
-      
+      // Always use Camera plugin with DataUrl for reliable persistence
       const image = await Camera.getPhoto({
         quality: 80,
         resultType: CameraResultType.DataUrl,

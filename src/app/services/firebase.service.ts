@@ -451,11 +451,11 @@ export class FirebaseService {
   }
 
   
-  async getGameFlashcardsOnce(): Promise<Array<{ id: string; label: string; image: string; category: string; audio?: string; duration?: number; createdAt?: number }>> {
+  async getGameFlashcardsOnce(): Promise<Array<{ id: string; label: string; image: string; category: string; audio?: string; duration?: number; createdAt?: number; categoryId?: string }>> {
     const uid = this.getCurrentUser()?.uid || localStorage.getItem('userId') || '';
     if (!uid) return [];
     const out: any[] = [];
-    const cats: Array<'people' | 'places' | 'objects'> = ['people','places','objects'];
+    const cats: Array<'people' | 'places' | 'objects' | 'custom-category'> = ['people','places','objects','custom-category'];
     const cgId = this.getCaregiverId();
     const pid = this.getPatientId();
     if (!cgId || !pid) return [];
@@ -464,14 +464,14 @@ export class FirebaseService {
         const structured = await getDocs(query(collection(this.firestore, 'caregiver', cgId, 'patients', pid, 'userFlashcards', cat, 'cards'), orderBy('createdAt', 'desc')));
         structured.docs.forEach(d => {
           const data = d.data() as any;
-          out.push({ ...data, id: data?.id || d.id, category: cat });
+          out.push({ ...data, id: data?.id || d.id, category: cat, categoryId: data?.categoryId });
         });
       } catch (e) {
         console.warn('getGameFlashcardsOnce structured read error for', cat, e);
       }
     }
     const mapped = out
-      .map((d: any) => ({ id: d.id, label: d.label, image: d.src || d.image, audio: d.audio || undefined, duration: d.duration || 0, category: (d.category || '').toString(), createdAt: d.createdAt }))
+      .map((d: any) => ({ id: d.id, label: d.label, image: d.src || d.image, audio: d.audio || undefined, duration: d.duration || 0, category: (d.category || '').toString(), createdAt: d.createdAt, categoryId: d.categoryId }))
       .filter((c: any) => !!c.label && !!c.image);
     const seen = new Set<string>();
     const unique = mapped.filter((c: any) => { const k = `${c.category}::${c.label.toLowerCase()}::${c.image}`; if (seen.has(k)) return false; seen.add(k); return true; });
@@ -483,6 +483,91 @@ export class FirebaseService {
     try {
       return [];
     } catch { return []; }
+  }
+
+  // ─── Custom Categories (Firebase Sync) ─────────────────────────────────────
+  
+  async saveCustomCategory(category: { id: string; name: string; description?: string; emoji?: string; createdAt: number }): Promise<void> {
+    const cgId = this.getCaregiverId();
+    const pid = this.getPatientId();
+    if (!cgId || !pid) throw new Error('User not authenticated');
+    
+    const data = this.sanitizeForFirestore({
+      id: category.id,
+      name: category.name,
+      description: category.description || null,
+      emoji: category.emoji || null,
+      createdAt: category.createdAt,
+      updatedAt: Date.now()
+    });
+    
+    await setDoc(doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'customCategories', category.id), data);
+  }
+
+  async deleteCustomCategory(categoryId: string): Promise<void> {
+    const cgId = this.getCaregiverId();
+    const pid = this.getPatientId();
+    if (!cgId || !pid) throw new Error('User not authenticated');
+    
+    await deleteDoc(doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'customCategories', categoryId));
+  }
+
+  async getCustomCategories(): Promise<Array<{ id: string; name: string; description?: string; emoji?: string; createdAt: number }>> {
+    const cgId = this.getCaregiverId();
+    const pid = this.getPatientId();
+    if (!cgId || !pid) return [];
+    
+    try {
+      const snapshot = await getDocs(query(
+        collection(this.firestore, 'caregiver', cgId, 'patients', pid, 'customCategories'),
+        orderBy('createdAt', 'desc')
+      ));
+      
+      return snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: data['id'] || d.id,
+          name: data['name'] || 'Untitled',
+          description: data['description'] || undefined,
+          emoji: data['emoji'] || undefined,
+          createdAt: data['createdAt'] || Date.now()
+        };
+      });
+    } catch (e) {
+      console.warn('getCustomCategories error:', e);
+      return [];
+    }
+  }
+
+  async getCustomCategoryCards(categoryId: string): Promise<Array<{ id: string; label: string; image: string; audio?: string; duration?: number; createdAt?: number }>> {
+    const cgId = this.getCaregiverId();
+    const pid = this.getPatientId();
+    if (!cgId || !pid) return [];
+    
+    try {
+      const snapshot = await getDocs(query(
+        collection(this.firestore, 'caregiver', cgId, 'patients', pid, 'userFlashcards', 'custom-category', 'cards'),
+        orderBy('createdAt', 'desc')
+      ));
+      
+      return snapshot.docs
+        .filter(d => d.data()['categoryId'] === categoryId)
+        .map(d => {
+          const data = d.data();
+          return {
+            id: data['id'] || d.id,
+            label: data['label'] || 'Untitled',
+            image: data['src'] || data['image'] || '',
+            audio: data['audio'] || undefined,
+            duration: data['duration'] || 0,
+            createdAt: data['createdAt'] || Date.now()
+          };
+        })
+        .filter(c => !!c.image);
+    } catch (e) {
+      console.warn('getCustomCategoryCards error:', e);
+      return [];
+    }
   }
 
   

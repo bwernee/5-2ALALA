@@ -1,72 +1,71 @@
-<ion-header>
-  <ion-toolbar color="transparent">
-    <ion-buttons slot="start">
-      <ion-button routerLink="/home" fill="clear" color="light">
-        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-    <ion-title color="light" class="header-title">Memory Games</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="lavender-content flashcard-games-screen" [scrollY]="true" fullscreen>
 
-<ion-content class="home-screen" fullscreen>
-  <div class="header-spacer"></div>
-  
-  <div class="section-label"> Choose your adventure</div>
-  
-  <div class="game-categories">
-    <div class="category-card people" (click)="selectCategory('people')">
-      <div class="category-icon">
-        <ion-icon name="people-outline"></ion-icon>
-      </div>
-      <h3>People</h3>
-      <p>Family & Friends</p>
-      <button class="play-button">
-        Play Now
-        <ion-icon name="play"></ion-icon>
-      </button>
-    </div>
-    
-    <div class="category-card places" (click)="selectCategory('places')">
-      <div class="category-icon">
-        <ion-icon name="location-outline"></ion-icon>
-      </div>
-      <h3>Places</h3>
-      <p>Special Locations</p>
-      <button class="play-button">
-        Play Now
-        <ion-icon name="play"></ion-icon>
-      </button>
-    </div>
-    
-    <div class="category-card objects" (click)="selectCategory('objects')">
-      <div class="category-icon">
-        <ion-icon name="cube-outline"></ion-icon>
-      </div>
-      <h3>Objects</h3>
-      <p>Favorite Things</p>
-      <button class="play-button">
-        Play Now
-        <ion-icon name="play"></ion-icon>
-      </button>
-    </div>
-  </div>
+  <div class="lavender-container app-container">
 
-  
-  <div class="floating-elements">
-    <div class="floating-emoji emoji-1">
-      <ion-icon name="heart-outline"></ion-icon>
+    <app-global-header>
+      <div gh-left>
+        <div class="app-header__leading">
+          <ion-buttons>
+            <ion-button class="back-btn" fill="clear" routerLink="/home">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </div>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
+          <ion-icon name="albums-outline"></ion-icon>
+        </div>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Memory Games</h1>
+          <p class="app-header__subtitle">Choose your adventure</p>
+        </div>
+      </div>
+    </app-global-header>
+
+    <div class="app-cards">
+      <div class="app-card" (click)="selectCategory('people')">
+        <div class="app-card-icon">
+          <ion-icon name="people-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">People</h2>
+          <p class="app-card-content__subtitle">Family & Friends</p>
+          <button type="button" class="flashcard-play-btn">
+            Play Now
+            <ion-icon name="play"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="app-card" (click)="selectCategory('places')">
+        <div class="app-card-icon">
+          <ion-icon name="location-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">Places</h2>
+          <p class="app-card-content__subtitle">Special Locations</p>
+          <button type="button" class="flashcard-play-btn">
+            Play Now
+            <ion-icon name="play"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="app-card" (click)="selectCategory('objects')">
+        <div class="app-card-icon">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <div class="app-card-content">
+          <h2 class="app-card-content__title">Objects</h2>
+          <p class="app-card-content__subtitle">Favorite Things</p>
+          <button type="button" class="flashcard-play-btn">
+            Play Now
+            <ion-icon name="play"></ion-icon>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="floating-emoji emoji-2">
-      <ion-icon name="star-outline"></ion-icon>
-    </div>
-    <div class="floating-emoji emoji-3">
-      <ion-icon name="sparkles-outline"></ion-icon>
-    </div>
-    <div class="floating-emoji emoji-4">
-      <ion-icon name="flower-outline"></ion-icon>
-    </div>
+
   </div>
 </ion-content>
-
-

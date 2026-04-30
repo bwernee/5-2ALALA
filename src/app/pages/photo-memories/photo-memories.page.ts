@@ -42,6 +42,7 @@ interface UnifiedCard {
   label: string;
   image: string;
   category: Category;
+  categoryName?: string;
   createdAt?: number;
   
   origin: { kind: 'builtin'; key: 'peopleCards' | 'placesCards' | 'objectsCards' }
@@ -157,18 +158,44 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
     try {
       const firebaseCards = await this.firebaseService.getGameFlashcardsOnce();
 
-      
       const filtered = firebaseCards.filter((card) => !!card.image && !!card.label);
       filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-      this.cards = filtered.map((c) => ({
-        id: c.id,
-        label: c.label,
-        image: c.image,
-        category: c.category as Category,
-        createdAt: c.createdAt,
-        origin: { kind: 'firebase', id: c.id }
-      }));
+      // Load custom categories to get names
+      const customCategoriesMap = new Map<string, string>();
+      try {
+        const user = this.firebaseService.getCurrentUser();
+        const userSpecificKey = user ? `${CATEGORIES_KEY}_${user.uid}` : CATEGORIES_KEY;
+        const raw = localStorage.getItem(userSpecificKey);
+        if (raw) {
+          const categories = JSON.parse(raw) as Array<{ id: string; name: string }>;
+          categories.forEach(cat => customCategoriesMap.set(cat.id, cat.name));
+        }
+      } catch (e) {
+        console.warn('Failed to load custom categories:', e);
+      }
+
+      this.cards = filtered.map((c) => {
+        let categoryName = c.category;
+        
+        // If it's a custom category, look up the actual name
+        if (c.category === 'custom-category' && (c as any).categoryId) {
+          const customName = customCategoriesMap.get((c as any).categoryId);
+          if (customName) {
+            categoryName = customName;
+          }
+        }
+
+        return {
+          id: c.id,
+          label: c.label,
+          image: c.image,
+          category: c.category as Category,
+          categoryName: categoryName,
+          createdAt: c.createdAt,
+          origin: { kind: 'firebase', id: c.id }
+        };
+      });
     } catch (error) {
       console.error('Failed to load photo memories from Firebase:', error);
       this.cards = [];
@@ -249,16 +276,10 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
 
   
   private onFlashcardAdded = async (e: CustomEvent) => {
-    
-    
-    
     const category = e.detail?.category;
-    if (!category || !['people', 'places', 'objects'].includes(category)) {
-      
+    if (!category || !['people', 'places', 'objects', 'custom-category'].includes(category)) {
       return;
     }
-    
-    
     
     const prev = this.currentCard?.id;
     await this.loadAll();
@@ -721,6 +742,8 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
       this.selectedCards.clear();
       this.isSelectionMode = false;
       
+      // Close the detail modal after delete
+      this.closeDetailView();
       
       this.forceCompleteUIUpdate();
       

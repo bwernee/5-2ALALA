@@ -139,6 +139,9 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
       this.newPatientName = '';
       this.newPatientAge = '';
       this.newPatientSex = '';
+      
+      // Force reload patients list to ensure it appears on mobile
+      await this.loadPatients();
     } catch (error: any) {
       console.error('Error adding patient:', error);
       this.presentToast(error?.message || 'Failed to add patient', 'danger');

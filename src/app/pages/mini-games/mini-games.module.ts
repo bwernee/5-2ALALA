@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { MiniGamesPageRoutingModule } from './mini-games-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { MiniGamesPage } from './mini-games.page';
 
@@ -13,6 +14,7 @@ import { MiniGamesPage } from './mini-games.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     MiniGamesPageRoutingModule
   ],
   declarations: [MiniGamesPage]

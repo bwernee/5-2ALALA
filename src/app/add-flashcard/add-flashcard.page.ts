@@ -696,19 +696,19 @@ export class AddFlashcardPage implements OnInit {
   private async ensurePersistentSrc(src: string | null, prefix: 'img' | 'aud', fallbackExt: string): Promise<string | null> {
     if (!src) return null;
 
-    if (/^(https?:|capacitor:|file:)/i.test(src)) return src;
-    const isWeb = Capacitor.getPlatform() === 'web';
+    // For images, always use DataUrl (base64) for reliable persistence across app restarts
+    if (prefix === 'img' && src.startsWith('data:image/')) {
+      // Shrink the image to reduce storage size but keep as DataUrl
+      return await this.shrinkDataUrl(src, 1280, 0.8);
+    }
 
-    if (isWeb) {
-      if (prefix === 'img' && src.startsWith('data:image/')) {
-        return await this.shrinkDataUrl(src, 1280, 0.8);
-      }
+    // For audio, keep as DataUrl if it's already base64
+    if (prefix === 'aud' && src.startsWith('data:')) {
       return src;
     }
 
-    if (src.startsWith('data:')) {
-      return await this.persistDataUrlToFilesystem(src, prefix, fallbackExt);
-    }
+    // If already a persistent URL, keep it
+    if (/^(https?:|capacitor:|file:)/i.test(src)) return src;
 
     return src;
   }

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { OptionsPageRoutingModule } from './options-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { OptionsPage } from './options.page';
 
@@ -13,6 +14,7 @@ import { OptionsPage } from './options.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     OptionsPageRoutingModule
   ],
   declarations: [OptionsPage]

@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-global-header {
+  box-sizing: border-box;
+  width: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.app-global-header__inner {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 72px;
+  box-sizing: border-box;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+.app-global-header__left,
+.app-global-header__right {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 40%;
+}
+
+.app-global-header__center {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .app-global-header__center .app-header__body {
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+:host ::ng-deep .app-global-header__center .app-header__title,
+:host ::ng-deep .app-global-header__center .app-header__subtitle {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+}
+
+:host ::ng-deep .app-global-header__left .app-profile-photo.app-profile-photo--icon,
+:host ::ng-deep .app-global-header__center .app-profile-photo.app-profile-photo--icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-width: 2px;
+}
+
+:host ::ng-deep .app-global-header__left .app-profile-photo--icon ion-icon,
+:host ::ng-deep .app-global-header__center .app-profile-photo--icon ion-icon {
+  font-size: 22px;
+}
+
+:host ::ng-deep .app-global-header__left .welcome-icon {
+  background: var(--app-gradient-button);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--app-shadow-soft);
+}
+
+:host ::ng-deep .app-global-header__left .welcome-icon ion-icon {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+:host ::ng-deep .app-global-header__left .logo-image {
+  display: block;
+  width: auto;
+  height: 44px;
+  max-width: 120px;
+  object-fit: contain;
+}

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { CategoryMatchPageRoutingModule } from './category-match-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { CategoryMatchPage } from './category-match.page';
 
@@ -13,6 +14,7 @@ import { CategoryMatchPage } from './category-match.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     CategoryMatchPageRoutingModule
   ],
   declarations: [CategoryMatchPage]

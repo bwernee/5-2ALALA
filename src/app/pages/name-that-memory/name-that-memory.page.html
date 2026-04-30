@@ -1,23 +1,26 @@
-<ion-content class="game-home-screen" [fullscreen]="true" [scrollY]="true">
+<ion-content class="lavender-content game-home-screen" [fullscreen]="true" [scrollY]="true">
   
-  <div class="lavender-container">
-    <div class="welcome-section">
-      <div class="welcome-content">
-        <ion-buttons slot="start">
-          <ion-button class="back-btn" fill="clear" (click)="goBack()">
-            <ion-icon name="arrow-back-outline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <div class="welcome-icon">
+  <div class="lavender-container app-container">
+    <app-global-header>
+      <div gh-left>
+        <div class="app-header__leading">
+          <ion-buttons>
+            <ion-button class="back-btn" fill="clear" (click)="goBack()">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </div>
+        <div class="app-profile-photo app-profile-photo--icon" aria-hidden="true">
           <ion-icon name="bulb-outline"></ion-icon>
         </div>
-        <div class="welcome-text">
-          <h1>Name That Memory</h1>
-          <p>Test your memory recognition skills</p>
-        </div>
-        
       </div>
-    </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Name That Memory</h1>
+          <p class="app-header__subtitle">Test your memory recognition skills</p>
+        </div>
+      </div>
+    </app-global-header>
   </div>
   
   
@@ -130,18 +133,14 @@
           More categories
         </div>
 
-        <div
-          class="picker-card custom-card"
-          *ngFor="let c of userCategories"
-          (click)="chooseCustom(c.id)"
-          [attr.data-id]="c.id">
-          <div class="picker-icon">
-            <ion-icon [name]="getCategoryIcon(c)"></ion-icon>
-          </div>
-          <div class="picker-text">
-            <h3>{{ c.name }}</h3>
-            <p>{{ (counts.custom[c.id] || 0) }} cards</p>
-          </div>
+        <div class="custom-category-dropdown">
+          <select class="category-select" (change)="onCustomCategorySelect($event)">
+            <option value="" disabled selected>Select a category...</option>
+            <option *ngFor="let c of userCategories" [value]="c.id">
+              {{ c.name }} ({{ counts.custom[c.id] || 0 }} cards)
+            </option>
+          </select>
+          <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
         </div>
       </ng-container>
     </div>

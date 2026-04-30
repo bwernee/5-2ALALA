@@ -1,35 +1,53 @@
+/**
+ * CATEGORY MATCH GAME
+ * 
+ * This game shows a flashcard image and asks the user to identify its category.
+ * Each question provides 4 category options (1 correct + 3 incorrect).
+ * 
+ * FLOW:
+ * 1. Open the game → the category picker modal appears
+ * 2. Choose a category (People/Places/Objects/Custom)
+ * 3. Load cards from Firebase and local storage
+ * 4. For each question: show the image + 4 shuffled category options
+ * 5. Answer or skip → show result → continue
+ * 6. Finish → show final score and save progress
+ */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { ProgressPage } from '../progress/progress.page';
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPE DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Category is stored as a plain string */
 type Category = string;
 
+/** Raw card shape from local storage (supports legacy field names) */
 interface RawCard {
   id?: string;
-  label?: string;   
+  label?: string;
   name?: string;
   image?: string;
   photo?: string;
   photoUrl?: string;
   imagePath?: string;
-  category?: string; 
+  category?: string;
 }
 
+/** Normalized game card used by the gameplay logic */
 interface GameCard {
   id?: string;
-  label: string;     
-  image: string;
+  label: string;      // Card label/answer
+  image: string;      // Image URL or base64
   audio?: string | null;
   duration?: number;
-  category: Category; 
+  category: Category; // Card category
 }
 
-
-const CATEGORIES_KEY = 'alala_custom_categories_v1';
-const CARDS_PREFIX   = 'alala_cards_';
-
+/** Custom category shape stored in local storage */
 interface CustomCategory {
   id: string;
   name: string;
@@ -38,6 +56,7 @@ interface CustomCategory {
   createdAt?: number;
 }
 
+/** Raw custom card stored in local storage */
 interface RawCustomCard {
   id: string;
   categoryId: string;
@@ -49,6 +68,14 @@ interface RawCustomCard {
   createdAt?: number;
 }
 
+// Local storage keys for custom categories
+const CATEGORIES_KEY = 'alala_custom_categories_v1';
+const CARDS_PREFIX = 'alala_cards_';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
 @Component({
   selector: 'app-category-match',
   templateUrl: './category-match.page.html',
@@ -57,72 +84,245 @@ interface RawCustomCard {
 })
 export class CategoryMatchPage implements OnInit, OnDestroy {
   
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UI STATE
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  /** Whether patient mode is enabled (hides some controls) */
   isPatientMode = false;
-
   
+  /** Whether the category picker modal is visible */
+  isCategoryPickerOpen = false;
+  
+  /** List of user-created custom categories */
+  userCategories: CustomCategory[] = [];
+  
+  /** Currently selected category filter */
+  selectedFilter: { type: 'builtin' | 'custom'; value: string } | null = null;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CARD COUNTS (for the category picker UI)
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  /** Card counts per category */
+  counts: { 
+    people: number; 
+    places: number; 
+    objects: number; 
+    custom: Record<string, number> 
+  } = { people: 0, places: 0, objects: 0, custom: {} };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GAME DATA
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  /** All cards available for the game */
   gameCards: GameCard[] = [];
-  allCategories: string[] = []; 
-
   
+  /** Tanan nga available nga categories */
+  allCategories: string[] = [];
+  
+  /** Cards received from Firebase */
+  private firebaseCards: GameCard[] = [];
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CURRENT QUESTION STATE
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  /** The card shown for the current question */
   currentCard: GameCard | null = null;
-  options: string[] = []; 
+  
+  /** 4 category options (shuffled, includes the correct answer) */
+  options: string[] = [];
+  
+  /** Karon nga pangutana number (nagsugod sa 1) */
   currentQuestion = 0;
+  
+  /** Total questions in this game session */
   totalQuestions = 10;
+  
+  /** Pila na ka sakto nga tubag */
   correctAnswers = 0;
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RESULT/COMPLETION STATE
+  // ─────────────────────────────────────────────────────────────────────────────
   
+  /** Whether to show the result panel (correct/incorrect) */
   showResult = false;
-  isCorrect = false;
-  showGameComplete = false;
-
   
+  /** Whether the last answer was correct */
+  isCorrect = false;
+  
+  /** Whether to show the game-complete modal */
+  showGameComplete = false;
+  
+  /** Flag to complete the game after showing the result */
   private shouldCompleteAfterResult = false;
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SKIP TRACKING
+  // ─────────────────────────────────────────────────────────────────────────────
   
+  /** Number of skipped questions */
   skipCount = 0;
+  
+  /** Mga ID sa gi-skip nga cards */
   skippedCardIds: string[] = [];
+  
+  /** Mga labels nga na-pangutana na (para di mausab) */
   private askedLabels = new Set<string>();
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DEFAULT CATEGORIES (fallback when there aren't enough categories)
+  // ─────────────────────────────────────────────────────────────────────────────
   
   private readonly DEFAULT_CATEGORIES = ['People', 'Places', 'Objects', 'Events'];
 
+  /** Firebase subscription cleanup function */
   private gcUnsub?: any;
-  private firebaseCards: GameCard[] = [];
 
-  constructor(private router: Router, private firebaseService: FirebaseService) {}
+  constructor(
+    private router: Router, 
+    private firebaseService: FirebaseService
+  ) {}
 
-  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // LIFECYCLE HOOKS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  ngOnInit() {
+    // Load patient mode from storage
+    this.loadPatientModeFromStorage();
+    
+    // Mag-subscribe sa Firebase flashcards para real-time updates
+    this.attachFirebaseFlashcards();
+    
+    // Fetch an initial snapshot from Firebase
+    this.primeFromFirebaseOnce();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up Firebase subscription
+    try { this.gcUnsub?.(); } catch {}
+  }
+
+  ionViewWillEnter() {
+    // Load user categories and counts when returning to the page
+    this.loadUserCategories();
+    this.computeCounts();
+    this.openCategoryPicker();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PATIENT MODE
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Toggle patient mode on/off */
   togglePatientMode() {
     this.isPatientMode = !this.isPatientMode;
-    try { localStorage.setItem('patientMode', JSON.stringify(this.isPatientMode)); } catch {}
+    try { 
+      localStorage.setItem('patientMode', JSON.stringify(this.isPatientMode)); 
+    } catch {}
   }
+
+  /** Load patient mode from local storage */
   private loadPatientModeFromStorage() {
     try {
       const raw = localStorage.getItem('patientMode');
       this.isPatientMode = raw ? JSON.parse(raw) : false;
-    } catch { this.isPatientMode = false; }
+    } catch { 
+      this.isPatientMode = false; 
+    }
   }
 
-  ngOnInit() {
-    this.loadPatientModeFromStorage();
-    this.attachFirebaseFlashcards();
-    this.primeFromFirebaseOnce();
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CATEGORY PICKER
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Load user categories from local storage */
+  private loadUserCategories() {
+    try {
+      const user = this.firebaseService.getCurrentUser();
+      const userSpecificKey = user ? `${CATEGORIES_KEY}_${user.uid}` : CATEGORIES_KEY;
+      const raw = localStorage.getItem(userSpecificKey);
+      this.userCategories = raw ? JSON.parse(raw) as CustomCategory[] : [];
+    } catch { 
+      this.userCategories = []; 
+    }
   }
 
-  ngOnDestroy(): void { try { this.gcUnsub?.(); } catch {} }
+  /** Open the category picker modal */
+  openCategoryPicker() {
+    this.isCategoryPickerOpen = true;
+  }
 
-  
-  ionViewWillEnter() {
+  /** Close the category picker modal */
+  closeCategoryPicker() {
+    this.isCategoryPickerOpen = false;
+  }
+
+  /** Close the picker and navigate to Brain Games */
+  dismissPickerToBrainGames() {
+    this.closeCategoryPicker();
+    this.router.navigate(['/brain-games']);
+  }
+
+  /** Select a built-in category (people/places/objects) */
+  chooseBuiltin(builtin: 'people' | 'places' | 'objects') {
+    this.selectedFilter = { type: 'builtin', value: builtin };
+    this.closeCategoryPicker();
     this.setupNewRun();
   }
 
-  private setupNewRun() {
-    this.loadAllCardsAndCategories();
+  /** Select a custom category by ID */
+  chooseCustom(categoryId: string) {
+    this.selectedFilter = { type: 'custom', value: categoryId };
+    this.closeCategoryPicker();
+    this.setupNewRun();
+  }
 
+  /** Handle dropdown selection for custom categories */
+  onCustomCategorySelect(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const categoryId = select.value;
+    if (categoryId) {
+      this.chooseCustom(categoryId);
+      select.value = ''; // Reset the dropdown
+    }
+  }
+
+  /** Get the appropriate icon for a custom category */
+  getCategoryIcon(c: CustomCategory): string {
+    if (c.emoji === '👤' || c.emoji === '👥') return 'people-outline';
+    if (c.emoji === '📍' || c.emoji === '🏠') return 'location-outline';
+    if (c.emoji === '📦' || c.emoji === '🎁') return 'cube-outline';
+    return 'folder-outline';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // GAME SETUP
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Mag-initialize ug bag-o nga game run
+   * - Mag-load ug tanan nga cards
+   * - Mag-filter base sa gipili nga category
+   * - Mag-reset sa tanan nga game state
+   * - Starts the first question
+   */
+  private setupNewRun() {
+    // Load all cards and categories
+    this.loadAllCardsAndCategories();
+    
+    // Filter cards based on the selection
+    this.filterCardsBySelection();
+
+    // Set total questions (max 10, bounded by unique labels)
     const uniqueCount = new Set(this.gameCards.map(c => c.label.toLowerCase())).size;
     this.totalQuestions = Math.min(10, Math.max(uniqueCount, 0));
 
-    
+    // Reset all game state
     this.currentCard = null;
     this.options = [];
     this.currentQuestion = 0;
@@ -135,27 +335,63 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     this.shouldCompleteAfterResult = false;
     this.askedLabels.clear();
 
+    // Start the game if there are cards
     if (this.gameCards.length > 0 && this.totalQuestions > 0) {
       this.startNewQuestion();
     }
   }
 
+  /** Filter cards based on the selected category */
+  private filterCardsBySelection() {
+    if (!this.selectedFilter) return;
+    
+    if (this.selectedFilter.type === 'builtin') {
+      // Para sa builtin categories, i-filter base sa normalized category
+      const cat = this.selectedFilter.value;
+      this.gameCards = this.gameCards.filter(c => 
+        this.normalizeCategoryForStorage(c.category) === cat
+      );
+    } else if (this.selectedFilter.type === 'custom') {
+      // For custom categories, load cards from local storage
+      const categoryId = this.selectedFilter.value;
+      const customCards = this.readCustomCards(categoryId);
+      const catName = this.userCategories.find(uc => uc.id === categoryId)?.name || categoryId;
+      
+      this.gameCards = customCards
+        .filter(c => c.label && c.src)
+        .map(c => ({
+          id: c.id,
+          label: c.label || '',
+          image: c.src,
+          audio: c.audio || null,
+          duration: c.duration || 0,
+          category: catName
+        }));
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // FIREBASE DATA LOADING
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Mag-subscribe sa Firebase flashcards para real-time updates */
   private attachFirebaseFlashcards() {
     try {
       this.gcUnsub?.();
+      
       this.gcUnsub = this.firebaseService.subscribeToGameFlashcards((cards) => {
-        
-        this.firebaseCards = (cards || []).map((c:any) => ({
+        // Mag-map sa Firebase cards ngadto sa GameCard format
+        this.firebaseCards = (cards || []).map((c: any) => ({
           id: c.id,
           label: c.label,
           image: c.image || c.src || '',
           category: (c.category || '').toString()
         }));
         
-        
+        // I-cache locally para offline use
         this.cacheGameCardsLocally(this.firebaseCards);
         
-        
+        // Refresh the card list
         this.loadAllCardsAndCategories();
       });
     } catch (e) {
@@ -163,16 +399,16 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     }
   }
 
+  /** Fetch cards from Firebase once (initial load) */
   private async primeFromFirebaseOnce() {
     try {
       const initial = await (this.firebaseService as any).getGameFlashcardsOnce?.();
       if (Array.isArray(initial) && initial.length > 0) {
-        
         this.firebaseCards = initial as any;
       } else {
+        // Fallback sa cached cards
         const cached = (this.firebaseService as any).getCachedGameFlashcards?.() || [];
         if (cached.length > 0) {
-          
           this.firebaseCards = cached as any;
         }
       }
@@ -180,48 +416,67 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     this.setupNewRun();
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CARD LOADING (Local Storage + Firebase)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Mag-load ug tanan nga cards ug categories
+   * - Merges Firebase cards and local storage cards
+   * - Deduplicates
+   * - Builds the allCategories list
+   */
   private loadAllCardsAndCategories() {
-    
+    // Start with Firebase cards
     let merged: GameCard[] = this.firebaseCards.slice();
     const seen = new Set<string>(merged.map(c => `${c.label.toLowerCase()}::${c.image}::${c.category}`));
 
+    // Mga possible local storage keys nga i-scan
     const keysToScan = [
-      
-      'peopleCards','personCards','people','people_cards','person_cards','peopleList','personList',
-      'placesCards','placeCards','places','places_cards','place_cards','placesList','placeList',
-      'objectsCards','objectCards','objects','objects_cards','object_cards','objectsList','objectList',
-      
-      'cards','memories','memoryCards'
+      // People
+      'peopleCards', 'personCards', 'people', 'people_cards', 'person_cards', 'peopleList', 'personList',
+      // Places
+      'placesCards', 'placeCards', 'places', 'places_cards', 'place_cards', 'placesList', 'placeList',
+      // Objects
+      'objectsCards', 'objectCards', 'objects', 'objects_cards', 'object_cards', 'objectsList', 'objectList',
+      // Generic
+      'cards', 'memories', 'memoryCards'
     ];
 
+    // Helper function para mu-add ug card
     const pushCard = (r: RawCard, fallbackCategory: string | null) => {
       const label = (r.label || r.name || '').toString().trim();
       const image = (r.image ?? r.photoUrl ?? r.photo ?? r.imagePath ?? '').toString();
       const rawCat = (r.category ?? fallbackCategory ?? '').toString().trim();
       const cat = this.normalizeCategoryForStorage(rawCat) || 'uncategorized';
       if (!label) return;
+      
+      // Skip duplicates
       const key = `${label.toLowerCase()}::${image}::${cat}`;
       if (seen.has(key)) return;
       seen.add(key);
       merged.push({ id: r.id, label, image, category: cat });
     };
 
+    // Mag-scan sa tanan nga local storage keys
     for (const key of keysToScan) {
       const raw = localStorage.getItem(key);
       if (!raw) continue;
+      
       let arr: RawCard[] = [];
       try { arr = JSON.parse(raw); } catch { arr = []; }
       if (!Array.isArray(arr)) continue;
 
+      // Determine fallback category based on the key name
       let fallback: string | null = null;
       if (/people|person/i.test(key)) fallback = 'people';
-      else if (/place/i.test(key))     fallback = 'places';
-      else if (/object/i.test(key))    fallback = 'objects';
+      else if (/place/i.test(key)) fallback = 'places';
+      else if (/object/i.test(key)) fallback = 'objects';
 
       for (const r of arr) pushCard(r, fallback);
     }
 
-    
+    // Mag-load ug custom category cards
     const { cards: customCards, categories: customDisplayCats } = this.loadCustomGameCardsAndCats();
     for (const c of customCards) {
       const key = `${c.label.toLowerCase()}::${c.image}::${c.category}`;
@@ -233,7 +488,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
 
     this.gameCards = merged;
 
-    
+    // Build the allCategories list (used for wrong-answer options)
     const userCats = Array.from(
       new Set(
         merged.map(c => this.displayCategory(c.category)).filter(Boolean)
@@ -241,13 +496,37 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     );
     const mergedCats = Array.from(new Set([
       ...userCats,
-      ...customDisplayCats,       
-      ...this.DEFAULT_CATEGORIES  
+      ...customDisplayCats,
+      ...this.DEFAULT_CATEGORIES
     ]));
     this.allCategories = mergedCats.slice(0);
   }
 
-  
+  /** Compute card counts for all categories */
+  private computeCounts() {
+    this.loadAllCardsAndCategories();
+    this.counts = { people: 0, places: 0, objects: 0, custom: {} };
+    
+    // Count built-in categories
+    for (const c of this.gameCards) {
+      const norm = this.normalizeCategoryForStorage(c.category);
+      if (norm === 'people') this.counts.people++;
+      else if (norm === 'places') this.counts.places++;
+      else if (norm === 'objects') this.counts.objects++;
+    }
+    
+    // Count custom categories
+    for (const cat of this.userCategories) {
+      const cards = this.readCustomCards(cat.id);
+      this.counts.custom[cat.id] = cards.length;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // LOCAL STORAGE HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Get all custom categories from local storage */
   private getAllUserCategories(): CustomCategory[] {
     try {
       const user = this.firebaseService.getCurrentUser();
@@ -255,17 +534,25 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
       const raw = localStorage.getItem(userSpecificKey);
       const arr = raw ? JSON.parse(raw) as CustomCategory[] : [];
       return Array.isArray(arr) ? arr : [];
-    } catch { return []; }
+    } catch { 
+      return []; 
+    }
   }
 
+  /** Mag-read ug cards para sa specific custom category */
   private readCustomCards(categoryId: string): RawCustomCard[] {
     try {
       const raw = localStorage.getItem(`${CARDS_PREFIX}${categoryId}`);
       return raw ? JSON.parse(raw) as RawCustomCard[] : [];
-    } catch { return []; }
+    } catch { 
+      return []; 
+    }
   }
 
-  
+  /**
+   * Mag-load ug custom game cards ug categories
+   * Returns: cards array ug categories array
+   */
   private loadCustomGameCardsAndCats(): { cards: GameCard[]; categories: string[] } {
     const cats = this.getAllUserCategories();
     if (cats.length === 0) return { cards: [], categories: [] };
@@ -277,6 +564,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
       const display = this.displayCategory(cat.name || 'Custom');
       categories.add(display);
 
+      // Load and filter custom cards (photos only)
       const raw = this.readCustomCards(cat.id).filter(c => c.type === 'photo');
 
       for (const r of raw) {
@@ -284,7 +572,6 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
         const image = (r.src || '').toString().trim();
         if (!label || !image) continue;
 
-        
         const norm = this.normalizeCategoryForStorage(cat.name || 'custom');
         cards.push({
           id: r.id,
@@ -300,12 +587,18 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     return { cards, categories: Array.from(categories) };
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CATEGORY HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Format a category for display (capitalize words) */
   private displayCategory(cat: string): string {
-    
     const cleaned = (cat || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
     if (!cleaned) return 'Uncategorized';
     return cleaned.replace(/\b\w/g, m => m.toUpperCase());
   }
+
+  /** Normalize a category for storage (lowercase, alphanumeric) */
   private normalizeCategoryForStorage(cat: string): string {
     return (cat || '')
       .toString()
@@ -316,8 +609,18 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
       .replace(/\s+/g, ' ');
   }
 
-  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // QUESTION GENERATION
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Mag-generate ug bag-o nga pangutana
+   * - Magpili ug random unasked card
+   * - Maghimo ug 4 ka category options (1 sakto + 3 sayop)
+   * - Shuffles options randomly
+   */
   private startNewQuestion() {
+    // End the game if needed
     if (this.currentQuestion >= this.totalQuestions || this.gameCards.length === 0) {
       this.endGame();
       return;
@@ -325,7 +628,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
 
     this.currentQuestion += 1;
 
-    
+    // Pick a random card that hasn't been asked yet
     const pool = this.gameCards.filter(c => !this.askedLabels.has(c.label));
     const card = (pool.length ? pool : this.gameCards)[
       Math.floor(Math.random() * (pool.length ? pool.length : this.gameCards.length))
@@ -333,15 +636,17 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     this.askedLabels.add(card.label);
     this.currentCard = card;
 
-    
+    // Maghimo ug sayop nga category options
     const correctDisplay = this.displayCategory(card.category);
-    const otherCats = this.allCategories.filter(c => this.normalizeToken(c) !== this.normalizeToken(correctDisplay));
+    const otherCats = this.allCategories.filter(c => 
+      this.normalizeToken(c) !== this.normalizeToken(correctDisplay)
+    );
 
-    
+    // Filter out categories that are too similar to the correct one
     const filtered = otherCats.filter(c => !this.isSimilar(c, correctDisplay));
     const poolCats = this.shuffle([...filtered]);
 
-    
+    // Add default categories if we don't have enough distractors
     const defaultFillers = this.DEFAULT_CATEGORIES
       .filter(dc => this.normalizeToken(dc) !== this.normalizeToken(correctDisplay))
       .filter(dc => !this.isSimilar(dc, correctDisplay));
@@ -352,29 +657,44 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
       }
     }
 
+    // Maghimo ug mag-shuffle sa final options
     const four = [correctDisplay, ...poolCats.slice(0, 3)];
     this.options = this.shuffle(four);
+    
+    // Reset result state
     this.showResult = false;
     this.isCorrect = false;
     this.shouldCompleteAfterResult = false;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // ANSWER HANDLING
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Handle when the user selects an answer */
   selectAnswer(choice: string) {
     if (!this.currentCard) return;
+    
     const correctDisplay = this.displayCategory(this.currentCard.category);
-    this.isCorrect = this.isSimilar(choice, correctDisplay) || this.normalizeToken(choice) === this.normalizeToken(correctDisplay);
+    
+    // Check whether the answer is correct
+    this.isCorrect = this.isSimilar(choice, correctDisplay) || 
+                     this.normalizeToken(choice) === this.normalizeToken(correctDisplay);
     if (this.isCorrect) this.correctAnswers++;
 
-    
+    // Check whether this is the last question
     this.shouldCompleteAfterResult = (this.currentQuestion >= this.totalQuestions);
     this.showResult = true;
   }
 
+  /** Handle when the user skips the current question */
   skipCurrent() {
     if (!this.currentCard) return;
+    
     this.skipCount++;
     if (this.currentCard.id) this.skippedCardIds.push(this.currentCard.id);
 
+    // Continue to the next question or end the game
     if (this.currentQuestion >= this.totalQuestions) {
       this.endGame();
     } else {
@@ -382,6 +702,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     }
   }
 
+  /** Continue to the next question after showing the result */
   continueGame() {
     this.showResult = false;
 
@@ -393,43 +714,52 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // GAME COMPLETION
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** End the game and save progress */
   async endGame() {
-  const sessionData = {
-    category: 'category-match',
-    totalQuestions: this.totalQuestions,
-    correctAnswers: this.correctAnswers,
-    skipped: this.skipCount,
-    totalTime: 0,
-    timestamp: Date.now()
-  };
+    // Prepare session data
+    const sessionData = {
+      category: 'category-match',
+      totalQuestions: this.totalQuestions,
+      correctAnswers: this.correctAnswers,
+      skipped: this.skipCount,
+      totalTime: 0,
+      timestamp: Date.now()
+    };
 
-  try {
-    
-    const key = 'categoryMatchHistory';
-    const history: any[] = JSON.parse(localStorage.getItem(key) || '[]');
-    history.push(sessionData);
-    localStorage.setItem(key, JSON.stringify(history));
+    try {
+      // I-save sa local storage history
+      const key = 'categoryMatchHistory';
+      const history: any[] = JSON.parse(localStorage.getItem(key) || '[]');
+      history.push(sessionData);
+      localStorage.setItem(key, JSON.stringify(history));
 
-    
-    window.dispatchEvent(new CustomEvent('categoryMatchFinished', { detail: sessionData }));
+      // Mag-dispatch ug event para sa uban nga components
+      window.dispatchEvent(new CustomEvent('categoryMatchFinished', { detail: sessionData }));
+    } catch (error) {
+      console.error('Error sa pag-save sa Category Match session:', error);
+    }
 
-    
-  } catch (error) {
-    console.error('Error saving Category Match session:', error);
+    // Show completion modal
+    this.showResult = false;
+    this.showGameComplete = true;
+
+    // I-save sa Firebase progress
+    try {
+      await ProgressPage.saveGameSession(
+        this.firebaseService, 
+        sessionData as any, 
+        (window as any).progressPageInstance
+      );
+    } catch (e) {
+      console.warn('Progress save/refresh failed:', e);
+    }
   }
 
-  this.showResult = false;
-  this.showGameComplete = true;
-
-  
-  try {
-    await ProgressPage.saveGameSession(this.firebaseService, sessionData as any, (window as any).progressPageInstance);
-  } catch (e) {
-    console.warn('Progress save/refresh failed:', e);
-  }
-}
-
-
+  /** Close the game complete modal and navigate to Brain Games */
   finishGame() {
     this.showGameComplete = false;
     this.showResult = false;
@@ -437,21 +767,28 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     this.router.navigate(['/brain-games']);
   }
 
+  /** Restart the game using the same category */
   playAgain() {
     this.setupNewRun();
   }
 
+  /** Mag-navigate balik sa brain games */
   goBack() {
     this.router.navigate(['/brain-games']);
   }
 
+  /** Mag-navigate sa add flashcard page */
   goToAddFlashcard() {
     this.router.navigate(['/add-flashcard'], {
       queryParams: { from: 'category-match' }
     });
   }
 
-  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PROGRESS TRACKING
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Get how many questions have been answered so far */
   private getAnsweredCount(): number {
     if (this.totalQuestions <= 0) return 0;
     if (this.showGameComplete) return this.totalQuestions;
@@ -459,19 +796,23 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     return Math.max(0, this.currentQuestion - 1);
   }
 
+  /** Progress bar percentage (0-100) */
   get progressPct(): number {
     if (this.totalQuestions <= 0) return 0;
     const pct = (this.getAnsweredCount() / this.totalQuestions) * 100;
     return Math.min(100, Math.max(0, Math.round(pct)));
   }
 
-  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // UTILITY FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Get the image source for the card */
   imgSrc(card: GameCard | null): string {
-    if (!card) return '';
-    return card.image;
+    return card?.image || '';
   }
 
-  
+  /** Fisher-Yates shuffle algorithm */
   private shuffle<T>(arr: T[]): T[] {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -481,6 +822,7 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     return a;
   }
 
+  /** Mag-normalize sa string para comparison */
   private normalizeToken(s: string): string {
     return s
       .toLowerCase()
@@ -488,39 +830,48 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
       .replace(/[^a-z0-9]/g, '');
   }
 
+  /** Compare two strings for category matching */
   private isSimilar(a: string, b: string): boolean {
     const na = this.normalizeToken(a);
     const nb = this.normalizeToken(b);
     if (!na || !nb) return false;
     if (na === nb) return true;
+    
+    // Substring similarity check
     if (na.includes(nb) || nb.includes(na)) {
       if (Math.abs(na.length - nb.length) <= 2) return true;
     }
+    
+    // Levenshtein distance check
     const d = this.levenshtein(na, nb);
     if (Math.max(na.length, nb.length) <= 5) return d <= 1;
     return d <= 2;
   }
 
+  /** Compute Levenshtein distance between two strings */
   private levenshtein(a: string, b: string): number {
     const m = a.length, n = b.length;
     if (m === 0) return n;
     if (n === 0) return m;
+    
     const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
     for (let i = 0; i <= m; i++) dp[i][0] = i;
     for (let j = 0; j <= n; j++) dp[0][j] = j;
+    
     for (let i = 1; i <= m; i++) {
       for (let j = 1; j <= n; j++) {
         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
         dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + cost
+          dp[i - 1][j] + 1,     // deletion
+          dp[i][j - 1] + 1,     // insertion
+          dp[i - 1][j - 1] + cost // substitution
         );
       }
     }
     return dp[m][n];
   }
 
+  /** Cache game cards locally for offline access */
   private cacheGameCardsLocally(cards: GameCard[]) {
     try {
       const user = this.firebaseService.getCurrentUser();

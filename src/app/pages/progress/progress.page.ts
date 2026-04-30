@@ -67,7 +67,7 @@ export class ProgressPage implements OnInit {
   async ngOnInit() {
     await this.loadChartJS();
     await this.loadProgressData();
-    this.generateInsights();
+   
     if (this.chartLoaded) {
       await this.createChart();
     }
@@ -83,7 +83,7 @@ export class ProgressPage implements OnInit {
     window.addEventListener('user-logged-in', (e: any) => {
       
       this.loadProgressData();
-      this.generateInsights();
+    
       if (this.chartLoaded) {
         this.createChart();
       }
@@ -91,26 +91,7 @@ export class ProgressPage implements OnInit {
     });
   }
 
-  checkPatientMode() {
-    const savedMode = localStorage.getItem('patientMode');
-    this.isPatientMode = savedMode === 'true';
-  }
 
-  onPatientModeToggle() {
-    window.dispatchEvent(new CustomEvent('caregiver-toggle'));
-  }
-
-  navigateToPatientsDashboard() {
-    this.router.navigate(['/patients-dashboard']);
-  }
-
-  navigateToHome() {
-    this.router.navigate(['/home']);
-  }
-
-  navigateToProfile() {
-    this.router.navigate(['/profile']);
-  }
 
   async loadChartJS() {
     try {
@@ -137,198 +118,11 @@ export class ProgressPage implements OnInit {
     }
   }
 
-  // ─── Data loading & Firebase sync ───────────────────────────────────────────
-  // Fetch sessions (Firebase → cache → localStorage), filter by period, compute stats, sync aggregated stats to Firebase.
-  async loadProgressData() {
-    try {
-      
-      this.isLoading = true;
-
-      
-      // fetch sessions from firebase
-      // from firebase.service.ts
-      let sessions: any[] = [];
-      try {
-        sessions = await this.firebaseService.getUserGameSessions();
-        this.isFirebaseConnected = true;
-        this.dataSource = 'Firebase';
-        
-      } catch (fbErr) {
-        console.warn(' Firebase fetch failed, falling back to cached/local data', fbErr);
-        this.isFirebaseConnected = false;
-        
-        sessions = this.firebaseService.getCachedData('gameSessions', []);
-        if (!sessions || sessions.length === 0) {
-          
-          const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
-          const localKey = pid ? `gameSessions_${pid}` : 'gameSessions';
-          const raw = localStorage.getItem(localKey) || localStorage.getItem('gameSessions') || '[]';
-          try { sessions = JSON.parse(raw); } catch { sessions = []; }
-          this.dataSource = sessions && sessions.length > 0 ? 'Local Storage' : 'No Data';
-        } else {
-          this.dataSource = 'Cached Data';
-        }
-        
-      }
-
-      
-      const filtered = this.filterSessionsByPeriod(sessions || []);
-      if (filtered && filtered.length > 0) {
-        this.calculateOverallStats(filtered);
-        this.calculateCategoryStats(filtered);
-        this.loadRecentSessions(filtered);
-        this.firebaseService.cacheData('gameSessions', sessions);
-        
-        
-        try {
-          await this.updateFirebaseStats(sessions || []);
-          
-        } catch (error) {
-          console.error(' Firebase stats update failed:', error);
-        }
-      } else {
-        
-        this.overallStats = { accuracy: 0, avgTimePerCard: 0, totalCards: 0, skippedCards: 0 };
-        this.categoryStats.forEach(c => { c.accuracy = 0; c.cardsPlayed = 0; c.avgTime = 0; });
-        this.recentSessions = [];
-        
-        
-        try {
-          await this.updateFirebaseStats([]);
-          
-        } catch (error) {
-          console.error('Firebase stats update failed (zero stats):', error);
-        }
-      }
-
-      this.isLoading = false;
-    } catch (error) {
-      console.error('Error loading progress data:', error);
-      this.dataSource = 'Error';
-      this.isLoading = false;
-    }
-  }
-
-  calculateAccuracyOverTime(sessions: any[]) {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const calculateAccuracy = (filteredSessions: any[]) => {
-      if (filteredSessions.length === 0) return 0;
-      const totalQuestions = filteredSessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
-      const totalCorrect = filteredSessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
-      return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-    };
-
-    const todaySessions = sessions.filter(s => {
-      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
-      return sessionDate >= today;
-    });
-
-    const weekSessions = sessions.filter(s => {
-      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
-      return sessionDate >= weekAgo;
-    });
-
-    const monthSessions = sessions.filter(s => {
-      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
-      return sessionDate >= monthAgo;
-    });
-
-    return {
-      today: calculateAccuracy(todaySessions),
-      week: calculateAccuracy(weekSessions),
-      month: calculateAccuracy(monthSessions),
-      allTime: calculateAccuracy(sessions)
-    };
-  }
-
-  async forceUpdateFirebaseStats() {
-    try {
-      
-      const sessions = await this.firebaseService.getUserGameSessions();
-      
-      
-      if (sessions.length > 0) {
-        this.calculateOverallStats(sessions);
-        this.calculateCategoryStats(sessions);
-        this.loadRecentSessions(sessions);
-        
-        await this.updateFirebaseStats(sessions);
-        
-      } else {
-        
-      }
-    } catch (error) {
-      console.error('Force update failed:', error);
-    }
-  }
-
-//called from firebase.service.ts
-  async updateFirebaseStats(sessions: any[]) {
-    try {
-      console.log(' updateFirebaseStats called with:', {
-        isFirebaseConnected: this.isFirebaseConnected,
-        sessionsCount: sessions.length,
-        overallStats: this.overallStats,
-        categoryStatsCount: this.categoryStats.length,
-        recentSessionsCount: this.recentSessions.length
-      });
-
-      if (!this.isFirebaseConnected) {
-        
-        return;
-      }
-
-      const accuracyOverTime = this.calculateAccuracyOverTime(sessions);
-      
-      
-      const statsData = {
-        overallStats: this.overallStats,
-        categoryStats: this.categoryStats,
-        recentSessions: this.recentSessions,
-        accuracyOverTime: accuracyOverTime
-      };
-
-      
-      
-      await this.firebaseService.updateUserStats(statsData);
-
-      
-    } catch (error) {
-      console.error('Failed to update Firebase stats:', error);
-    }
-  }
+  
 
   // ─── Stats & session processing ─────────────────────────────────────────────
   // Derive overallStats, categoryStats (People/Places/Objects/Category Match), and recentSessions from filtered sessions.
-  calculateOverallStats(sessions: any[]) {
-    if (sessions.length === 0) {
-      this.overallStats = {
-        accuracy: 0,
-        avgTimePerCard: 0,
-        totalCards: 0,
-        skippedCards: 0
-      };
-      return;
-    }
 
-    const totalQuestions = sessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
-    const totalCorrect = sessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
-    const totalTime = sessions.reduce((sum, s) => sum + (s.totalTime || 0), 0);
-    const totalSkipped = sessions.reduce((sum, s) => sum + (s.skipped || 0), 0);
-
-    this.overallStats = {
-      accuracy: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0,
-      avgTimePerCard: totalQuestions > 0 ? Math.round(totalTime / totalQuestions) : 0,
-      totalCards: totalQuestions,
-      skippedCards: totalSkipped
-    };
-
-    
-  }
 
   calculateCategoryStats(sessions: any[]) {
     
@@ -369,26 +163,7 @@ export class ProgressPage implements OnInit {
     accumulate('Category Match', cmSessions);
   }
 
-  loadRecentSessions(sessions: any[]) {
-    if (sessions.length === 0) {
-      this.recentSessions = [];
-      return;
-    }
-
-    this.recentSessions = sessions
-      .slice() 
-      .sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime())
-      .slice(0, 5)
-      .map(session => ({
-        date: new Date(session.timestamp || session.createdAt || Date.now()),
-        category: this.formatCategoryName(session.category),
-        accuracy: Math.round(((session.correctAnswers || 0) / (session.totalQuestions || 1)) * 100),
-        correctAnswers: session.correctAnswers,
-        totalQuestions: session.totalQuestions,
-        duration: Math.round((session.totalTime || 0) / 60),
-        skipped: session.skipped || 0
-      }));
-  }
+ 
 
   private formatCategoryName(category: string): string {
     if (!category) return 'Unknown';
@@ -411,13 +186,13 @@ export class ProgressPage implements OnInit {
          return;
        }
 
-       const chartData = await this.getChartData();
+       const chartData = await this.displayChartData();
 
        if (this.chart) {
          this.chart.destroy();
        }
 
-       
+       //to make today a bar graph
        const chartType = this.selectedPeriod === 'today' ? 'bar' : 'line';
 
        this.chart = new (window as any).Chart(ctx, {
@@ -500,318 +275,6 @@ export class ProgressPage implements OnInit {
      }
    }
 
-  async getChartData() {
-    
-    try {
-      
-      let sessions: any[] = [];
-      try {
-        sessions = await this.firebaseService.getUserGameSessions();
-        this.isFirebaseConnected = true;
-        this.dataSource = 'Firebase';
-      } catch (fbErr) {
-        console.warn(' Firebase sessions fetch failed; using cached/local sessions', fbErr);
-        this.isFirebaseConnected = false;
-        sessions = this.firebaseService.getCachedData('gameSessions', []);
-        if ((!sessions || sessions.length === 0)) {
-          const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
-          const localKey = pid ? `gameSessions_${pid}` : 'gameSessions';
-          const raw = localStorage.getItem(localKey) || '[]';
-          try { sessions = JSON.parse(raw); } catch { sessions = []; }
-        }
-      }
-
-      if (!sessions || sessions.length === 0) {
-        
-        this.hasDataForPeriod = false;
-        
-        
-        let labels: string[] = [];
-        
-        if (this.selectedPeriod === 'custom' && this.customStartDate && this.customEndDate) {
-          
-          const startDate = new Date(this.customStartDate);
-          const endDate = new Date(this.customEndDate);
-          const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff <= 7) {
-            
-            labels = [];
-            for (let i = 0; i <= daysDiff; i++) {
-              const date = new Date(startDate);
-              date.setDate(startDate.getDate() + i);
-              labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            }
-          } else {
-            
-            labels = [startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })];
-          }
-        } else {
-          
-          switch (this.selectedPeriod) {
-            case 'today':
-              labels = ['Today'];
-              break;
-            case 'week':
-              labels = ['This Week'];
-              break;
-            case 'month':
-              labels = [new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })];
-              break;
-            case 'all':
-              labels = ['All Time'];
-              break;
-            default:
-              labels = ['No Data'];
-          }
-        }
-        
-        const emptyDataset = (label: string, color: string) => ({
-          label,
-          data: new Array(labels.length).fill(0),
-          borderColor: color,
-          backgroundColor: color + '33',
-          fill: false,
-          tension: 0.3
-        });
-        
-        return {
-          labels,
-          datasets: [
-            emptyDataset('Name That Memory - People', '#3b82f6'),
-            emptyDataset('Name That Memory - Places', '#10b981'),
-            emptyDataset('Name That Memory - Objects', '#f59e0b'),
-            emptyDataset('Category Match', '#ef4444')
-          ]
-        } as any;
-      }
-
-      
-      const dateRange = this.getChartDateRangeFromSessions(sessions);
-      const labels = dateRange.map(d => d.label);
-
-      
-      
-
-      
-      const grouped = this.groupSessionsIntoBuckets(sessions, dateRange);
-
-      
-      for (const [key, sArr] of Object.entries(grouped)) {
-        
-      }
-
-      
-      const cats = [
-        { key: 'people', label: 'Name That Memory - People', color: '#3b82f6' },
-        { key: 'places', label: 'Name That Memory - Places', color: '#10b981' },
-        { key: 'objects', label: 'Name That Memory - Objects', color: '#f59e0b' },
-        { key: 'category-match', label: 'Category Match', color: '#ef4444' }
-      ];
-
-      
-      if (this.selectedPeriod === 'today') {
-        const datasets = cats.map(cat => {
-          
-          const todaySessions = sessions.filter(s => {
-            const sessionDate = new Date(s.timestamp || s.createdAt || 0);
-            const today = new Date();
-            const isToday = sessionDate.toDateString() === today.toDateString();
-            return isToday && this.isSessionInCategory(s, cat.key);
-          });
-
-          let accuracy = 0;
-          if (todaySessions.length > 0) {
-            const totalCorrect = todaySessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
-            const totalQuestions = todaySessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
-            accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-          }
-
-          return {
-            label: cat.label,
-            data: [accuracy],
-            borderColor: cat.color,
-            backgroundColor: cat.color + '80',
-            borderWidth: 1,
-            borderRadius: 4
-          } as any;
-        });
-
-        this.hasDataForPeriod = true;
-        return { 
-          labels: ['Today'], 
-          datasets 
-        } as any;
-      }
-
-      
-      const datasets = cats.map(cat => {
-        const data = dateRange.map((dr, drIdx) => {
-          const bucketKey = dr.key;
-          const allBucketSessions = grouped[bucketKey] || [];
-          const bucketSessions: any[] = allBucketSessions.filter((s: any) => this.isSessionInCategory(s, cat.key));
-
-          
-
-          if (!bucketSessions || bucketSessions.length === 0) return 0;
-          const totalCorrect = bucketSessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
-          const totalQuestions = bucketSessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
-          const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-          
-          return accuracy;
-        });
-
-        
-
-        return {
-          label: cat.label,
-          data,
-          borderColor: cat.color,
-          backgroundColor: cat.color + '33',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3,
-          pointRadius: 3,
-          pointBorderWidth: 2,
-          pointBackgroundColor: cat.color,
-          pointBorderColor: '#fff'
-        } as any;
-      });
-
-      this.hasDataForPeriod = true;
-      const chartData = { labels, datasets };
-      
-      datasets.forEach((ds, idx) => {
-        
-      });
-      return chartData;
-    } catch (error) {
-      console.error('Error generating chart data:', error);
-      return { labels: ['Error'], datasets: [] } as any;
-    }
-  }
-
-  
-  private isSessionInCategory(session: any, catKey: string): boolean {
-  const c = (session.category || '').toString().toLowerCase().replace(/\s+/g, '-'); 
-  if (catKey === 'category-match') {
-    return c === 'category-match' || c === 'categorymatch' || c === 'category match';
-  } else {
-    return c === catKey || c === `name-that-memory-${catKey}`;
-  }
-  }
-
-  private getChartDateRangeFromSessions(sessions: any[]) {
-     const buckets: Array<{ key: string; label: string; start: Date; end: Date }> = [];
-
-     
-     if (this.selectedPeriod === 'today') {
-       const today = new Date();
-       const startDate = new Date(today);
-       startDate.setHours(0, 0, 0, 0);
-       
-       const endDate = new Date(today);
-       endDate.setHours(23, 59, 59, 999);
-
-       const key = today.toISOString().split('T')[0];
-       const label = today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-       
-       buckets.push({ key, label, start: startDate, end: endDate });
-       return buckets;
-     }
-
-     
-     let earliestDate: Date | null = null;
-     if (sessions && sessions.length > 0) {
-       const sessionDates = sessions
-         .map(s => new Date(s.timestamp || s.createdAt || 0))
-         .filter(d => !isNaN(d.getTime()));
-       
-       if (sessionDates.length > 0) {
-         earliestDate = new Date(Math.min(...sessionDates.map(d => d.getTime())));
-       }
-     }
-
-     
-     if (!earliestDate || isNaN(earliestDate.getTime())) {
-       earliestDate = new Date();
-     }
-
-     
-     const startDate = new Date(earliestDate);
-     startDate.setHours(0, 0, 0, 0);
-
-     
-     let endDate: Date;
-     if (this.selectedPeriod === 'week') {
-       
-       endDate = new Date(startDate);
-       endDate.setDate(endDate.getDate() + 7);
-     } else if (this.selectedPeriod === 'month') {
-       
-       endDate = new Date(startDate);
-       endDate.setMonth(endDate.getMonth() + 5);
-     } else {
-       
-       endDate = new Date(startDate);
-       endDate.setDate(endDate.getDate() + 7);
-     }
-     endDate.setHours(23, 59, 59, 999);
-
-     
-     if (this.selectedPeriod === 'month') {
-       
-       const current = new Date(startDate);
-       while (current <= endDate) {
-         const monthStart = new Date(current.getFullYear(), current.getMonth(), 1, 0, 0, 0, 0);
-         const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0, 23, 59, 59, 999);
-         
-         const key = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
-         const label = monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-         
-         buckets.push({ key, label, start: monthStart, end: monthEnd });
-         
-         
-         current.setMonth(current.getMonth() + 1);
-       }
-     } else {
-       
-       const current = new Date(startDate);
-       while (current <= endDate) {
-         const dayStart = new Date(current);
-         dayStart.setHours(0, 0, 0, 0);
-         
-         const dayEnd = new Date(current);
-         dayEnd.setHours(23, 59, 59, 999);
-
-         const key = current.toISOString().split('T')[0];
-         const label = current.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-         
-         buckets.push({ key, label, start: dayStart, end: dayEnd });
-         current.setDate(current.getDate() + 1);
-       }
-     }
-
-     return buckets;
-   }
-
-  
-  private groupSessionsIntoBuckets(sessions: any[], dateRange: Array<{ key: string; label: string; start: Date; end: Date }>) {
-    const map: Record<string, any[]> = {};
-    for (const dr of dateRange) map[dr.key] = [];
-    for (const s of sessions) {
-      const ts = (s.timestamp || s.createdAt || 0);
-      const d = new Date(ts);
-      for (const dr of dateRange) {
-        if (d >= dr.start && d <= dr.end) {
-          map[dr.key].push(s);
-          break;
-        }
-      }
-    }
-    return map;
-  }
-
   
   async updateChart() {
     if (!this.chart) {
@@ -819,7 +282,7 @@ export class ProgressPage implements OnInit {
       return;
     }
     try {
-      const chartData = await this.getChartData();
+      const chartData = await this.displayChartData();
 
       
       chartData.datasets.forEach((ds: any, idx: number) => {
@@ -856,8 +319,7 @@ export class ProgressPage implements OnInit {
       const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
       localStorage.removeItem('gameSessions');
       if (pid) localStorage.removeItem(`gameSessions_${pid}`);
-      await this.loadProgressData();
-      this.generateInsights();
+     
       if (this.chart) {
         await this.updateChart();
       } else if (this.chartLoaded) {
@@ -869,263 +331,18 @@ export class ProgressPage implements OnInit {
     }
   }
 
-  // ─── Insights, export & session save ───────────────────────────────────────
-  // Generate insight messages from stats, accuracy CSS class, JSON export, and static saveGameSession (Firebase + local).
-  generateInsights() {
-    this.insights = [];
-
-    if (this.overallStats.accuracy >= 80) {
-      this.insights.push({
-        icon: '',
-        title: 'Excellent Accuracy',
-        message: `Great job! Your accuracy of ${this.overallStats.accuracy}% shows strong memory retention.`
-      });
-    } else if (this.overallStats.accuracy >= 60) {
-      this.insights.push({
-        icon: '',
-        title: 'Good Progress',
-        message: `You're doing well with ${this.overallStats.accuracy}% accuracy. Keep practicing!`
-      });
-    } else if (this.overallStats.accuracy > 0) {
-      this.insights.push({
-        icon: '',
-        title: 'Keep Practicing',
-        message: 'Practice makes perfect! Try focusing on accuracy over speed.'
-      });
-    }
-
-    if (this.overallStats.avgTimePerCard > 10) {
-      this.insights.push({
-        icon: '⏰',
-        title: 'Take Your Time',
-        message: 'No rush! Taking time to think helps with memory formation.'
-      });
-    }
-
-    if (this.categoryStats.length > 0) {
-      const bestCategory = this.categoryStats.reduce((best, current) => current.accuracy > best.accuracy ? current : best);
-      if (bestCategory.accuracy > 0) {
-        this.insights.push({
-          icon: '',
-          title: 'Strongest Category',
-          message: `You excel at ${bestCategory.name} with ${bestCategory.accuracy}% accuracy!`
-        });
-      }
-    }
-  }
-
-  getAccuracyClass(accuracy: number): string {
-    if (accuracy >= 80) return 'excellent';
-    if (accuracy >= 60) return 'good';
-    return 'needs-improvement';
-  }
-
-  async exportData() {
-    try {
-      const allData = {
-        overallStats: this.overallStats,
-        categoryStats: this.categoryStats,
-        recentSessions: this.recentSessions,
-        exportDate: new Date().toISOString(),
-        source: this.dataSource
-      };
-
-      const dataStr = JSON.stringify(allData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(dataBlob);
-      link.download = `progress-report-${new Date().toISOString().split('T')[0]}.json`;
-      link.click();
-    } catch (error) {
-      console.error('Error exporting data:', error);
-    }
-  }
-
-  
-  static async saveGameSession(firebaseService: FirebaseService, sessionData: {
-  category: string;
-  totalQuestions: number;
-  correctAnswers: number;
-  skipped: number;
-  totalTime: number;
-  timestamp?: number;
-}, progressPageInstance?: ProgressPage) {
-  try {
-    const sessionWithTimestamp = { ...sessionData, timestamp: sessionData.timestamp || Date.now() };
-
-    
-    await firebaseService.saveGameSession(sessionWithTimestamp);
-
-    
-    const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
-    const key = pid ? `gameSessions_${pid}` : 'gameSessions';
-    const sessions = JSON.parse(localStorage.getItem(key) || '[]');
-    sessions.push(sessionWithTimestamp);
-    localStorage.setItem(key, JSON.stringify(sessions));
-
-    
-
-    
-    if (progressPageInstance) {
-      await progressPageInstance.recalculateForCurrentFilter();
-    }
-  } catch (error) {
-    console.error('Error saving game session:', error);
-  }
-}
-
-  // ─── Period selection & filtering ──────────────────────────────────────────
-  // Date buckets for filtering, get game sessions, filter by period, period/custom change handlers, Firebase subscription, recalculate.
-  private getDateRangeFromSessions(sessions: any[]) {
-  const now = new Date();
-  const buckets: Array<{ key: string; label: string; start: Date; end: Date }> = [];
-
-  
-  if (this.selectedPeriod === 'today') {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    const label = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    buckets.push({ key: start.toISOString().split('T')[0], label, start, end });
-    return buckets;
-  }
-
-  
-  if (this.selectedPeriod === 'week') {
-    const firstSession = sessions
-      .map(s => new Date(s.timestamp || s.createdAt || 0))
-      .sort((a, b) => a.getTime() - b.getTime())[0] || now;
-
-    let cursor = new Date(firstSession);
-    cursor.setHours(0, 0, 0, 0);
-
-    while (cursor <= now) {
-      const start = new Date(cursor);
-      const end = new Date(start.getTime() + 7 * 24 * 3600 * 1000 - 1);
-      const label = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const key = `${start.toISOString().split('T')[0]}_${end.toISOString().split('T')[0]}`;
-      buckets.push({ key, label, start, end });
-      cursor.setDate(cursor.getDate() + 7);
-    }
-    return buckets;
-  }
-
-  
-  if (this.selectedPeriod === 'month') {
-    const monthsMap: Record<string, { start: Date; end: Date }> = {};
-    sessions.forEach(s => {
-      const d = new Date(s.timestamp || s.createdAt || 0);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      if (!monthsMap[key]) {
-        const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-        const end = new Date(d.getFullYear(), d.getMonth() + 1, 1, 0, 0, 0, 0);
-        end.setMilliseconds(end.getMilliseconds() - 1);
-        monthsMap[key] = { start, end };
-      }
-    });
-    for (const [key, range] of Object.entries(monthsMap)) {
-      const label = range.start.toLocaleDateString('en-US', { month: 'short' });
-      buckets.push({ key, label, start: range.start, end: range.end });
-    }
-    return buckets.sort((a, b) => a.start.getTime() - b.start.getTime());
-  }
-
-  
-  if (this.selectedPeriod === 'custom' || this.selectedPeriod === 'year') {
-    const start = this.customStartDate ? new Date(this.customStartDate) : new Date(now.getFullYear(), 0, 1);
-    const end = this.customEndDate ? new Date(this.customEndDate) : now;
-    buckets.push({ key: 'custom', label: `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`, start, end });
-    return buckets;
-  }
-
-  return [];
-}
-
-
-  
-  async getGameSessionData() {
-    try {
-      let allSessions: any[] = [];
-      try {
-        allSessions = await this.firebaseService.getUserGameSessions();
-        this.isFirebaseConnected = true;
-        this.dataSource = 'Firebase';
-      } catch (fbErr) {
-        console.warn('getGameSessionData: firebase fetch failed', fbErr);
-        this.isFirebaseConnected = false;
-        allSessions = this.firebaseService.getCachedData('gameSessions', []);
-        if ((!allSessions || allSessions.length === 0)) {
-          const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
-          const localKey = pid ? `gameSessions_${pid}` : 'gameSessions';
-          const raw = localStorage.getItem(localKey) || '[]';
-          try { allSessions = JSON.parse(raw); } catch { allSessions = []; }
-        }
-      }
-      return this.filterSessionsByPeriod(allSessions);
-    } catch (error) {
-      console.error('Error getting game session data:', error);
-    }
-    return [];
-  }
-
-  filterSessionsByPeriod(sessions: any[]) {
-  
-  if (this.selectedPeriod === 'all') {
-    return sessions.slice();
-  }
-  const dateBuckets = this.getDateRangeFromSessions(sessions); 
-  if (!dateBuckets || dateBuckets.length === 0) return [];
-
-  const start = dateBuckets[0].start;
-  const end   = dateBuckets[dateBuckets.length - 1].end;
-
-  return sessions.filter(session => {
-    const ts = session.timestamp || session.createdAt || 0;
-    const sessionDate = new Date(ts);
-    return sessionDate >= start && sessionDate <= end;
-  });
-}
-
-
-  onPeriodChange() {
-    
-    this.recalculateForCurrentFilter();
-  }
-
-  onCustomDateChange() {
-    if (this.customStartDate && this.customEndDate) {
-      this.recalculateForCurrentFilter();
-    }
-  }
-
   togglePatientMode() {
     this.isPatientMode = !this.isPatientMode;
     
   }
 
-  //called from firebase.service.ts
-  private subscribeToGameSessions() {
-    try {
-      this.firebaseService.subscribeToGameSessions((sessions) => {
-        
-        const filtered = this.filterSessionsByPeriod(sessions);
-        this.calculateOverallStats(filtered);
-        this.calculateCategoryStats(filtered);
-        this.loadRecentSessions(filtered);
-        this.updateChart();
-      });
-    } catch (e) {
-      console.error('Failed to subscribe to game sessions:', e);
-    }
-  }
+ 
 
   
   private async recalculateForCurrentFilter() {
-    const sessions = await this.getGameSessionData();
+    const sessions = await this.fetchGameSessions();
     this.calculateOverallStats(sessions);
     this.calculateCategoryStats(sessions);
-    this.loadRecentSessions(sessions);
     await this.updateChart();
   }
 
@@ -1556,4 +773,623 @@ export class ProgressPage implements OnInit {
     
     this.updateDateRangeText();
   }
+  checkPatientMode() {
+    const savedMode = localStorage.getItem('patientMode');
+    this.isPatientMode = savedMode === 'true';
+  }
+
+  onPatientModeToggle() {
+    window.dispatchEvent(new CustomEvent('caregiver-toggle'));
+  }
+
+  navigateToPatientsDashboard() {
+    this.router.navigate(['/patients-dashboard']);
+  }
+
+  navigateToHome() {
+    this.router.navigate(['/home']);
+  }
+
+  navigateToProfile() {
+    this.router.navigate(['/profile']);
+  }
+  async updateFirebaseStats(sessions: any[]) {
+    try {
+      console.log(' updateFirebaseStats called with:', {
+        isFirebaseConnected: this.isFirebaseConnected,
+        sessionsCount: sessions.length,
+        overallStats: this.overallStats,
+        categoryStatsCount: this.categoryStats.length,
+        recentSessionsCount: this.recentSessions.length
+      });
+  
+      if (!this.isFirebaseConnected) {
+        
+        return;
+      }
+  
+      const accuracyOverTime = this.calculateAccuracyOverTime(sessions);
+      
+      
+      const statsData = {
+        overallStats: this.overallStats,
+        categoryStats: this.categoryStats,
+        recentSessions: this.recentSessions,
+        accuracyOverTime: accuracyOverTime
+      };
+  
+      
+      
+      await this.firebaseService.updateUserStats(statsData);
+  
+      
+    } catch (error) {
+      console.error('Failed to update Firebase stats:', error);
+    }
+  }
+  calculateAccuracyOverTime(sessions: any[]) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+    const calculateAccuracy = (filteredSessions: any[]) => {
+      if (filteredSessions.length === 0) return 0;
+      const totalQuestions = filteredSessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
+      const totalCorrect = filteredSessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
+      return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+    };
+  
+    const todaySessions = sessions.filter(s => {
+      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
+      return sessionDate >= today;
+    });
+  
+    const weekSessions = sessions.filter(s => {
+      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
+      return sessionDate >= weekAgo;
+    });
+  
+    const monthSessions = sessions.filter(s => {
+      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
+      return sessionDate >= monthAgo;
+    });
+  
+    return {
+      today: calculateAccuracy(todaySessions),
+      week: calculateAccuracy(weekSessions),
+      month: calculateAccuracy(monthSessions),
+      allTime: calculateAccuracy(sessions)
+    };
+  }
+    
+
+  
+  static async saveGameSession(firebaseService: FirebaseService, sessionData: {
+    category: string;
+    totalQuestions: number;
+    correctAnswers: number;
+    skipped: number;
+    totalTime: number;
+    timestamp?: number;
+  }, progressPageInstance?: ProgressPage) {
+    try {
+      const sessionWithTimestamp = { ...sessionData, timestamp: sessionData.timestamp || Date.now() };
+  
+      
+      await firebaseService.saveGameSession(sessionWithTimestamp);
+  
+      
+      const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
+      const key = pid ? `gameSessions_${pid}` : 'gameSessions';
+      const sessions = JSON.parse(localStorage.getItem(key) || '[]');
+      sessions.push(sessionWithTimestamp);
+      localStorage.setItem(key, JSON.stringify(sessions));
+  
+      
+  
+      
+      if (progressPageInstance) {
+        await progressPageInstance.recalculateForCurrentFilter();
+      }
+    } catch (error) {
+      console.error('Error saving game session:', error);
+    }
+  }
+
+
+  async fetchGameSessions() {
+    try {
+      let allSessions: any[] = [];
+      try {
+        allSessions = await this.firebaseService.getUserGameSessions();
+        this.isFirebaseConnected = true;
+        this.dataSource = 'Firebase';
+        this.firebaseService.cacheData('gameSessions', allSessions);
+      } catch (fbErr) {
+        console.warn('fetchGameSessions: firebase fetch failed', fbErr);
+        this.isFirebaseConnected = false;
+        allSessions = this.firebaseService.getCachedData('gameSessions', []);
+        if ((!allSessions || allSessions.length === 0)) {
+          const pid = localStorage.getItem('selectedPatientId') || localStorage.getItem('userId');
+          const localKey = pid ? `gameSessions_${pid}` : 'gameSessions';
+          const raw = localStorage.getItem(localKey) || '[]';
+          try { allSessions = JSON.parse(raw); } catch { allSessions = []; }
+        }
+        this.dataSource = allSessions && allSessions.length > 0 ? 'Local Storage' : 'No Data';
+      }
+      return this.filterSessionsByPeriod(allSessions);
+    } catch (error) {
+      console.error('Error getting game session data:', error);
+    }
+    return [];
+  }
+
+
+  async loadProgressData() {
+    this.isLoading = true;
+    try {
+      const sessions = await this.fetchGameSessions() || [];
+      this.calculateOverallStats(sessions);
+      
+      if (sessions.length === 0) {
+        this.categoryStats.forEach(c => { c.accuracy = 0; c.cardsPlayed = 0; c.avgTime = 0; });
+      }
+
+      await this.updateFirebaseStats(sessions).catch(err => 
+        console.error('Firebase stats update failed:', err)
+      );
+    } catch (error) {
+      console.error('Error loading progress data:', error);
+      this.dataSource = 'Error';
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  calculateOverallStats(sessions: any[]) {
+    const defaultStats = { accuracy: 0, avgTimePerCard: 0, totalCards: 0, skippedCards: 0 };
+    
+    if (sessions.length === 0) {
+      this.overallStats = defaultStats;
+      return;
+    }
+
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    let totalTime = 0;
+    let totalSkipped = 0;
+
+    for (const session of sessions) {
+      totalQuestions += session.totalQuestions || 0;
+      totalCorrect += session.correctAnswers || 0;
+      totalTime += session.totalTime || 0;
+      totalSkipped += session.skipped || 0;
+    }
+
+    const totals = {
+      questions: totalQuestions,
+      correct: totalCorrect,
+      time: totalTime,
+      skipped: totalSkipped
+    };
+
+    this.overallStats = {
+      accuracy: totals.questions > 0 ? Math.round((totals.correct / totals.questions) * 100) : 0,
+      avgTimePerCard: totals.questions > 0 ? Math.round(totals.time / totals.questions) : 0,
+      totalCards: totals.questions,
+      skippedCards: totals.skipped
+    };
+  }
+
+
+
+  async forceUpdateFirebaseStats() {
+    try {
+      
+      const sessions = await this.firebaseService.getUserGameSessions();
+      
+      
+      if (sessions.length > 0) {
+        this.calculateOverallStats(sessions);
+        this.calculateCategoryStats(sessions);
+        
+        await this.updateFirebaseStats(sessions);
+        
+      } else {
+        
+      }
+    } catch (error) {
+      console.error('Force update failed:', error);
+    }
+  }
+
+
+   //called from firebase.service.ts
+   private subscribeToGameSessions() {
+    try {
+      this.firebaseService.subscribeToGameSessions((sessions) => {
+        
+        const filtered = this.filterSessionsByPeriod(sessions);
+        this.calculateOverallStats(filtered);
+        this.calculateCategoryStats(filtered);
+        this.updateChart();
+      });
+    } catch (e) {
+      console.error('Failed to subscribe to game sessions:', e);
+    }
+   }
+
+
+   async displayChartData() {
+    try {
+      let sessions: any[] = await this.fetchGameSessions();
+
+      if (!sessions || sessions.length === 0) {
+        
+        this.hasDataForPeriod = false;
+        
+        
+        let labels: string[] = [];
+        
+        if (this.selectedPeriod === 'custom' && this.customStartDate && this.customEndDate) {
+          const startDate = new Date(this.customStartDate);
+          const endDate = new Date(this.customEndDate);
+          labels = [`${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`];
+        } else {
+          
+          switch (this.selectedPeriod) {
+            case 'today':
+              labels = ['Today'];
+              break;
+            case 'week':
+              labels = ['This Week'];
+              break;
+            case 'month':
+              labels = [new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })];
+              break;
+            case 'all':
+              labels = ['All Time'];
+              break;
+            default:
+              labels = ['Today'];
+          }
+        }
+        
+        const emptyDataset = (label: string, color: string) => ({
+          label,
+          data: new Array(labels.length).fill(0),
+          borderColor: color,
+          backgroundColor: color + '33',
+          fill: false,
+          tension: 0.3
+        });
+        
+        return {
+          labels,
+          datasets: [
+            emptyDataset('Name That Memory - People', '#3b82f6'),
+            emptyDataset('Name That Memory - Places', '#10b981'),
+            emptyDataset('Name That Memory - Objects', '#f59e0b'),
+            emptyDataset('Category Match', '#ef4444')
+          ]
+        } as any;
+      }
+
+      
+      const dateRange = this.getChartDateRangeFromSessions(sessions);
+      const labels = dateRange.map(d => d.label);
+
+      // Handle no data for custom period
+      if (this.selectedPeriod === 'custom' && dateRange.length === 0) {
+        this.hasDataForPeriod = false;
+        const customRange = this.getCustomDateRange();
+        const periodLabel = customRange 
+          ? `${customRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${customRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+          : 'No Data';
+        
+        const emptyDataset = (label: string, color: string) => ({
+          label,
+          data: [0],
+          borderColor: color,
+          backgroundColor: color + '33',
+          fill: false,
+          tension: 0.3
+        });
+        
+        return {
+          labels: [periodLabel],
+          datasets: [
+            emptyDataset('Name That Memory - People', '#3b82f6'),
+            emptyDataset('Name That Memory - Places', '#10b981'),
+            emptyDataset('Name That Memory - Objects', '#f59e0b'),
+            emptyDataset('Category Match', '#ef4444')
+          ]
+        } as any;
+      }
+
+      const grouped = this.groupSessionsIntoBuckets(sessions, dateRange);
+
+      
+      for (const [key, sArr] of Object.entries(grouped)) {
+        
+      }
+
+      
+      const cats = [
+        { key: 'people', label: 'Name That Memory - People', color: '#3b82f6' },
+        { key: 'places', label: 'Name That Memory - Places', color: '#10b981' },
+        { key: 'objects', label: 'Name That Memory - Objects', color: '#f59e0b' },
+        { key: 'category-match', label: 'Category Match', color: '#ef4444' }
+      ];
+
+      //today
+      if (this.selectedPeriod === 'today') {
+        const datasets = cats.map(cat => {
+          
+          const todaySessions = sessions.filter(s => {
+            const sessionDate = new Date(s.timestamp || s.createdAt || 0);
+            const today = new Date();
+            const isToday = sessionDate.toDateString() === today.toDateString();
+            return isToday && this.isSessionInCategory(s, cat.key);
+          });
+
+          let accuracy = 0;
+          if (todaySessions.length > 0) {
+            const totalCorrect = todaySessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
+            const totalQuestions = todaySessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
+            accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+          }
+
+          return {
+            label: cat.label,
+            data: [accuracy],
+            borderColor: cat.color,
+            backgroundColor: cat.color + '80',
+            borderWidth: 1,
+            borderRadius: 4
+          } as any;
+        });
+
+        this.hasDataForPeriod = true;
+        return { 
+          labels: ['Today'], 
+          datasets 
+        } as any;
+      }
+
+      
+      const datasets = cats.map(cat => {
+        const data = dateRange.map((dr, drIdx) => {
+          const bucketKey = dr.key;
+          const allBucketSessions = grouped[bucketKey] || [];
+          const bucketSessions: any[] = allBucketSessions.filter((s: any) => this.isSessionInCategory(s, cat.key));
+
+          
+
+          if (!bucketSessions || bucketSessions.length === 0) return 0;
+          const totalCorrect = bucketSessions.reduce((sum, s) => sum + (s.correctAnswers || 0), 0);
+          const totalQuestions = bucketSessions.reduce((sum, s) => sum + (s.totalQuestions || 0), 0);
+          const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+          
+          return accuracy;
+        });
+
+        
+
+        return {
+          label: cat.label,
+          data,
+          borderColor: cat.color,
+          backgroundColor: cat.color + '33',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBorderWidth: 2,
+          pointBackgroundColor: cat.color,
+          pointBorderColor: '#fff'
+        } as any;
+      });
+
+      this.hasDataForPeriod = true;
+      const chartData = { labels, datasets };
+      
+      datasets.forEach((ds, idx) => {
+        
+      });
+      return chartData;
+    } catch (error) {
+      console.error('Error generating chart data:', error);
+      return { labels: ['Error'], datasets: [] } as any;
+    }
+  }
+
+  
+  private isSessionInCategory(session: any, catKey: string): boolean {
+  const c = (session.category || '').toString().toLowerCase().replace(/\s+/g, '-'); 
+  if (catKey === 'category-match') {
+    return c === 'category-match' || c === 'categorymatch' || c === 'category match';
+  } else {
+    return c === catKey || c === `name-that-memory-${catKey}`;
+  }
+  }
+
+  private getCustomDateRange(): { start: Date; end: Date } | null {
+    if (!this.customStartDate || !this.customEndDate) {
+      return null;
+    }
+    const start = new Date(this.customStartDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(this.customEndDate);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  private isSessionInDateRange(session: any, start: Date, end: Date): boolean {
+    const ts = session.timestamp || session.createdAt || 0;
+    const sessionDate = new Date(ts);
+    return !isNaN(sessionDate.getTime()) && sessionDate >= start && sessionDate <= end;
+  }
+
+  private getUniqueDatesFromSessions(sessions: any[]): Array<{ key: string; date: Date }> {
+    const uniqueDatesMap = new Map<string, Date>();
+    sessions.forEach(s => {
+      const sessionDate = new Date(s.timestamp || s.createdAt || 0);
+      if (!isNaN(sessionDate.getTime())) {
+        const dateKey = sessionDate.toISOString().split('T')[0];
+        if (!uniqueDatesMap.has(dateKey)) {
+          uniqueDatesMap.set(dateKey, sessionDate);
+        }
+      }
+    });
+    return Array.from(uniqueDatesMap.entries())
+      .map(([key, date]) => ({ key, date }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  private createDayBucket(date: Date): { key: string; label: string; start: Date; end: Date } {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    const key = dayStart.toISOString().split('T')[0];
+    const label = dayStart.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return { key, label, start: dayStart, end: dayEnd };
+  }
+
+//switchcase
+
+  private getChartDateRangeFromSessions(sessions: any[]) {
+    const buckets: Array<{ key: string; label: string; start: Date; end: Date }> = [];
+
+    if (this.selectedPeriod === 'today') {
+      buckets.push(this.createDayBucket(new Date()));
+      return buckets;
+    }
+
+    if (this.selectedPeriod === 'custom') {
+      const customRange = this.getCustomDateRange();
+      if (!customRange) return buckets;
+
+      const filteredSessions = (sessions || []).filter(s => 
+        this.isSessionInDateRange(s, customRange.start, customRange.end)
+      );
+      
+      if (filteredSessions.length === 0) return buckets;
+
+      const sortedDates = this.getUniqueDatesFromSessions(filteredSessions);
+      for (const { date } of sortedDates) {
+        buckets.push(this.createDayBucket(date));
+      }
+      return buckets;
+    }
+
+    if (this.selectedPeriod === 'all') {
+      if (!sessions || sessions.length === 0) return buckets;
+
+      const sortedDates = this.getUniqueDatesFromSessions(sessions);
+      for (const { date } of sortedDates) {
+        buckets.push(this.createDayBucket(date));
+      }
+      return buckets;
+    }
+
+    // For week/month periods
+    let earliestDate: Date | null = null;
+    if (sessions && sessions.length > 0) {
+      const sessionDates = sessions
+        .map(s => new Date(s.timestamp || s.createdAt || 0))
+        .filter(d => !isNaN(d.getTime()));
+      if (sessionDates.length > 0) {
+        earliestDate = new Date(Math.min(...sessionDates.map(d => d.getTime())));
+      }
+    }
+    if (!earliestDate || isNaN(earliestDate.getTime())) {
+      earliestDate = new Date();
+    }
+
+    const startDate = new Date(earliestDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    let endDate: Date;
+    if (this.selectedPeriod === 'month') {
+      endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 5);
+    } else {
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 7);
+    }
+    endDate.setHours(23, 59, 59, 999);
+
+    if (this.selectedPeriod === 'month') {
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        const monthStart = new Date(current.getFullYear(), current.getMonth(), 1, 0, 0, 0, 0);
+        const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0, 23, 59, 59, 999);
+        const key = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+        const label = monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        buckets.push({ key, label, start: monthStart, end: monthEnd });
+        current.setMonth(current.getMonth() + 1);
+      }
+    } else {
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        buckets.push(this.createDayBucket(current));
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    return buckets;
+  }
+
+  filterSessionsByPeriod(sessions: any[]) {
+    if (this.selectedPeriod === 'all') {
+      return sessions.slice();
+    }
+
+    if (this.selectedPeriod === 'custom') {
+      const customRange = this.getCustomDateRange();
+      if (!customRange) return [];
+      return sessions.filter(s => this.isSessionInDateRange(s, customRange.start, customRange.end));
+    }
+
+    const dateBuckets = this.getChartDateRangeFromSessions(sessions);
+    if (!dateBuckets || dateBuckets.length === 0) return [];
+
+    const start = dateBuckets[0].start;
+    const end = dateBuckets[dateBuckets.length - 1].end;
+    return sessions.filter(s => this.isSessionInDateRange(s, start, end));
+  }
+
+
+  onPeriodChange() {
+    
+    this.recalculateForCurrentFilter();
+  }
+
+  onCustomDateChange() {
+    if (this.customStartDate && this.customEndDate) {
+      this.recalculateForCurrentFilter();
+    }
+  }
+
+  
+  private groupSessionsIntoBuckets(sessions: any[], dateRange: Array<{ key: string; label: string; start: Date; end: Date }>) {
+    const map: Record<string, any[]> = {};
+    for (const dr of dateRange) map[dr.key] = [];
+    for (const s of sessions) {
+      const ts = (s.timestamp || s.createdAt || 0);
+      const d = new Date(ts);
+      for (const dr of dateRange) {
+        if (d >= dr.start && d <= dr.end) {
+          map[dr.key].push(s);
+          break;
+        }
+      }
+    }
+    return map;
+  }
+
+  
 }

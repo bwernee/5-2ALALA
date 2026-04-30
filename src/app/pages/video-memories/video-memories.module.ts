@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { VideoMemoriesPageRoutingModule } from './video-memories-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { VideoMemoriesPage } from './video-memories.page';
 
@@ -13,6 +14,7 @@ import { VideoMemoriesPage } from './video-memories.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     VideoMemoriesPageRoutingModule
   ],
   declarations: [VideoMemoriesPage]

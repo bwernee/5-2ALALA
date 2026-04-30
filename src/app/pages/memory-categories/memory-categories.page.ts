@@ -40,9 +40,13 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
     private location: Location
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.isPatientMode = localStorage.getItem('patientMode') === 'true';
-    this.loadCategories();
+    await this.loadCategories();
+  }
+
+  async ionViewWillEnter() {
+    await this.loadCategories();
   }
 
   ngOnDestroy(): void {
@@ -62,7 +66,7 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
     this.newCategoryDescription = '';
   }
 
-  saveNewCategory() {
+  async saveNewCategory() {
     const name = this.newCategoryName.trim();
     const description = this.newCategoryDescription.trim();
 
@@ -82,8 +86,15 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
       createdAt: Date.now(),
     };
 
+    // Save to Firebase for cross-device sync
+    try {
+      await this.firebaseService.saveCustomCategory(category);
+    } catch (e) {
+      console.warn('Failed to save category to Firebase:', e);
+    }
+
     this.userCategories.push(category);
-    this.saveCategories();
+    await this.saveCategories();
 
     window.dispatchEvent(new CustomEvent('categories-updated', { detail: this.userCategories }));
 
@@ -93,10 +104,10 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
     this.router.navigate(['/category', category.id], {
       state: { categoryName: category.name }
     });
+    
   }
 
   async onEditCategory(cat: UserCategory, ev?: Event) {
-    
     ev?.stopPropagation();
     ev?.preventDefault();
 
@@ -121,7 +132,7 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Save',
-          handler: (data) => {
+          handler: async (data) => {
             const name = (data?.name || '').trim();
             const description = (data?.description || '').trim();
 
@@ -130,21 +141,31 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
               return false;
             }
             if (name !== cat.name && this.userCategories.some(c => c.id !== cat.id && c.name.toLowerCase() === name.toLowerCase())) {
+            
               this.presentToast('Category name already exists.', 'warning');
               return false;
             }
 
-            
             const categoryIndex = this.userCategories.findIndex(c => c.id === cat.id);
             if (categoryIndex >= 0) {
-              this.userCategories[categoryIndex] = {
+              this.saveCategories();
+
+              const updatedCategory = {
                 ...this.userCategories[categoryIndex],
                 name,
                 description: description || undefined
               };
-              this.saveCategories();
-
               
+              // Save to Firebase
+              try {
+                await this.firebaseService.saveCustomCategory(updatedCategory);
+              } catch (e) {
+                console.warn('Failed to update category in Firebase:', e);
+              }
+              
+              this.userCategories[categoryIndex] = updatedCategory;
+              await this.saveCategories();
+
               window.dispatchEvent(new CustomEvent('categories-updated', { detail: this.userCategories }));
 
               this.presentToast('Category updated successfully!', 'success');
@@ -156,16 +177,16 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
       ]
     });
     await alert.present();
+    
   }
 
   async onRemoveCategory(cat: UserCategory, ev?: Event) {
-    
     ev?.stopPropagation();
     ev?.preventDefault();
 
     const alert = await this.alertCtrl.create({
       header: 'Remove Category',
-      message: `Remove "${cat.name}"? This will s the category and all its flashcards.`,
+      message: `Remove "${cat.name}"? This will delete the category and all its flashcards.`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
@@ -173,20 +194,21 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
           role: 'destructive',
           handler: async () => {
             try {
+              // Delete from Firebase
               
+              
+              await this.firebaseService.deleteCustomCategory(cat.id);
               await this.firebaseService.deleteFlashcardsByCategory(cat.name);
-              
 
-              
               this.userCategories = this.userCategories.filter(c => c.id !== cat.id);
-              this.saveCategories();
-
+              await this.saveCategories();
               
+
+              // Clear local storage
               const user = this.firebaseService.getCurrentUser();
               const uid = user ? user.uid : 'anon';
               const cardsKey = `alala_cards_${cat.id}_${uid}`;
               localStorage.removeItem(cardsKey);
-              
 
               this.presentToast('Category and flashcards removed', 'success');
             } catch (err) {

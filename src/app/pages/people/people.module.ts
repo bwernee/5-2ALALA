@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { PeoplePageRoutingModule } from './people-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { PeoplePage } from './people.page';
 
@@ -13,6 +14,7 @@ import { PeoplePage } from './people.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     PeoplePageRoutingModule
   ],
   declarations: [PeoplePage]

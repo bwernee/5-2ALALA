@@ -3,20 +3,24 @@
   <div class="lavender-container">
     
     
-    <div class="welcome-section">
-      <div class="welcome-content">
+    <app-global-header>
+      <div gh-left>
         <div class="welcome-icon">
           <img src="assets/ALALA_logo.png" alt="ALALA logo" class="logo-image" />
         </div>
-        <div class="welcome-text">
-          <h1>Welcome to ALALA!</h1>
-          <p>Your magical memory companion</p>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Welcome to ALALA!</h1>
+          <p class="app-header__subtitle">Your magical memory companion</p>
         </div>
+      </div>
+      <div gh-right>
         <ion-button routerLink="/settings" class="settings-btn" fill="clear" *ngIf="!isPatientMode" aria-label="Settings">
           <ion-icon name="settings-outline"></ion-icon>
         </ion-button>
       </div>
-    </div>
+    </app-global-header>
     <div class="cute-card progress-card" *ngIf="!isPatientMode">
       <div class="card-header" (click)="toggleProgressDropdown()">
         <div class="header-content">

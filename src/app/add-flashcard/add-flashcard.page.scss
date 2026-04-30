@@ -2,19 +2,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 .lavender-content {
-  --ion-background-color: #faf8ff;
-  --ion-text-color: #2d1b69;
+  --ion-background-color: var(--app-bg-1);
+  --ion-text-color: var(--app-text);
   font-family: 'Inter', sans-serif;
   height: 100vh;
   overflow: auto;
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ede8ff 100%);
+  background: var(--app-bg-gradient);
 }
 
 .lavender-header {
-  --background: linear-gradient(135deg, #794494 0%, #794494 50%, #794494 100%);
+  --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
   --color: white;
   --border-width: 0;
-  box-shadow: 0 4px 20px rgba(121, 68, 148, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--app-primary-rgb), 0.3);
   
   .lavender-title {
     font-weight: 600;
@@ -67,7 +67,7 @@
   
   .category-fixed {
     .category-value {
-      color: #794494;
+      color: var(--app-primary);
       font-weight: 600;
       font-size: 16px;
     }
@@ -81,24 +81,24 @@
   margin-bottom: 8px;
   
   .badge-content {
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-    border: 2px solid #c7d2fe;
+    background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
     border-radius: 20px;
     padding: 12px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 4px 12px rgba(121, 68, 148, 0.15);
+    box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.15);
     transition: all 0.3s ease;
     
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(121, 68, 148, 0.25);
+      box-shadow: 0 6px 20px rgba(var(--app-primary-rgb), 0.25);
     }
   }
   
   .badge-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
     width: 32px;
     height: 32px;
@@ -126,7 +126,7 @@
     
     .badge-value {
       font-size: 16px;
-      color: #2d1b69;
+      color: var(--app-text);
       font-weight: 600;
     }
   }
@@ -137,7 +137,7 @@
   .categories-title {
     font-size: 16px;
     font-weight: 600;
-    color: #2d1b69;
+    color: var(--app-text);
     margin-bottom: 12px;
     text-align: center;
   }
@@ -159,14 +159,14 @@
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
-        border-color: #c7d2fe;
+        box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
+        border-color: rgba(var(--app-primary-rgb), 0.12);
       }
       
       &.selected {
-        background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
-        border-color: #794494;
-        box-shadow: 0 4px 16px rgba(121, 68, 148, 0.25);
+        background: linear-gradient(180deg, #ffffff 0%, #faf6ef 100%);
+        border-color: var(--app-primary);
+        box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.25);
         transform: translateY(-2px);
       }
       
@@ -178,7 +178,7 @@
       .card-name {
         font-size: 14px;
         font-weight: 500;
-        color: #2d1b69;
+        color: var(--app-text);
       }
     }
   }
@@ -189,12 +189,12 @@
   background: white;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 12px rgba(121, 68, 148, 0.1);
-  border: 1px solid rgba(121, 68, 148, 0.1);
+  box-shadow: 0 2px 12px rgba(var(--app-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.1);
   transition: all 0.3s ease;
   
   &:hover {
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.15);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.15);
     transform: translateY(-1px);
   }
 }
@@ -208,20 +208,20 @@
   border-bottom: 1px solid #f3f4f6;
   
   ion-icon {
-    color: #794494;
+    color: var(--app-primary);
     font-size: 18px;
   }
   
   span {
     font-size: 16px;
     font-weight: 600;
-    color: #2d1b69;
+    color: var(--app-text);
   }
 }
 
 
 .lavender-item {
-  --background: #faf8ff;
+  --background: var(--app-bg-1);
   --border-radius: 12px;
   --border-width: 2px;
   --border-color: #e5e7eb;
@@ -235,12 +235,12 @@
   &:focus-within {
     --border-color: #8b5cf6;
     --background: white;
-    box-shadow: 0 0 0 3px rgba(121, 68, 148, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--app-primary-rgb), 0.1);
   }
   
   ion-input {
     font-size: 16px;
-    color: #2d1b69;
+    color: var(--app-text);
     font-weight: 500;
     
     &::placeholder {
@@ -271,7 +271,7 @@
   
   &:hover {
     border-color: #8b5cf6;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.2);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.2);
   }
   
   &:active {
@@ -299,7 +299,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(121, 68, 148, 0.8) 0%, rgba(121, 68, 148, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(var(--app-primary-rgb), 0.8) 0%, rgba(var(--app-primary-rgb), 0.8) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -340,7 +340,7 @@
   gap: 12px;
   
   .placeholder-icon {
-    background: linear-gradient(135deg, #794494, #794494);
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -364,7 +364,7 @@
     .main-text {
       font-size: 15px;
       font-weight: 600;
-      color: #2d1b69;
+      color: var(--app-text);
     }
     
     .sub-text {
@@ -384,26 +384,26 @@
     --border-radius: 12px;
     --border-width: 2px;
     --border-color: #e5e7eb;
-    --color: #2d1b69;
+    --color: var(--app-text);
     font-weight: 500;
     height: 44px;
     margin: 0;
     transition: all 0.3s ease;
     
     &:hover {
-      --border-color: #794494;
-      --background: #faf8ff;
+      --border-color: var(--app-primary);
+      --background: var(--app-bg-1);
     }
   }
   
   .camera-btn {
-    --border-color: #794494;
-    --color: #794494;
+    --border-color: var(--app-primary);
+    --color: var(--app-primary);
   }
   
   .gallery-btn {
-    --border-color: #794494;
-    --color: #794494;
+    --border-color: var(--app-primary);
+    --color: var(--app-primary);
   }
 }
 
@@ -418,7 +418,7 @@
     --border-radius: 12px;
     --border-width: 2px;
     --border-color: #e5e7eb;
-    --color: #2d1b69;
+    --color: var(--app-text);
     font-weight: 500;
     height: 44px;
     font-size: 14px;
@@ -426,8 +426,8 @@
     transition: all 0.3s ease;
     
     &:hover {
-      --border-color: #794494;
-      --background: #faf8ff;
+      --border-color: var(--app-primary);
+      --background: var(--app-bg-1);
     }
     
     &.recording {
@@ -439,13 +439,13 @@
   }
   
   .record-button-lavender {
-    --border-color: #794494;
-    --color: #794494;
+    --border-color: var(--app-primary);
+    --color: var(--app-primary);
   }
   
   .upload-btn {
-    --border-color: #794494;
-    --color: #794494;
+    --border-color: var(--app-primary);
+    --color: var(--app-primary);
   }
 }
 
@@ -453,17 +453,17 @@
   margin-top: 8px;
   
   .save-flashcard-btn {
-    --background: linear-gradient(135deg, #794494 0%, #794494 100%);
+    --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
     --color: white;
     --border-radius: 12px;
     height: 50px;
     font-weight: 600;
     font-size: 16px;
-    box-shadow: 0 4px 16px rgba(121, 68, 148, 0.3);
+    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.3);
     margin: 0;
     
     &:hover:not([disabled]) {
-      box-shadow: 0 6px 20px rgba(121, 68, 148, 0.4);
+      box-shadow: 0 6px 20px rgba(var(--app-primary-rgb), 0.4);
     }
     
     &[disabled] {
@@ -539,14 +539,14 @@
       gap: 6px;
       
       ion-icon {
-        color: #794494;
+        color: var(--app-primary);
         font-size: 16px;
       }
       
       span {
         font-size: 13px;
         font-weight: 600;
-        color: #2d1b69;
+        color: var(--app-text);
       }
     }
     
@@ -565,12 +565,12 @@
     gap: 10px;
     
     .play-btn {
-      --color: #794494;
+      --color: var(--app-primary);
       --background: white;
       --border-radius: 50%;
       width: 36px;
       height: 36px;
-      box-shadow: 0 2px 6px rgba(121, 68, 148, 0.2);
+      box-shadow: 0 2px 6px rgba(var(--app-primary-rgb), 0.2);
       
       &:hover {
         transform: scale(1.1);
@@ -596,8 +596,8 @@
   
   .audio-range-lavender {
     --bar-background: #e5e7eb;
-    --bar-background-active: #794494;
-    --knob-background: #794494;
+    --bar-background-active: var(--app-primary);
+    --knob-background: var(--app-primary);
     --knob-size: 16px;
   }
 }
@@ -776,10 +776,10 @@
 
 
 :root {
-  --lavender-primary: #794494;
-  --lavender-secondary: #794494;
-  --lavender-light: #794494;
-  --lavender-bg: #faf8ff;
-  --lavender-text: #2d1b69;
+  --lavender-primary: var(--app-primary);
+  --lavender-secondary: var(--app-primary);
+  --lavender-light: var(--app-primary);
+  --lavender-bg: var(--app-bg-1);
+  --lavender-text: var(--app-text);
   --lavender-border: #e5e7eb;
 }

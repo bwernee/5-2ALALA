@@ -1,14 +1,20 @@
-<ion-header class="app-header">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/signup"></ion-back-button>
-    </ion-buttons>
-    <ion-title class="app-title">ALALA</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="lavender-content patient-details-screen">
+  <div class="container app-container">
 
-<ion-content class="patient-details-screen">
-  <div class="container">
+    <app-global-header>
+      <div gh-left>
+        <ion-buttons>
+          <ion-button class="back-btn" fill="clear" routerLink="/signup">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">ALALA</h1>
+        </div>
+      </div>
+    </app-global-header>
     
     <div class="header-section">
       <h1>Patient Details</h1>

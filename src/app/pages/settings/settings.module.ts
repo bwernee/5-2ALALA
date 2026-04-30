@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { SettingsPageRoutingModule } from './settings-routing.module';
+import { SharedModule } from '../../shared/shared.module';
 
 import { SettingsPage } from './settings.page';
 
@@ -13,6 +14,7 @@ import { SettingsPage } from './settings.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     SettingsPageRoutingModule
   ],
   declarations: [SettingsPage]
