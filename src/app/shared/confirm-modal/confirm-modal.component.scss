@@ -1,0 +1,63 @@
+.confirm-modal {
+  --background: transparent;
+}
+
+.confirm-modal__backdrop {
+  min-height: 100%;
+  width: 100%;
+  padding: 22px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-overlay);
+  backdrop-filter: blur(var(--app-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--app-overlay-blur));
+}
+
+.confirm-modal__card {
+  width: min(420px, 94vw);
+  background: var(--app-modal-bg);
+  border-radius: var(--app-modal-radius);
+  box-shadow: var(--app-modal-shadow);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+  padding: 22px 20px 18px;
+  color: var(--app-text);
+}
+
+.confirm-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.confirm-modal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--app-primary);
+  letter-spacing: 0.02em;
+}
+
+.confirm-modal__message {
+  margin: 0 0 16px 0;
+  text-align: center;
+  color: var(--app-muted);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.confirm-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+ion-button.app-button-solid.danger {
+  --background: #dc2626;
+  --background-activated: #b91c1c;
+  --background-focused: #b91c1c;
+}
+

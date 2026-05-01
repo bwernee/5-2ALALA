@@ -91,7 +91,7 @@ export class FirebaseTestComponent {
     this.authResult = null;
 
     try {
-      const user = await this.firebaseService.signup(this.testEmail, this.testPassword, 'Test User');
+      const user = await this.firebaseService.signup(this.testEmail, this.testPassword, 'Test User', '09999999999');
       this.authResult = {
         success: true,
         message: ` Signup successful! Created user: ${user.email} with nested data structure`

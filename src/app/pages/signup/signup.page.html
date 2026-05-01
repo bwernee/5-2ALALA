@@ -38,9 +38,29 @@
             <ion-icon name="person-outline" slot="start"></ion-icon>
             <ion-input 
               type="text" 
-              placeholder="Full Name" 
-              [(ngModel)]="name" 
-              name="name">
+              placeholder="First Name" 
+              [(ngModel)]="firstName" 
+              name="firstName">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="custom-input">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            <ion-input 
+              type="text" 
+              placeholder="Last Name" 
+              [(ngModel)]="lastName" 
+              name="lastName">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="custom-input">
+            <ion-icon name="calendar-outline" slot="start"></ion-icon>
+            <ion-input
+              type="date"
+              placeholder="Birthday"
+              [(ngModel)]="birthday"
+              name="birthday">
             </ion-input>
           </ion-item>
 
@@ -89,7 +109,7 @@
           expand="block"
           class="signup-btn"
           (click)="signup()"
-          [disabled]="isLoading || !name || !email || !phoneNumber || !password || !confirmPassword">
+          [disabled]="isLoading || !firstName || !lastName || !birthday || !email || !phoneNumber || !password || !confirmPassword">
           <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
           <span *ngIf="!isLoading">Create Account</span>
           <span *ngIf="isLoading">Creating Account...</span>

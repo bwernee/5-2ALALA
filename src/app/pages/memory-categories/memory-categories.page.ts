@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import { Location } from '@angular/common';
 import type { Unsubscribe } from '@firebase/firestore';
+import { ConfirmService } from '../../services/confirm.service';
 
 type UUID = string;
 
@@ -35,8 +36,8 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private firebaseService: FirebaseService,
+    private confirmService: ConfirmService,
     private location: Location
   ) {}
 
@@ -245,15 +246,10 @@ export class MemoryCategoriesPage implements OnInit, OnDestroy {
 
   private async presentToast(
     message: string,
-    color: 'success' | 'warning' | 'danger' | 'primary' = 'primary'
+    _color: 'success' | 'warning' | 'danger' | 'primary' = 'primary'
   ) {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 1700,
-      color,
-      position: 'bottom'
-    });
-    await toast.present();
+    // Toasts removed for defense UI consistency (use consistent modals instead).
+    await this.confirmService.notify(message);
   }
 
   private uuid(): UUID {

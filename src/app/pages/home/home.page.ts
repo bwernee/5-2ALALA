@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import type { Unsubscribe } from '@firebase/firestore';
+import { ConfirmService } from '../../services/confirm.service';
 
 
 @Component({
@@ -38,9 +39,9 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
     private firebaseService: FirebaseService,
+    private confirmService: ConfirmService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -94,7 +95,7 @@ export class HomePage implements OnInit, OnDestroy {
   private activatePatientModeDirectly() {
     this.isPatientMode = true;
     localStorage.setItem('patientMode', 'true');
-    this.presentToast('Patient Mode enabled');
+    void this.confirmService.notify('Patient Mode enabled');
     window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
   }
 
@@ -268,26 +269,11 @@ export class HomePage implements OnInit, OnDestroy {
       ]);
 
       await loading.dismiss();
-      
-      
-      const toast = await this.toastCtrl.create({
-        message: 'Data refreshed successfully!',
-        duration: 2000,
-        position: 'top',
-        color: 'success'
-      });
-      await toast.present();
+      await this.confirmService.notify('Data refreshed successfully!', 'Saved');
       
     } catch (error) {
       console.error('Error refreshing data:', error);
-      
-      const toast = await this.toastCtrl.create({
-        message: 'Error refreshing data',
-        duration: 2000,
-        position: 'top',
-        color: 'danger'
-      });
-      await toast.present();
+      await this.confirmService.notify('Error refreshing data', 'Could not refresh');
     }
   }
 
@@ -337,7 +323,7 @@ export class HomePage implements OnInit, OnDestroy {
           handler: () => {
             this.isPatientMode = true;
             localStorage.setItem('patientMode', 'true');
-            this.presentToast('Patient Mode enabled');
+            void this.confirmService.notify('Patient Mode enabled');
             window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
           }
         }
@@ -412,13 +398,13 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     if (!inputPin || inputPin !== savedPin) {
-      this.presentToast('Incorrect password', 'danger');
+      await this.confirmService.notify('Incorrect password', 'Try again');
       return false;
     }
 
     this.isPatientMode = false;
     localStorage.setItem('patientMode', 'false');
-    this.presentToast('Standard Mode enabled');
+    await this.confirmService.notify('Standard Mode enabled');
     
     window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: false }));
     return true;
@@ -455,16 +441,5 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
-  private async presentToast(
-    message: string,
-    color?: 'success' | 'warning' | 'danger' | 'primary' | 'medium'
-  ) {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 1700,
-      color: color || 'medium',
-      position: 'top'
-    });
-    await toast.present();
-  }
+  // Toasts removed for defense UI consistency (use consistent modals instead).
 }

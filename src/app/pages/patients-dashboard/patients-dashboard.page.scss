@@ -453,6 +453,31 @@
   }
 }
 
+.patient-delete {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+  background: rgba(var(--app-primary-rgb), 0.06);
+  color: var(--app-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.patient-delete ion-icon {
+  font-size: 20px;
+}
+
+.patient-delete:active {
+  transform: scale(0.98);
+}
+
 .add-patient-card {
   .patient-info {
     h3 {

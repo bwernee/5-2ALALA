@@ -1,0 +1,218 @@
+.mrc-content {
+  --ion-background-color: var(--app-bg-1);
+  background: var(--app-bg-gradient);
+  --overflow: hidden !important;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 12px;
+  gap: 12px;
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Force no scrolling for this feature */
+:host ::ng-deep ion-content.mrc-content::part(scroll) {
+  overflow: hidden !important;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 18px;
+  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+  box-shadow: 0 10px 30px rgba(var(--app-primary-rgb), 0.12);
+  padding: 18px;
+  width: min(560px, 94vw);
+}
+
+.panel-title {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--app-text);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.instruction {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  justify-content: center;
+  align-content: start;
+}
+
+.grid-study {
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+}
+
+.grid-recall {
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
+}
+
+.grid-distraction {
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
+}
+
+@media (max-width: 420px) {
+  .grid-recall {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+  .grid-distraction {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+}
+
+.study-card,
+.recall-card {
+  border-radius: 18px;
+  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
+  background: white;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji {
+  font-size: clamp(46px, 9.5vw, 64px);
+  line-height: 1;
+}
+
+.recall-card {
+  appearance: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.recall-card:active {
+  transform: scale(0.985);
+}
+
+.recall-card.selected {
+  border-color: rgba(0, 184, 148, 0.55);
+  background: rgba(208, 244, 222, 1);
+}
+
+.recall-card.blocked,
+.big-choice.blocked {
+  pointer-events: none;
+}
+
+.feedback {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: hidden;
+  margin-bottom: 10px;
+}
+
+.feedback.visible {
+  visibility: visible;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.big-choice {
+  border: none;
+  border-radius: 16px;
+  padding: 18px 14px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+}
+
+.big-choice.purple {
+  background: linear-gradient(180deg, #7a36a5 0%, #5c2782 100%);
+  color: white;
+}
+
+.big-choice.blue {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+ion-button.big-btn {
+  --border-radius: 16px;
+  --padding-top: 18px;
+  --padding-bottom: 18px;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: none;
+}
+
+ion-button.secondary {
+  --background: rgba(var(--app-primary-rgb), 0.12);
+  --color: var(--app-primary);
+}
+
+.result-pills {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+
+.pill {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.btn-col {
+  display: grid;
+  gap: 12px;
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

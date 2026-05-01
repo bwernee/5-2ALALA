@@ -98,13 +98,22 @@ const routes: Routes = [
     loadChildren: () => import('./pages/brain-games/brain-games.module').then( m => m.BrainGamesPageModule)
   },
   {
+    path: 'memory-flip',
+    loadChildren: () => import('./pages/memory-flip/memory-flip.module').then(m => m.MemoryFlipPageModule)
+  },
+  {
+    path: 'memory-recall-challenge',
+    loadChildren: () => import('./pages/memory-recall-challenge/memory-recall-challenge.module').then(m => m.MemoryRecallChallengePageModule)
+  },
+  {
     path: 'category-performance',
     loadChildren: () => import('./pages/category-performance/category-performance.module').then( m => m.CategoryPerformancePageModule)
   },
   {
     path: 'recent-sessions',
     loadChildren: () => import('./pages/recent-sessions/recent-sessions.module').then( m => m.RecentSessionsPageModule)
-  },  {
+  },
+  {
     path: 'profile',
     loadChildren: () => import('./pages/profile/profile.module').then( m => m.ProfilePageModule)
   },

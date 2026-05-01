@@ -54,6 +54,13 @@
           <div class="patient-action">
             <ion-icon name="chevron-forward-outline"></ion-icon>
           </div>
+          <button
+            type="button"
+            class="patient-delete"
+            (click)="onDeletePatientClicked(patient, $event)"
+            aria-label="Delete patient">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
         </div>
       </div>
 
@@ -85,45 +92,61 @@
 
       <div class="modal-body">
         <div class="form-group">
-          <label for="patientName">PATIENT NAME</label>
+          <label for="patientFirstName">FIRST NAME</label>
           <div class="input-wrapper">
             <ion-icon name="person-outline"></ion-icon>
             <input
-              id="patientName"
-              [(ngModel)]="newPatientName"
-              placeholder="Enter patient's full name"
+              id="patientFirstName"
+              [(ngModel)]="newPatientFirstName"
+              placeholder="Enter patient's first name"
               type="text"
             />
           </div>
         </div>
 
         <div class="form-group">
-          <label for="patientAge">AGE</label>
+          <label for="patientLastName">LAST NAME</label>
           <div class="input-wrapper">
-            <ion-icon name="calendar-outline"></ion-icon>
+            <ion-icon name="person-outline"></ion-icon>
             <input
-              id="patientAge"
-              [(ngModel)]="newPatientAge"
-              placeholder="Enter patient's age"
-              type="number"
-              min="0"
-              max="150"
+              id="patientLastName"
+              [(ngModel)]="newPatientLastName"
+              placeholder="Enter patient's last name"
+              type="text"
             />
           </div>
         </div>
 
         <div class="form-group">
+          <label for="patientBirthday">BIRTHDAY</label>
+          <div class="input-wrapper">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <ion-datetime-button datetime="newPatientBirthdayPicker"></ion-datetime-button>
+          </div>
+        </div>
+
+        <ion-modal [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              id="newPatientBirthdayPicker"
+              presentation="date"
+              [(ngModel)]="newPatientBirthday"
+              preferWheel="false"
+              showDefaultButtons="true">
+            </ion-datetime>
+          </ng-template>
+        </ion-modal>
+
+        <div class="form-group">
           <label for="patientSex">SEX</label>
           <div class="input-wrapper">
             <ion-icon name="person-circle-outline"></ion-icon>
-            <select id="patientSex" [(ngModel)]="newPatientSex">
-              <option value="" disabled selected>Select patient's sex</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-              <option value="Prefer not to say">Prefer not to say</option>
-            </select>
           </div>
+          <ion-segment class="app-segment" [(ngModel)]="newPatientSex">
+            <ion-segment-button value="Male"><ion-label>Male</ion-label></ion-segment-button>
+            <ion-segment-button value="Female"><ion-label>Female</ion-label></ion-segment-button>
+            <ion-segment-button value="Other"><ion-label>Other</ion-label></ion-segment-button>
+          </ion-segment>
         </div>
       </div>
 

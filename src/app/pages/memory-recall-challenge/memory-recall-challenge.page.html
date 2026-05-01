@@ -1,0 +1,115 @@
+<ion-content class="mrc-content" fullscreen [scrollY]="false">
+  <div class="container">
+    <app-global-header>
+      <div gh-left>
+        <ion-buttons>
+          <ion-button class="back-btn" fill="clear" (click)="onBackTapped()">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <div class="welcome-icon">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </div>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">Memory Recall Challenge</h1>
+          <p class="app-header__subtitle">Calm memory practice, no pressure</p>
+        </div>
+      </div>
+    </app-global-header>
+
+    <div class="stage">
+    <!-- START (first load) -->
+    <div *ngIf="phase === 'study' && studyCards.length === 0" class="panel fade-in">
+      <h2 class="panel-title">Ready?</h2>
+      <p class="instruction">You will study 4 cards, then recall them calmly.</p>
+      <ion-button class="big-btn" expand="block" (click)="startNewRound()">Start</ion-button>
+    </div>
+
+    <!-- STUDY -->
+    <div *ngIf="phase === 'study' && studyCards.length > 0" class="panel fade-in">
+      <h2 class="panel-title">Study these cards</h2>
+      <p class="instruction">Study at your own pace, then tap Done 😊</p>
+      <div class="grid grid-study">
+        <div class="study-card" *ngFor="let e of studyCards">
+          <div class="emoji">{{ e }}</div>
+        </div>
+      </div>
+      <div class="btn-col">
+        <ion-button class="big-btn" expand="block" (click)="doneStudying()">Done</ion-button>
+      </div>
+    </div>
+
+    <!-- DISTRACTION -->
+    <div *ngIf="phase === 'distraction'" class="panel fade-in">
+      <h2 class="panel-title">Quick calm task</h2>
+      <p class="instruction">{{ distractionPrompt }}</p>
+
+      <div class="feedback" [class.visible]="!!feedbackMessage">{{ feedbackMessage || ' ' }}</div>
+
+      <!-- Color choice -->
+      <div class="btn-row" *ngIf="distractionType === 'color'">
+        <button type="button" class="big-choice purple" (click)="onColorChoice('purple')" [class.blocked]="isBusy">
+          Purple
+        </button>
+        <button type="button" class="big-choice blue" (click)="onColorChoice('blue')" [class.blocked]="isBusy">
+          Blue
+        </button>
+      </div>
+
+      <!-- Tap task -->
+      <div class="grid grid-distraction" *ngIf="distractionType !== 'color'">
+        <button
+          type="button"
+          class="recall-card"
+          *ngFor="let c of distractionCards"
+          (click)="onTapDistractionCard(c.id)"
+          [class.selected]="c.isSelected"
+          [class.blocked]="isBusy">
+          <div class="emoji">{{ c.emoji }}</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- RECALL -->
+    <div *ngIf="phase === 'recall'" class="panel fade-in">
+      <h2 class="panel-title">Which cards did you see earlier?</h2>
+      <p class="instruction">Select {{ studyCards.length }} cards only 😊</p>
+
+      <div class="feedback" [class.visible]="!!feedbackMessage">{{ feedbackMessage || ' ' }}</div>
+
+      <div class="grid grid-recall">
+        <button
+          type="button"
+          class="recall-card"
+          *ngFor="let c of recallCards"
+          (click)="toggleRecallCard(c.id)"
+          [class.selected]="c.isSelected"
+          [class.blocked]="isBusy">
+          <div class="emoji">{{ c.emoji }}</div>
+        </button>
+      </div>
+
+      <ion-button class="big-btn" expand="block" (click)="submitRecall()">
+        Submit
+      </ion-button>
+    </div>
+
+    <!-- RESULT -->
+    <div *ngIf="phase === 'result'" class="panel fade-in">
+      <h2 class="panel-title">Well done for trying 😊</h2>
+      <div class="result-pills">
+        <div class="pill"><strong>Score:</strong> {{ recallPercent }}%</div>
+        <div class="pill"><strong>False picks:</strong> {{ falseSelections }}</div>
+        <div class="pill"><strong>Retention:</strong> {{ retentionRate }}%</div>
+      </div>
+      <div class="btn-col">
+        <ion-button class="big-btn" expand="block" (click)="playAgain()">Play Again</ion-button>
+        <ion-button class="big-btn secondary" expand="block" (click)="backToBrainGames()">Back to Menu</ion-button>
+      </div>
+    </div>
+    </div>
+  </div>
+</ion-content>
+

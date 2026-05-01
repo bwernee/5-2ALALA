@@ -1,8 +1,9 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertController, ToastController, ActionSheetController } from '@ionic/angular';
+import { AlertController, ActionSheetController } from '@ionic/angular';
 import { Location } from '@angular/common';
 import { FirebaseService } from '../../services/firebase.service';
+import { ConfirmService } from '../../services/confirm.service';
 
 type UUID = string;
 
@@ -94,12 +95,12 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private actionSheetCtrl: ActionSheetController,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private location: Location,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private confirmService: ConfirmService
   ) {}
 
   async ngOnInit() {
@@ -501,10 +502,10 @@ export class CustomCategoryPage implements OnInit, OnDestroy {
   
   private async presentToast(
     message: string,
-    color: 'success' | 'warning' | 'danger' | 'primary' = 'primary'
+    _color: 'success' | 'warning' | 'danger' | 'primary' = 'primary'
   ) {
-    const toast = await this.toastCtrl.create({ message, duration: 1600, color, position: 'bottom' });
-    await toast.present();
+    // Toasts removed for defense UI consistency (use consistent modals instead).
+    await this.confirmService.notify(message);
   }
 
   // Image Modal Methods

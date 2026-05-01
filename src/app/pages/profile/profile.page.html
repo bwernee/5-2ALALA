@@ -26,7 +26,7 @@
         <ion-icon name="person-circle"></ion-icon>
       </div>
       <div class="patient-basic-info">
-        <h1 class="patient-name">{{ patientInfo?.name || 'Patient Name' }}</h1>
+        <h1 class="patient-name">{{ getPatientDisplayName() }}</h1>
         <p class="patient-id">Patient ID: {{ patientId }}</p>
         <div class="patient-status">
           <span class="status-badge active">Active</span>
@@ -49,23 +49,33 @@
       </div>
       
       <div class="patient-details">
-        <div class="detail-item" *ngIf="patientInfo?.name">
+        <div class="detail-item">
           <div class="detail-icon">
             <ion-icon name="person-outline"></ion-icon>
           </div>
           <div class="detail-content">
             <span class="detail-label">Full Name</span>
-            <span class="detail-value">{{ patientInfo?.name }}</span>
+            <span class="detail-value">{{ getPatientDisplayName() }}</span>
           </div>
         </div>
         
-        <div class="detail-item" *ngIf="(patientInfo?.age ?? 0) > 0">
+        <div class="detail-item" *ngIf="patientInfo?.dateOfBirth">
           <div class="detail-icon">
             <ion-icon name="calendar-outline"></ion-icon>
           </div>
           <div class="detail-content">
+            <span class="detail-label">Birthday</span>
+            <span class="detail-value">{{ patientInfo?.dateOfBirth }}</span>
+          </div>
+        </div>
+
+        <div class="detail-item" *ngIf="getPatientAgeLabel()">
+          <div class="detail-icon">
+            <ion-icon name="time-outline"></ion-icon>
+          </div>
+          <div class="detail-content">
             <span class="detail-label">Age</span>
-            <span class="detail-value">{{ patientInfo?.age }} years old</span>
+            <span class="detail-value">{{ getPatientAgeLabel() }}</span>
           </div>
         </div>
         
@@ -89,11 +99,71 @@
           </div>
         </div>
         
-        <div class="detail-item" *ngIf="!patientInfo || (!patientInfo.name && !patientInfo.age && !patientInfo.gender && !patientInfo.username)">
+        <div class="detail-item" *ngIf="!patientInfo || (!getPatientDisplayName() && !patientInfo.gender && !patientInfo.username)">
           <div class="detail-content">
             <span class="detail-value" style="color: #999; font-style: italic;">Patient information will be displayed here once available.</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="cute-card patient-section" *ngIf="patientInfo">
+      <div class="card-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <ion-icon name="create-outline"></ion-icon>
+          </div>
+          <div class="header-text">
+            <h2>Edit Profile</h2>
+            <p>Update patient details anytime</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="patient-details" *ngIf="!isEditingPatient">
+        <ion-button expand="block" (click)="startEditPatient()">Edit Profile</ion-button>
+      </div>
+
+      <div class="patient-details" *ngIf="isEditingPatient">
+        <ion-item>
+          <ion-label position="stacked">First Name</ion-label>
+          <ion-input [(ngModel)]="editFirstName" type="text"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Last Name</ion-label>
+          <ion-input [(ngModel)]="editLastName" type="text"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Birthday</ion-label>
+          <ion-datetime-button datetime="editBirthdayPicker"></ion-datetime-button>
+        </ion-item>
+        <ion-modal [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              id="editBirthdayPicker"
+              presentation="date"
+              [(ngModel)]="editBirthday"
+              preferWheel="false"
+              showDefaultButtons="true">
+            </ion-datetime>
+          </ng-template>
+        </ion-modal>
+        <ion-item>
+          <ion-label position="stacked">Sex</ion-label>
+          <ion-segment class="app-segment" [(ngModel)]="editSex">
+            <ion-segment-button value="Male"><ion-label>Male</ion-label></ion-segment-button>
+            <ion-segment-button value="Female"><ion-label>Female</ion-label></ion-segment-button>
+            <ion-segment-button value="Other"><ion-label>Other</ion-label></ion-segment-button>
+          </ion-segment>
+        </ion-item>
+
+        <ion-button expand="block" (click)="saveEditedPatient()" [disabled]="isSavingPatient">
+          <ion-spinner *ngIf="isSavingPatient" name="crescent"></ion-spinner>
+          <span *ngIf="!isSavingPatient">Save</span>
+        </ion-button>
+        <ion-button expand="block" fill="outline" (click)="cancelEditPatient()" [disabled]="isSavingPatient">
+          Cancel
+        </ion-button>
       </div>
     </div>
 

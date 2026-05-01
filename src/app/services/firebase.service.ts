@@ -5,6 +5,7 @@ import { Firestore, doc, setDoc, getDoc, addDoc, collection, query, where, order
 import { onSnapshot, Unsubscribe } from '@firebase/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { CloudinaryService } from './cloudinary.service';
+import { calculateAge, formatFullName } from '../utils/patient-utils';
 
 /**
  * FirebaseService: central data layer for auth + Firestore + storage.
@@ -19,6 +20,9 @@ interface UserData {
   email: string;
   createdAt: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
   photo?: string;
   lastLoginAt?: string;
   role?: 'patient' | 'caregiver' | 'standard';
@@ -161,6 +165,11 @@ export class FirebaseService {
     password: string,
     name?: string,
     phoneNumber?: string,
+    profileDetails?: {
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    },
     patientInfo?: {
       name: string;
       age?: number;
@@ -209,6 +218,15 @@ export class FirebaseService {
       throw new Error('Name cannot be empty');
     }
 
+    if (profileDetails) {
+      const fn = (profileDetails.firstName || '').trim();
+      const ln = (profileDetails.lastName || '').trim();
+      const dob = (profileDetails.dateOfBirth || '').trim();
+      if (!fn || !ln || !dob) {
+        throw new Error('First name, last name, and birthday are required');
+      }
+    }
+
     let userCredential;
     try {
       userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
@@ -228,6 +246,9 @@ export class FirebaseService {
         email: email.trim(),
         createdAt: new Date().toISOString(),
         name: name.trim(),
+        firstName: profileDetails ? profileDetails.firstName.trim() : undefined,
+        lastName: profileDetails ? profileDetails.lastName.trim() : undefined,
+        dateOfBirth: profileDetails ? profileDetails.dateOfBirth.trim() : undefined,
         role: 'standard',
         securityCode,
         
@@ -285,15 +306,33 @@ export class FirebaseService {
   }
 
   //create patient
-  async savePatientDetails(details: { name: string; age?: number; sex?: string; relationship?: string; notes?: string; emergencyContact?: string }, patientId?: string): Promise<void> {
+  async savePatientDetails(details: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    sex?: string;
+    relationship?: string;
+    notes?: string;
+    emergencyContact?: string
+  }, patientId?: string): Promise<void> {
     const cgId = this.getCaregiverId();
     const pid = this.getPatientId(patientId);
     if (!cgId || !pid) throw new Error('User not authenticated');
 
+    const firstName = (details.firstName || '').trim();
+    const lastName = (details.lastName || '').trim();
+    const dateOfBirth = (details.dateOfBirth || '').trim();
+    if (!firstName || !lastName || !dateOfBirth) {
+      throw new Error('Patient first name, last name, and birthday are required');
+    }
+
     const patientDetailsRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'patientInfo', 'details');
     await setDoc(patientDetailsRef, {
-      name: details.name,
-      age: details.age || null,
+      firstName,
+      lastName,
+      name: `${lastName}, ${firstName}`,
+      dateOfBirth,
+      age: null,
       sex: details.sex || null,
       relationship: details.relationship || null,
       notes: details.notes || null,
@@ -301,6 +340,17 @@ export class FirebaseService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }, { merge: true });
+
+    // IMPORTANT: also update the patient root doc so patients list subscription updates immediately
+    const patientRootRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid);
+    await setDoc(patientRootRef, this.sanitizeForFirestore({
+      firstName,
+      lastName,
+      name: `${lastName}, ${firstName}`,
+      dateOfBirth,
+      sex: details.sex || null,
+      updatedAt: new Date().toISOString()
+    }), { merge: true });
   }
 
   
@@ -2733,12 +2783,12 @@ export class FirebaseService {
   }
 
   /** Get all patients for the current caregiver */
-  async getPatients(): Promise<Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; createdAt?: string }>> {
+  async getPatients(): Promise<Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string; createdAt?: string }>> {
     const cgId = this.getCaregiverId();
     if (!cgId) throw new Error('User not authenticated');
 
     try {
-      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; createdAt?: string }> = [];
+      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string; createdAt?: string }> = [];
       
       // Get patients from the patients subcollection
       const patientsRef = collection(this.firestore, 'caregiver', cgId, 'patients');
@@ -2759,14 +2809,20 @@ export class FirebaseService {
         
         if (patientInfoSnap.exists()) {
           const info = patientInfoSnap.data();
-          patientData.name = info['name'] || patientDocData['name'] || undefined;
-          patientData.age = info['age'] || patientDocData['age'] || undefined;
+          const firstName = info['firstName'] || patientDocData['firstName'] || '';
+          const lastName = info['lastName'] || patientDocData['lastName'] || '';
+          patientData.dateOfBirth = info['dateOfBirth'] || patientDocData['dateOfBirth'] || undefined;
+          patientData.name = formatFullName(lastName, firstName) || info['name'] || patientDocData['name'] || undefined;
+          patientData.age = calculateAge(patientData.dateOfBirth) ?? info['age'] ?? patientDocData['age'] ?? undefined;
           patientData.gender = info['sex'] || info['gender'] || patientDocData['sex'] || patientDocData['gender'] || undefined;
           patientData.photo = info['photo'] || patientDocData['photo'] || undefined;
         } else {
           // Fallback: check patient document itself for data
-          patientData.name = patientDocData['name'] || undefined;
-          patientData.age = patientDocData['age'] || undefined;
+          const firstName = patientDocData['firstName'] || '';
+          const lastName = patientDocData['lastName'] || '';
+          patientData.dateOfBirth = patientDocData['dateOfBirth'] || undefined;
+          patientData.name = formatFullName(lastName, firstName) || patientDocData['name'] || undefined;
+          patientData.age = calculateAge(patientData.dateOfBirth) ?? patientDocData['age'] ?? undefined;
           patientData.gender = patientDocData['sex'] || patientDocData['gender'] || undefined;
           patientData.photo = patientDocData['photo'] || undefined;
           
@@ -2794,11 +2850,15 @@ export class FirebaseService {
         const info = ownPatientInfoSnap.data();
         const caregiverDoc = await getDoc(doc(this.firestore, 'caregiver', cgId));
         const cgData = caregiverDoc.exists() ? caregiverDoc.data() : {};
+        const firstName = info['firstName'] || cgData['firstName'] || '';
+        const lastName = info['lastName'] || cgData['lastName'] || '';
+        const dateOfBirth = info['dateOfBirth'] || cgData['dateOfBirth'] || null;
         
         patients.push({
           id: cgId,
-          name: info['name'] || cgData['name'],
-          age: info['age'],
+          name: formatFullName(lastName, firstName) || info['name'] || cgData['name'],
+          dateOfBirth: dateOfBirth || undefined,
+          age: calculateAge(dateOfBirth) ?? info['age'],
           gender: info['sex'] || info['gender'],
           photo: info['photo'] || cgData['photo'],
           createdAt: cgData['createdAt']
@@ -2814,10 +2874,10 @@ export class FirebaseService {
 
   /** Add a new patient to the caregiver's patients collection */
   async addPatient(patientData: {
-    name: string;
-    age?: number;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
     gender?: string;
-    dateOfBirth?: string;
     medicalId?: string;
     notes?: string;
     photo?: string;
@@ -2826,6 +2886,14 @@ export class FirebaseService {
     if (!cgId) throw new Error('User not authenticated');
 
     try {
+      const firstName = (patientData.firstName || '').trim();
+      const lastName = (patientData.lastName || '').trim();
+      const dateOfBirth = (patientData.dateOfBirth || '').trim();
+      if (!firstName || !lastName || !dateOfBirth) {
+        throw new Error('Patient first name, last name, and birthday are required');
+      }
+      const displayName = `${lastName}, ${firstName}`;
+
       // Generate a unique patient ID
       const patientId = `patient_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
       
@@ -2833,16 +2901,24 @@ export class FirebaseService {
       const patientRef = doc(this.firestore, 'caregiver', cgId, 'patients', patientId);
       await setDoc(patientRef, {
         createdAt: new Date().toISOString(),
-        createdBy: cgId
+        createdBy: cgId,
+        firstName,
+        lastName,
+        name: displayName,
+        dateOfBirth,
+        sex: patientData.gender || null,
+        updatedAt: new Date().toISOString()
       });
 
       // Create patientInfo document
       const patientInfoRef = doc(this.firestore, 'caregiver', cgId, 'patients', patientId, 'patientInfo', 'details');
       await setDoc(patientInfoRef, this.sanitizeForFirestore({
-        name: patientData.name,
-        age: patientData.age || null,
+        firstName,
+        lastName,
+        name: displayName,
+        dateOfBirth,
+        age: null,
         sex: patientData.gender || null,
-        dateOfBirth: patientData.dateOfBirth || null,
         medicalId: patientData.medicalId || null,
         notes: patientData.notes || null,
         photo: patientData.photo || null,
@@ -2861,7 +2937,7 @@ export class FirebaseService {
   }
 
   /** Subscribe to patients list changes */
-  subscribeToPatients(onChange: (patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string }>) => void): Unsubscribe {
+  subscribeToPatients(onChange: (patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string }>) => void): Unsubscribe {
     const cgId = this.getCaregiverId();
     if (!cgId) {
       console.warn('subscribeToPatients: no auth available');
@@ -2871,7 +2947,7 @@ export class FirebaseService {
     const patientsRef = collection(this.firestore, 'caregiver', cgId, 'patients');
     
     return onSnapshot(patientsRef, async (snapshot) => {
-      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string }> = [];
+      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string }> = [];
       
       for (const patientDoc of snapshot.docs) {
         const patientId = patientDoc.id;
@@ -2885,14 +2961,20 @@ export class FirebaseService {
           
           if (patientInfoSnap.exists()) {
             const info = patientInfoSnap.data();
-            patientData.name = info['name'] || patientDocData['name'] || undefined;
-            patientData.age = info['age'] || patientDocData['age'] || undefined;
+            const firstName = info['firstName'] || patientDocData['firstName'] || '';
+            const lastName = info['lastName'] || patientDocData['lastName'] || '';
+            patientData.dateOfBirth = info['dateOfBirth'] || patientDocData['dateOfBirth'] || undefined;
+            patientData.name = formatFullName(lastName, firstName) || info['name'] || patientDocData['name'] || undefined;
+            patientData.age = calculateAge(patientData.dateOfBirth) ?? info['age'] ?? patientDocData['age'] ?? undefined;
             patientData.gender = info['sex'] || info['gender'] || patientDocData['sex'] || patientDocData['gender'] || undefined;
             patientData.photo = info['photo'] || patientDocData['photo'] || undefined;
           } else {
             // Fallback: check patient document itself for data
-            patientData.name = patientDocData['name'] || undefined;
-            patientData.age = patientDocData['age'] || undefined;
+            const firstName = patientDocData['firstName'] || '';
+            const lastName = patientDocData['lastName'] || '';
+            patientData.dateOfBirth = patientDocData['dateOfBirth'] || undefined;
+            patientData.name = formatFullName(lastName, firstName) || patientDocData['name'] || undefined;
+            patientData.age = calculateAge(patientData.dateOfBirth) ?? patientDocData['age'] ?? undefined;
             patientData.gender = patientDocData['sex'] || patientDocData['gender'] || undefined;
             patientData.photo = patientDocData['photo'] || undefined;
             
@@ -2923,11 +3005,16 @@ export class FirebaseService {
           const info = ownPatientInfoSnap.data();
           const caregiverDoc = await getDoc(doc(this.firestore, 'caregiver', cgId));
           const cgData = caregiverDoc.exists() ? caregiverDoc.data() : {};
-          
+
+          const firstName = info['firstName'] || cgData['firstName'] || '';
+          const lastName = info['lastName'] || cgData['lastName'] || '';
+          const dateOfBirth = info['dateOfBirth'] || cgData['dateOfBirth'] || null;
+
           patients.push({
             id: cgId,
-            name: info['name'] || cgData['name'],
-            age: info['age'],
+            name: formatFullName(lastName, firstName) || info['name'] || cgData['name'],
+            dateOfBirth: dateOfBirth || undefined,
+            age: calculateAge(dateOfBirth) ?? info['age'],
             gender: info['sex'] || info['gender'],
             photo: info['photo'] || cgData['photo']
           });

@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { Location } from '@angular/common';
 import type { Unsubscribe } from '@firebase/firestore';
+import { ConfirmService } from '../../services/confirm.service';
 
 
 type BuiltinCategory = 'people' | 'places' | 'objects';
@@ -96,9 +97,9 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
 
    constructor(
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private router: Router,
     private firebaseService: FirebaseService,
+    private confirmService: ConfirmService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private location: Location
@@ -357,13 +358,8 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
 
   
   private async toast(message: string, color: 'success' | 'warning' | 'danger' | 'primary' = 'primary') {
-    const t = await this.toastCtrl.create({
-      message,
-      color,
-      duration: 1700,
-      position: 'bottom'
-    });
-    await t.present();
+    void color;
+    await this.confirmService.notify(message);
   }
 
   
@@ -689,33 +685,19 @@ export class PhotoMemoriesPage implements OnInit, OnDestroy {
     if (this.selectedCards.size === 0) return;
     
     const selectedCardsList = this.cards.filter(card => this.selectedCards.has(card.id));
-    
-    const alert = await this.alertCtrl.create({
-      header: 'Delete Memories',
+    const ok = await this.confirmService.confirm({
+      title: 'Confirm Action',
       message: `Are you sure you want to delete ${this.selectedCards.size} memories? This action cannot be undone.`,
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Delete',
-          role: 'destructive',
-          handler: () => {
-            this.performDelete(selectedCardsList);
-            return true;
-          }
-        }
-      ]
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      tone: 'danger'
     });
-    await alert.present();
+    if (!ok) return;
+    await this.performDelete(selectedCardsList);
   }
 
-  private async presentToast(message: string, color: 'success' | 'warning' | 'danger' | 'primary' = 'primary') {
-    const toast = await this.toastCtrl.create({
-      message,
-      color,
-      duration: 2000,
-      position: 'bottom'
-    });
-    await toast.present();
+  private async presentToast(message: string, _color: 'success' | 'warning' | 'danger' | 'primary' = 'primary') {
+    await this.confirmService.notify(message);
   }
 
   private async performDelete(cardsToDelete: UnifiedCard[]) {

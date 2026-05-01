@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
+import { ConfirmService } from '../../services/confirm.service';
 
 @Component({
   selector: 'app-patient-details',
@@ -9,15 +10,17 @@ import { FirebaseService } from '../../services/firebase.service';
   standalone: false
 })
 export class PatientDetailsPage implements OnInit {
-  patientName: string = '';
-  patientAge: string = '';
+  patientFirstName: string = '';
+  patientLastName: string = '';
+  patientBirthday: string = '';
   patientSex: string = '';
   isLoading: boolean = false;
   userId: string = '';
 
   constructor(
     private router: Router,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private confirmService: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -31,45 +34,79 @@ export class PatientDetailsPage implements OnInit {
 
   async savePatientDetails() {
     
-    const name = (this.patientName || '').trim();
-    const age = (this.patientAge || '').toString().trim();
+    const firstName = (this.patientFirstName || '').trim();
+    const lastName = (this.patientLastName || '').trim();
+    const dateOfBirth = (this.patientBirthday || '').toString().trim();
     const sex = (this.patientSex || '').trim();
 
     
-    if (!name) {
-      alert('Please enter the patient\'s name');
+    if (!firstName) {
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please enter the patient’s first name.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
       return;
     }
 
-    if (!age) {
-      alert('Please enter the patient\'s age');
+    if (!lastName) {
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please enter the patient’s last name.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+      return;
+    }
+
+    if (!dateOfBirth) {
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please select the patient’s birthday.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
       return;
     }
 
     if (!sex) {
-      alert('Please select the patient\'s sex');
-      return;
-    }
-
-    
-    const ageNum = parseInt(age, 10);
-    if (isNaN(ageNum) || ageNum < 0 || ageNum > 150) {
-      alert('Please enter a valid age (0-150)');
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please select the patient’s sex.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
       return;
     }
 
     this.isLoading = true;
 
     try {
+      const ok = await this.confirmService.confirm({
+        title: 'Confirm Action',
+        message: 'Are you sure you want to save this patient data?',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel'
+      });
+      if (!ok) return;
+
       
       const patientDetails = {
-        name: name,
-        age: ageNum,
+        firstName,
+        lastName,
+        name: `${lastName}, ${firstName}`,
+        dateOfBirth,
         sex: sex
       };
 
       
-      await this.firebaseService.savePatientDetails(patientDetails);
+      await this.firebaseService.savePatientDetails({
+        firstName,
+        lastName,
+        dateOfBirth,
+        sex
+      });
 
       
       localStorage.setItem('patientDetails', JSON.stringify(patientDetails));
@@ -79,14 +116,44 @@ export class PatientDetailsPage implements OnInit {
 
     } catch (error: any) {
       console.error('Error saving patient details:', error);
-      alert(error.message || 'Failed to save patient details. Please try again.');
+      await this.confirmService.confirm({
+        title: 'Could not save',
+        message: error.message || 'Failed to save patient details. Please try again.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
     } finally {
       this.isLoading = false;
     }
   }
 
-  goBack() {
+  private hasDraft(): boolean {
+    return !!(
+      (this.patientFirstName || '').trim() ||
+      (this.patientLastName || '').trim() ||
+      (this.patientBirthday || '').trim() ||
+      (this.patientSex || '').trim()
+    );
+  }
+
+  async onBackTapped() {
+    if (this.isLoading) return;
+    if (!this.hasDraft()) {
+      this.router.navigate(['/signup']);
+      return;
+    }
+    const discard = await this.confirmService.confirm({
+      title: 'Discard changes?',
+      message: 'Are you sure you want to discard the patient details you entered?',
+      confirmText: 'Yes',
+      cancelText: 'No'
+    });
+    if (!discard) return;
     this.router.navigate(['/signup']);
+  }
+
+  goBack() {
+    void this.onBackTapped();
   }
 }
 

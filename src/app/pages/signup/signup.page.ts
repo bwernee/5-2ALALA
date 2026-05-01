@@ -9,7 +9,9 @@ import { FirebaseService } from '../../services/firebase.service';
   standalone: false
 })
 export class SignupPage {
-  name: string = '';
+  firstName: string = '';
+  lastName: string = '';
+  birthday: string = '';
   email: string = '';
   phoneNumber: string = '';
   password: string = '';
@@ -23,15 +25,25 @@ export class SignupPage {
 
   async signup() {
     
-    const name = (this.name || '').trim();
+    const firstName = (this.firstName || '').trim();
+    const lastName = (this.lastName || '').trim();
+    const birthday = (this.birthday || '').trim();
     const email = (this.email || '').trim();
     const phoneNumber = (this.phoneNumber || '').trim();
     const password = this.password || '';
     const confirmPassword = this.confirmPassword || '';
 
     
-    if (!name) {
-      alert('Please enter your full name');
+    if (!firstName) {
+      alert('Please enter your first name');
+      return;
+    }
+    if (!lastName) {
+      alert('Please enter your last name');
+      return;
+    }
+    if (!birthday) {
+      alert('Please enter your birthday');
       return;
     }
 
@@ -85,11 +97,19 @@ export class SignupPage {
     this.isLoading = true;
 
     try {
-      const user = await this.firebaseService.signup(email, password, name, phoneNumber);
+      const displayName = `${lastName}, ${firstName}`;
+      const user = await this.firebaseService.signup(email, password, displayName, phoneNumber, {
+        firstName,
+        lastName,
+        dateOfBirth: birthday
+      } as any);
 
       
       const userData = {
-        name: name,
+        firstName,
+        lastName,
+        name: displayName,
+        birthday,
         email: email,
         phoneNumber: phoneNumber,
         createdAt: new Date().toISOString()

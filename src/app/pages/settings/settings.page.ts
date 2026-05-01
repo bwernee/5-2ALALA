@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import * as QRCode from 'qrcode';
-import { ActionSheetController, AlertController, ToastController } from '@ionic/angular';
+import { ActionSheetController, AlertController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
+import { ConfirmService } from '../../services/confirm.service';
 
 @Component({
   selector: 'app-settings',
@@ -71,9 +72,9 @@ export class SettingsPage implements OnInit {
   constructor(
     private router: Router,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private actionSheetCtrl: ActionSheetController,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private confirmService: ConfirmService
   ) {}
 
   async ngOnInit() {
@@ -562,9 +563,9 @@ export class SettingsPage implements OnInit {
     await confirmAlert.present();
   }
 
-  private async toast(message: string, color?: 'success' | 'warning' | 'danger' | 'primary' | 'medium') {
-    const t = await this.toastCtrl.create({ message, duration: 1700, color: color || 'medium', position: 'top' });
-    await t.present();
+  private async toast(message: string, _color?: 'success' | 'warning' | 'danger' | 'primary' | 'medium') {
+    // Toasts removed for defense UI consistency (use consistent modals instead).
+    await this.confirmService.notify(message);
   }
 
   

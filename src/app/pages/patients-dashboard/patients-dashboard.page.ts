@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import type { Unsubscribe } from '@firebase/firestore';
+import { ConfirmService } from '../../services/confirm.service';
 
 interface Patient {
   id: string;
@@ -10,6 +11,7 @@ interface Patient {
   photo?: string;
   age?: number;
   gender?: string;
+  dateOfBirth?: string;
 }
 
 @Component({
@@ -26,8 +28,9 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
 
   // Inline add-patient form state
   showAddForm = false;
-  newPatientName = '';
-  newPatientAge = '';
+  newPatientFirstName = '';
+  newPatientLastName = '';
+  newPatientBirthday = '';
   newPatientSex = '';
   isSavingPatient = false;
 
@@ -37,9 +40,9 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private confirmService: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -68,7 +71,12 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
       }
     } catch (error: any) {
       console.error('Error loading patients:', error);
-      this.presentToast(error.message || 'Failed to load patients', 'danger');
+      await this.confirmService.confirm({
+        title: 'Could not load',
+        message: error.message || 'Failed to load patients.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
       this.patients = [];
     } finally {
       this.isLoading = false;
@@ -92,59 +100,109 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
 
   cancelAddPatient() {
     if (this.isSavingPatient) return;
+    void this.maybeDiscardAddPatient();
+  }
+
+  private hasAddPatientDraft(): boolean {
+    return !!(
+      (this.newPatientFirstName || '').trim() ||
+      (this.newPatientLastName || '').trim() ||
+      (this.newPatientBirthday || '').trim() ||
+      (this.newPatientSex || '').trim()
+    );
+  }
+
+  private async maybeDiscardAddPatient() {
+    if (!this.hasAddPatientDraft()) {
+      this.resetAddPatientForm();
+      return;
+    }
+    const discard = await this.confirmService.confirm({
+      title: 'Discard changes?',
+      message: 'Are you sure you want to discard the patient details you entered?',
+      confirmText: 'Yes',
+      cancelText: 'No'
+    });
+    if (!discard) return;
+    this.resetAddPatientForm();
+  }
+
+  private resetAddPatientForm() {
     this.showAddForm = false;
-    this.newPatientName = '';
-    this.newPatientAge = '';
+    this.newPatientFirstName = '';
+    this.newPatientLastName = '';
+    this.newPatientBirthday = '';
     this.newPatientSex = '';
   }
 
   async saveNewPatient() {
-    const name = (this.newPatientName ?? '').toString().trim();
-    const ageStr = (this.newPatientAge ?? '').toString().trim();
+    const firstName = (this.newPatientFirstName ?? '').toString().trim();
+    const lastName = (this.newPatientLastName ?? '').toString().trim();
+    const dateOfBirth = (this.newPatientBirthday ?? '').toString().trim();
     const sex = (this.newPatientSex ?? '').toString().trim();
 
-    if (!name) {
-      this.presentToast('Please enter the patient\'s name', 'danger');
+    if (!firstName) {
+      await this.confirmService.notify('Please enter the patient\'s first name', 'Missing information');
       return;
     }
 
-    if (!ageStr) {
-      this.presentToast('Please enter the patient\'s age', 'danger');
+    if (!lastName) {
+      await this.confirmService.notify('Please enter the patient\'s last name', 'Missing information');
       return;
     }
 
-    const ageNum = parseInt(ageStr, 10);
-    if (isNaN(ageNum) || ageNum < 0 || ageNum > 150) {
-      this.presentToast('Please enter a valid age (0-150)', 'danger');
+    if (!dateOfBirth) {
+      await this.confirmService.notify('Please enter the patient\'s birthday', 'Missing information');
       return;
     }
 
     if (!sex) {
-      this.presentToast('Please select the patient\'s sex', 'danger');
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please select the patient’s sex.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
       return;
     }
 
     this.isSavingPatient = true;
 
     try {
+      const ok = await this.confirmService.confirm({
+        title: 'Confirm Action',
+        message: 'Are you sure you want to add this patient?',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel'
+      });
+      if (!ok) return;
+
       const patientId = await this.firebaseService.addPatient({
-        name,
-        age: ageNum,
+        firstName,
+        lastName,
+        dateOfBirth,
         gender: sex
       });
 
       localStorage.setItem('selectedPatientId', patientId);
-      this.presentToast('Patient added successfully', 'success');
-      this.showAddForm = false;
-      this.newPatientName = '';
-      this.newPatientAge = '';
-      this.newPatientSex = '';
+      await this.confirmService.confirm({
+        title: 'Saved',
+        message: 'Patient added successfully.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+      this.resetAddPatientForm();
       
       // Force reload patients list to ensure it appears on mobile
       await this.loadPatients();
     } catch (error: any) {
       console.error('Error adding patient:', error);
-      this.presentToast(error?.message || 'Failed to add patient', 'danger');
+      await this.confirmService.confirm({
+        title: 'Could not save',
+        message: error?.message || 'Failed to add patient. Please try again.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
     } finally {
       this.isSavingPatient = false;
     }
@@ -165,19 +223,43 @@ export class PatientsDashboardPage implements OnInit, OnDestroy {
       console.log('Navigated to home page');
     }).catch((error) => {
       console.error('Navigation error:', error);
-      this.presentToast('Failed to navigate to home', 'danger');
+      void this.confirmService.notify('Failed to navigate to home', 'Could not navigate');
     });
   }
 
-  async presentToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom'
+  async onDeletePatientClicked(patient: Patient, ev: Event) {
+    ev?.stopPropagation?.();
+    if (!patient?.id) return;
+
+    const ok = await this.confirmService.confirm({
+      title: 'Confirm Action',
+      message: `Are you sure you want to delete ${patient.name || 'this patient'}? This cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      tone: 'danger'
     });
-    await toast.present();
+    if (!ok) return;
+
+    try {
+      await this.firebaseService.deletePatient(patient.id);
+      await this.confirmService.confirm({
+        title: 'Deleted',
+        message: 'Patient deleted successfully.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+      await this.loadPatients();
+    } catch (error: any) {
+      await this.confirmService.confirm({
+        title: 'Could not delete',
+        message: error?.message || 'Failed to delete patient.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+    }
   }
+
+  // Toasts removed for defense UI consistency (use consistent modals instead).
 
   getPatientInitials(patient: Patient): string {
     if (patient.name) {

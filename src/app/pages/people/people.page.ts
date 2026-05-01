@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import { Location } from '@angular/common';
 import type { Unsubscribe } from '@firebase/firestore';
+import { ConfirmService } from '../../services/confirm.service';
 
 interface PeopleCard {
   id?: string;
@@ -61,8 +62,8 @@ export class PeoplePage implements OnInit, OnDestroy {
   constructor(
     private router: Router, 
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController,
     private firebaseService: FirebaseService,
+    private confirmService: ConfirmService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private location: Location
@@ -557,14 +558,8 @@ export class PeoplePage implements OnInit, OnDestroy {
     }
   }
 
-  private async toast(message: string, color: string = 'primary') {
-    const t = await this.toastCtrl.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'top'
-    });
-    await t.present();
+  private async toast(message: string, _color: string = 'primary') {
+    await this.confirmService.notify(message);
   }
 
   

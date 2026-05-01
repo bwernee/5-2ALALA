@@ -4,7 +4,7 @@
     <app-global-header>
       <div gh-left>
         <ion-buttons>
-          <ion-button class="back-btn" fill="clear" routerLink="/signup">
+          <ion-button class="back-btn" fill="clear" (click)="onBackTapped()">
             <ion-icon name="arrow-back-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -25,13 +25,27 @@
     <div class="form-section">
       
       <div class="form-group">
-        <label for="patientName">Patient Name</label>
+        <label for="patientFirstName">First Name</label>
         <ion-item class="input-item">
           <ion-icon name="person-outline" slot="start"></ion-icon>
           <ion-input
-            id="patientName"
-            [(ngModel)]="patientName"
-            placeholder="Enter patient's full name"
+            id="patientFirstName"
+            [(ngModel)]="patientFirstName"
+            placeholder="Enter patient's first name"
+            type="text"
+            clearInput
+          ></ion-input>
+        </ion-item>
+      </div>
+
+      <div class="form-group">
+        <label for="patientLastName">Last Name</label>
+        <ion-item class="input-item">
+          <ion-icon name="person-outline" slot="start"></ion-icon>
+          <ion-input
+            id="patientLastName"
+            [(ngModel)]="patientLastName"
+            placeholder="Enter patient's last name"
             type="text"
             clearInput
           ></ion-input>
@@ -40,37 +54,33 @@
 
       
       <div class="form-group">
-        <label for="patientAge">Age</label>
+        <label for="patientBirthday">Birthday</label>
         <ion-item class="input-item">
           <ion-icon name="calendar-outline" slot="start"></ion-icon>
-          <ion-input
-            id="patientAge"
-            [(ngModel)]="patientAge"
-            placeholder="Enter patient's age"
-            type="number"
-            min="0"
-            max="150"
-            clearInput
-          ></ion-input>
+          <ion-datetime-button datetime="patientBirthdayPicker"></ion-datetime-button>
         </ion-item>
       </div>
+
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime
+            id="patientBirthdayPicker"
+            presentation="date"
+            [(ngModel)]="patientBirthday"
+            preferWheel="false"
+            showDefaultButtons="true">
+          </ion-datetime>
+        </ng-template>
+      </ion-modal>
 
       
       <div class="form-group">
         <label for="patientSex">Sex</label>
-        <ion-item class="input-item">
-          <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-          <ion-select
-            id="patientSex"
-            [(ngModel)]="patientSex"
-            placeholder="Select patient's sex"
-          >
-            <ion-select-option value="Male">Male</ion-select-option>
-            <ion-select-option value="Female">Female</ion-select-option>
-            <ion-select-option value="Other">Other</ion-select-option>
-            <ion-select-option value="Prefer not to say">Prefer not to say</ion-select-option>
-          </ion-select>
-        </ion-item>
+        <ion-segment class="app-segment" [(ngModel)]="patientSex">
+          <ion-segment-button value="Male"><ion-label>Male</ion-label></ion-segment-button>
+          <ion-segment-button value="Female"><ion-label>Female</ion-label></ion-segment-button>
+          <ion-segment-button value="Other"><ion-label>Other</ion-label></ion-segment-button>
+        </ion-segment>
       </div>
     </div>
 

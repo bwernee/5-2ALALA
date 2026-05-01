@@ -4,6 +4,8 @@ import { Location } from '@angular/common';
 import { FirebaseService } from '../../services/firebase.service';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { AlertController } from '@ionic/angular';
+import { calculateAge, formatFullName } from '../../utils/patient-utils';
+import { ConfirmService } from '../../services/confirm.service';
 
 interface CaregiverInfo {
   name: string;
@@ -12,8 +14,10 @@ interface CaregiverInfo {
 }
 
 interface PatientInfo {
-  name: string;
-  age: number;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  name?: string; // legacy fallback
   gender?: string;
   username?: string;
 }
@@ -31,13 +35,22 @@ export class ProfilePage implements OnInit {
   accountCreated: Date | null = null;
   isPatientMode: boolean = false;
   patientId: string = '';
+  private patientDocId: string = '';
+
+  isEditingPatient = false;
+  editFirstName = '';
+  editLastName = '';
+  editBirthday = '';
+  editSex = '';
+  isSavingPatient = false;
 
   constructor(
     private location: Location,
     private firebaseService: FirebaseService,
     private firestore: Firestore,
     private router: Router,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private confirmService: ConfirmService
   ) {}
 
   ngOnInit() {
@@ -185,6 +198,7 @@ export class ProfilePage implements OnInit {
       // Get the correct patient ID (selected patient or current user)
       const selectedPatientId = localStorage.getItem('selectedPatientId');
       const patientId = selectedPatientId || user.uid;
+      this.patientDocId = patientId;
       
       // Set patient ID display (first 8 characters, uppercase)
       this.patientId = patientId.substring(0, 8).toUpperCase();
@@ -196,9 +210,11 @@ export class ProfilePage implements OnInit {
         try {
           const parsed = JSON.parse(storedPatientInfo);
           this.patientInfo = {
-            name: parsed.name,
-            age: parsed.age,
-            gender: parsed.sex || parsed.gender, 
+            firstName: parsed.firstName || undefined,
+            lastName: parsed.lastName || undefined,
+            dateOfBirth: parsed.dateOfBirth || parsed.birthday || undefined,
+            name: parsed.name || undefined,
+            gender: parsed.sex || parsed.gender,
             username: parsed.username || undefined
           };
         } catch (e) {
@@ -214,8 +230,10 @@ export class ProfilePage implements OnInit {
       if (patientDoc.exists()) {
         const patientData = patientDoc.data();
         this.patientInfo = {
+          firstName: patientData['firstName'] || undefined,
+          lastName: patientData['lastName'] || undefined,
+          dateOfBirth: patientData['dateOfBirth'] || undefined,
           name: patientData['name'] || '',
-          age: patientData['age'] || 0,
           gender: patientData['sex'] || patientData['gender'] || '', 
           username: patientData['username'] || undefined
         };
@@ -223,9 +241,11 @@ export class ProfilePage implements OnInit {
         // Update localStorage only if viewing own patient info
         if (!selectedPatientId) {
           localStorage.setItem('patientDetails', JSON.stringify({
-            name: this.patientInfo.name,
-            age: this.patientInfo.age,
-            sex: this.patientInfo.gender,
+            firstName: this.patientInfo.firstName || '',
+            lastName: this.patientInfo.lastName || '',
+            dateOfBirth: this.patientInfo.dateOfBirth || '',
+            name: this.getPatientDisplayName(),
+            sex: this.patientInfo.gender || '',
             username: this.patientInfo.username
           }));
         }
@@ -237,8 +257,10 @@ export class ProfilePage implements OnInit {
         if (patientDoc2.exists()) {
           const patientData2 = patientDoc2.data();
           this.patientInfo = {
+            firstName: patientData2['firstName'] || undefined,
+            lastName: patientData2['lastName'] || undefined,
+            dateOfBirth: patientData2['dateOfBirth'] || undefined,
             name: patientData2['name'] || 'Patient Name',
-            age: patientData2['age'] || 0,
             gender: patientData2['sex'] || patientData2['gender'] || '',
             username: patientData2['username'] || undefined
           };
@@ -246,6 +268,132 @@ export class ProfilePage implements OnInit {
       }
     } catch (error) {
       console.error('Error loading patient info:', error);
+    }
+  }
+
+  getPatientDisplayName(): string {
+    const p = this.patientInfo || {};
+    return (
+      formatFullName(p.lastName, p.firstName) ||
+      (p.name || '').toString().trim() ||
+      'Patient Name'
+    );
+  }
+
+  getPatientAgeLabel(): string {
+    const age = calculateAge(this.patientInfo?.dateOfBirth || null);
+    if (age === null) return '';
+    return `${age} years old`;
+  }
+
+  startEditPatient() {
+    if (!this.patientInfo) return;
+    this.isEditingPatient = true;
+    this.editFirstName = (this.patientInfo.firstName || '').toString();
+    this.editLastName = (this.patientInfo.lastName || '').toString();
+    this.editBirthday = (this.patientInfo.dateOfBirth || '').toString();
+    this.editSex = (this.patientInfo.gender || '').toString();
+  }
+
+  cancelEditPatient() {
+    if (this.isSavingPatient) return;
+    void this.maybeDiscardEditPatient();
+  }
+
+  private hasEditDraft(): boolean {
+    const fn = (this.editFirstName || '').trim();
+    const ln = (this.editLastName || '').trim();
+    const dob = (this.editBirthday || '').trim();
+    const sex = (this.editSex || '').trim();
+    const p = this.patientInfo || {};
+    return (
+      fn !== ((p.firstName || '').toString().trim()) ||
+      ln !== ((p.lastName || '').toString().trim()) ||
+      dob !== ((p.dateOfBirth || '').toString().trim()) ||
+      sex !== ((p.gender || '').toString().trim())
+    );
+  }
+
+  private async maybeDiscardEditPatient() {
+    if (!this.hasEditDraft()) {
+      this.isEditingPatient = false;
+      return;
+    }
+    const discard = await this.confirmService.confirm({
+      title: 'Discard changes?',
+      message: 'Are you sure you want to discard your edits?',
+      confirmText: 'Yes',
+      cancelText: 'No'
+    });
+    if (!discard) return;
+    this.isEditingPatient = false;
+  }
+
+  async saveEditedPatient() {
+    if (this.isSavingPatient) return;
+    const firstName = (this.editFirstName || '').trim();
+    const lastName = (this.editLastName || '').trim();
+    const dateOfBirth = (this.editBirthday || '').trim();
+    const sex = (this.editSex || '').trim();
+
+    if (!firstName) return;
+    if (!lastName) return;
+    if (!dateOfBirth) return;
+
+    const ok = await this.confirmService.confirm({
+      title: 'Confirm Action',
+      message: 'Are you sure you want to save this patient data?',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel'
+    });
+    if (!ok) return;
+
+    this.isSavingPatient = true;
+    try {
+      await this.firebaseService.savePatientDetails(
+        { firstName, lastName, dateOfBirth, sex },
+        this.patientDocId
+      );
+
+      this.patientInfo = {
+        ...(this.patientInfo || {}),
+        firstName,
+        lastName,
+        dateOfBirth,
+        gender: sex
+      };
+
+      // If viewing own patient info, keep local cache in sync for instant UI
+      const selectedPatientId = localStorage.getItem('selectedPatientId');
+      if (!selectedPatientId) {
+        localStorage.setItem('patientDetails', JSON.stringify({
+          firstName,
+          lastName,
+          dateOfBirth,
+          name: `${lastName}, ${firstName}`,
+          sex
+        }));
+      }
+
+      this.isEditingPatient = false;
+      await this.loadPatientInfo();
+
+      await this.confirmService.confirm({
+        title: 'Saved',
+        message: 'Patient profile updated successfully.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+    } catch (err: any) {
+      console.error('Error saving edited patient:', err);
+      await this.confirmService.confirm({
+        title: 'Could not save',
+        message: err?.message || 'Failed to save changes.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+    } finally {
+      this.isSavingPatient = false;
     }
   }
 

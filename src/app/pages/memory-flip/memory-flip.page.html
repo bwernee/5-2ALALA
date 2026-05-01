@@ -1,0 +1,69 @@
+<ion-content class="memory-flip-content" fullscreen>
+  <div class="container">
+    <app-global-header>
+      <div gh-left>
+        <ion-buttons>
+          <ion-button class="back-btn" fill="clear" (click)="onBackTapped()">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <div class="welcome-icon">
+          <ion-icon name="grid-outline"></ion-icon>
+        </div>
+      </div>
+      <div gh-center>
+        <div class="app-header__body">
+          <h1 class="app-header__title">{{ modeTitle }}</h1>
+          <p class="app-header__subtitle">Tap two cards to find the same picture</p>
+        </div>
+      </div>
+    </app-global-header>
+
+    <!-- MODE MENU -->
+    <div *ngIf="screen === 'menu'" class="panel">
+      <h2 class="panel-title">Choose a level</h2>
+      <div class="btn-grid">
+        <ion-button class="big-btn" expand="block" (click)="selectMode('easy')">Easy</ion-button>
+        <ion-button class="big-btn" expand="block" (click)="selectMode('medium')">Medium</ion-button>
+      </div>
+      <div class="hint">Take your time. No timer, no pressure.</div>
+    </div>
+
+    <!-- GAME -->
+    <div *ngIf="screen === 'game'" class="game">
+      <div class="moves-chip"><strong>Moves:</strong> {{ moves }}</div>
+      <div class="feedback" [class.visible]="!!feedbackMessage">{{ feedbackMessage || ' ' }}</div>
+
+      <div class="grid" [ngClass]="gridClass">
+        <button
+          type="button"
+          class="card"
+          *ngFor="let card of cards; let i = index"
+          (click)="flipCard(i)"
+          [class.flipped]="card.isFlipped"
+          [class.matched]="card.isMatched"
+          [class.blocked]="isBusy || (flippedCards.length >= 2 && !card.isFlipped) || card.isMatched"
+          [attr.aria-disabled]="(isBusy || (flippedCards.length >= 2 && !card.isFlipped) || card.isMatched) ? 'true' : null"
+          aria-label="Memory card">
+          <span class="card-inner">
+            <span class="card-face card-front" aria-hidden="true">?</span>
+            <span class="card-face card-back" aria-hidden="true">{{ card.emoji }}</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div *ngIf="screen === 'result'" class="panel">
+      <h2 class="panel-title">Good job! You matched all the cards 😊</h2>
+      <div class="result-stats">
+        <div class="result-pill"><strong>Moves:</strong> {{ moves }}</div>
+      </div>
+      <div class="btn-grid">
+        <ion-button class="big-btn" expand="block" (click)="playAgain()">Play Again</ion-button>
+        <ion-button class="big-btn secondary" expand="block" (click)="backToMenu()">Back to Menu</ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
