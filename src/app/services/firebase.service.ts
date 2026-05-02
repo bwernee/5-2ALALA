@@ -168,7 +168,7 @@ export class FirebaseService {
     profileDetails?: {
       firstName: string;
       lastName: string;
-      dateOfBirth: string;
+      dateOfBirth?: string;
     },
     patientInfo?: {
       name: string;
@@ -197,9 +197,6 @@ export class FirebaseService {
     if (!name || typeof name !== 'string') {
       throw new Error('Valid name is required');
     }
-    if (!phoneNumber || typeof phoneNumber !== 'string') {
-      throw new Error('Valid phone number is required');
-    }
 
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -207,10 +204,12 @@ export class FirebaseService {
       throw new Error('Invalid email format');
     }
 
-    
-    const phoneDigitsOnly = phoneNumber.replace(/\D/g, '');
-    if (phoneDigitsOnly.length < 10) {
-      throw new Error('Phone number must have at least 10 digits');
+    const phoneTrimmed = typeof phoneNumber === 'string' ? phoneNumber.trim() : '';
+    if (phoneTrimmed) {
+      const phoneDigitsOnly = phoneTrimmed.replace(/\D/g, '');
+      if (phoneDigitsOnly.length < 10) {
+        throw new Error('Phone number must have at least 10 digits');
+      }
     }
 
     
@@ -220,10 +219,8 @@ export class FirebaseService {
 
     if (profileDetails) {
       const fn = (profileDetails.firstName || '').trim();
-      const ln = (profileDetails.lastName || '').trim();
-      const dob = (profileDetails.dateOfBirth || '').trim();
-      if (!fn || !ln || !dob) {
-        throw new Error('First name, last name, and birthday are required');
+      if (!fn) {
+        throw new Error('First name is required');
       }
     }
 
@@ -247,8 +244,13 @@ export class FirebaseService {
         createdAt: new Date().toISOString(),
         name: name.trim(),
         firstName: profileDetails ? profileDetails.firstName.trim() : undefined,
-        lastName: profileDetails ? profileDetails.lastName.trim() : undefined,
-        dateOfBirth: profileDetails ? profileDetails.dateOfBirth.trim() : undefined,
+        lastName: profileDetails
+          ? (profileDetails.lastName || '').trim() || undefined
+          : undefined,
+        dateOfBirth:
+          profileDetails && (profileDetails.dateOfBirth || '').trim()
+            ? profileDetails.dateOfBirth!.trim()
+            : undefined,
         role: 'standard',
         securityCode,
         
@@ -256,7 +258,12 @@ export class FirebaseService {
         caregiverInfo: caregiverInfo ? this.sanitizeForFirestore(caregiverInfo) as any : undefined
       };
 
-      await setDoc(doc(this.firestore, 'caregiver', uid), this.sanitizeForFirestore({ ...userData, phoneNumber: phoneNumber.trim() }));
+      const caregiverDoc: UserData & { phoneNumber?: string } = { ...userData };
+      if (phoneTrimmed) {
+        caregiverDoc['phoneNumber'] = phoneTrimmed;
+      }
+
+      await setDoc(doc(this.firestore, 'caregiver', uid), this.sanitizeForFirestore(caregiverDoc as any));
 
       
       await this.createSecurityCodeEntry(uid, securityCode, { email: email.trim(), name: name.trim() });
@@ -437,8 +444,11 @@ export class FirebaseService {
     const unsubs: Unsubscribe[] = [];
     const latest: Record<string, any[]> = {};
     const emit = () => {
-      const merged = Object.values(latest).flat();
-      
+      const merged: any[] = [];
+      for (const arr of Object.values(latest)) {
+        merged.push(...arr);
+      }
+
       const mapped = merged.map((d: any) => ({
         id: d.id,
         label: d.label,
@@ -448,10 +458,18 @@ export class FirebaseService {
         category: (d.category || d._bucket || '').toString(),
         createdAt: d.createdAt || Date.now(),
       }));
-      
+
       const seen = new Set<string>();
-      const unique = mapped.filter(c => { const k = `${(c.label||'').toLowerCase()}::${c.src||''}`; if (seen.has(k)) return false; seen.add(k); return true; });
-      unique.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const unique = mapped.filter((c: { label?: string; src?: string; createdAt?: number }) => {
+        const k = `${(c.label || '').toLowerCase()}::${c.src || ''}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      unique.sort(
+        (a: (typeof mapped)[number], b: (typeof mapped)[number]) =>
+          (b.createdAt || 0) - (a.createdAt || 0)
+      );
       onChange(unique);
     };
     const cgId = this.getCaregiverId();
@@ -476,11 +494,32 @@ export class FirebaseService {
     const unsubs: Unsubscribe[] = [];
     const latest: Record<string, any[]> = {};
     const emit = () => {
-      const merged = Object.values(latest).flat().map((d: any) => ({ id: d.id, label: d.label, image: d.src || d.image, audio: d.audio || undefined, duration: d.duration || 0, category: (d.category || '').toString(), createdAt: d.createdAt }))
-        .filter((c: any) => !!c.label && !!c.image);
+      const mergedRaw: any[] = [];
+      for (const arr of Object.values(latest)) {
+        mergedRaw.push(...arr);
+      }
+      const merged = mergedRaw
+        .map((d: any) => ({
+          id: d.id,
+          label: d.label,
+          image: d.src || d.image,
+          audio: d.audio || undefined,
+          duration: d.duration || 0,
+          category: (d.category || '').toString(),
+          createdAt: d.createdAt,
+        }))
+        .filter((c: { label?: string; image?: string }) => !!c.label && !!c.image);
       const seen = new Set<string>();
-      const unique = merged.filter((c: any) => { const k = `${c.category}::${c.label.toLowerCase()}::${c.image}`; if (seen.has(k)) return false; seen.add(k); return true; });
-      unique.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const unique = merged.filter((c: { category: string; label: string; image: string }) => {
+        const k = `${c.category}::${c.label.toLowerCase()}::${c.image}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      unique.sort(
+        (a: (typeof merged)[number], b: (typeof merged)[number]) =>
+          (b.createdAt || 0) - (a.createdAt || 0)
+      );
       onChange(unique as any);
     };
     const cgId = this.getCaregiverId();

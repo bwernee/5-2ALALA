@@ -1,61 +1,5 @@
-<div *ngIf="isCategoryPickerOpen" class="picker-overlay" role="dialog" aria-modal="true" (click)="dismissPickerToBrainGames()">
-  <div class="picker-modal" tabindex="-1" (click)="$event.stopPropagation()">
-    <button class="picker-close" type="button" aria-label="Close" (click)="dismissPickerToBrainGames()">
-      <ion-icon name="close-outline"></ion-icon>
-    </button>
-    <div class="picker-stack">
-      <div class="picker-card builtin-card people-card" (click)="chooseBuiltin('people')">
-        <div class="picker-icon">
-          <ion-icon name="people-outline"></ion-icon>
-        </div>
-        <div class="picker-text">
-          <h3>People</h3>
-          <p>{{ counts.people || 0 }} cards</p>
-        </div>
-      </div>
-
-      <div class="picker-card builtin-card places-card" (click)="chooseBuiltin('places')">
-        <div class="picker-icon">
-          <ion-icon name="location-outline"></ion-icon>
-        </div>
-        <div class="picker-text">
-          <h3>Places</h3>
-          <p>{{ counts.places || 0 }} cards</p>
-        </div>
-      </div>
-
-      <div class="picker-card builtin-card objects-card" (click)="chooseBuiltin('objects')">
-        <div class="picker-icon">
-          <ion-icon name="cube-outline"></ion-icon>
-        </div>
-        <div class="picker-text">
-          <h3>Objects</h3>
-          <p>{{ counts.objects || 0 }} cards</p>
-        </div>
-      </div>
-
-      <ng-container *ngIf="userCategories?.length">
-        <div class="picker-divider-text">
-          More categories
-        </div>
-
-        <div class="custom-category-dropdown">
-          <select class="category-select" (change)="onCustomCategorySelect($event)">
-            <option value="" disabled selected>Select a category...</option>
-            <option *ngFor="let c of userCategories" [value]="c.id">
-              {{ c.name }} ({{ counts.custom[c.id] || 0 }} cards)
-            </option>
-          </select>
-          <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
-        </div>
-      </ng-container>
-    </div>
-  </div>
-</div>
-
-<ion-content class="game-home-screen" [fullscreen]="true">
-
-  <div class="lavender-container app-container">
+<ion-content class="lavender-content game-home-screen cm-screen" [fullscreen]="true" [scrollY]="false">
+  <div class="cm-layout lavender-container app-container">
     <app-global-header>
       <div gh-left>
         <div class="app-header__leading">
@@ -76,78 +20,73 @@
         </div>
       </div>
     </app-global-header>
-  </div>
 
-  <div class="progress-container" *ngIf="totalQuestions > 0">
-    <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="progressPct" aria-valuemin="0" aria-valuemax="100">
-      <div class="progress-fill" [style.width.%]="progressPct"></div>
-    </div>
-  </div>
-
-  
-  <div *ngIf="gameCards.length === 0" class="empty-state">
-    <ion-icon class="empty-icon" name="swap-horizontal-outline"></ion-icon>
-    <h2 class="empty-title">No Cards yet</h2>
-    <p class="empty-subtitle">Tap the + to add a memory.</p>
-    <ion-button class="empty-btn" (click)="goToAddFlashcard()">
-      <ion-icon name="add" slot="start"></ion-icon>
-      Add Photo
-    </ion-button>
-  </div>
-
-  
-  <div *ngIf="gameCards.length > 0" class="game-container">
-
-    
-    <div class="focus-banner" aria-hidden="true">
-      Choose the correct category
-    </div>
-
-    
-    <div class="question-card-wrapper" *ngIf="currentCard">
-      <div class="question-card">
-        <div class="image-container">
-          <div class="image-frame">
-            <img [src]="imgSrc(currentCard)" [alt]="currentCard.label || 'Flashcard image'" />
-          </div>
-        </div>
-        
-        <div class="question-text">
-          <h2 class="prompt-text">Which category is this?</h2>
-        </div>
+    <div class="progress-container" *ngIf="totalQuestions > 0">
+      <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="progressPct" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-fill" [style.width.%]="progressPct"></div>
       </div>
     </div>
 
-    
-    <div class="options-container" *ngIf="!showResult && currentCard && !showGameComplete">
-      <div class="options-grid">
-        <button
-          *ngFor="let cat of options; let i = index"
-          type="button"
-          class="option-button"
-          (click)="selectAnswer(cat)"
-          [attr.aria-label]="'Answer: ' + cat">
-          <span class="option-text">{{ cat }}</span>
-          <ion-icon class="option-caret" aria-hidden="true"></ion-icon>
-        </button>
+    <div *ngIf="gameCards.length === 0" class="empty-state empty-state--rich">
+      <div class="empty-card">
+        <div class="empty-badge" aria-hidden="true">
+          <ion-icon name="git-compare-outline"></ion-icon>
+        </div>
+        <h2 class="empty-title">Add memories to play</h2>
+        <p class="empty-subtitle">Save a few photos under People, Places, or Objects—then this game will shuffle them for you.</p>
+        <ion-button class="empty-btn" (click)="goToAddFlashcard()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Add a photo
+        </ion-button>
+      </div>
+    </div>
 
-        <button
-          type="button"
-          class="option-button skip-card"
-          (click)="skipCurrent()"
-          aria-label="Skip this card">
-          <div class="skip-content">
-            <ion-icon name="play-skip-forward-outline" class="skip-icon" aria-hidden="true"></ion-icon>
-            <span class="skip-text">Skip Card</span>
+    <div *ngIf="gameCards.length > 0" class="game-container">
+      <div class="focus-banner" aria-hidden="true">
+        Choose the correct category
+      </div>
+
+      <div class="question-card-wrapper" *ngIf="currentCard">
+        <div class="question-card">
+          <div class="image-container">
+            <div class="image-frame">
+              <img [src]="imgSrc(currentCard)" [alt]="currentCard.label || 'Flashcard image'" />
+            </div>
           </div>
-        </button>
 
-        
+          <div class="question-text">
+            <h2 class="prompt-text">Which category is this?</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="options-container" *ngIf="!showResult && currentCard && !showGameComplete">
+        <div class="options-grid">
+          <button
+            *ngFor="let cat of options; let i = index"
+            type="button"
+            class="option-button"
+            (click)="selectAnswer(cat)"
+            [attr.aria-label]="'Answer: ' + cat">
+            <span class="option-text">{{ cat }}</span>
+            <ion-icon class="option-caret" aria-hidden="true"></ion-icon>
+          </button>
+
+          <button
+            type="button"
+            class="option-button skip-card"
+            (click)="skipCurrent()"
+            aria-label="Skip this card">
+            <div class="skip-content">
+              <ion-icon name="play-skip-forward-outline" class="skip-icon" aria-hidden="true"></ion-icon>
+              <span class="skip-text">Skip Card</span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </ion-content>
-
 
 <div *ngIf="showResult" class="result-overlay" role="dialog" aria-modal="true">
   <div class="result-modal result-modal--light">
@@ -159,7 +98,7 @@
     <h2 *ngIf="isCorrect" class="result-title">You recognized that perfectly!</h2>
     <h2 *ngIf="!isCorrect" class="result-title">That was a good try!</h2>
 
-    <p class="correct-answer">
+    <p class="correct-answer" [class.answer-wrong]="!isCorrect">
       Category: <strong>{{ currentCard ? (currentCard.category | titlecase) : '' }}</strong>
     </p>
 
@@ -168,7 +107,6 @@
     </ion-button>
   </div>
 </div>
-
 
 <div *ngIf="showGameComplete" class="result-overlay" role="dialog" aria-modal="true">
   <div class="result-modal result-modal--light">

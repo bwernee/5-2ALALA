@@ -49,27 +49,6 @@
             <ion-icon name="chevron-forward-outline" class="security-arrow"></ion-icon>
           </div>
           
-          <div class="security-item" (click)="enableTwoFactor()">
-            <div class="security-icon">
-              <ion-icon name="shield-outline"></ion-icon>
-            </div>
-            <div class="security-info">
-              <div class="security-title">Two-Factor Authentication</div>
-              <div class="security-subtitle">Add extra security to your account</div>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="security-arrow"></ion-icon>
-          </div>
-          
-          <div class="security-item" (click)="viewLoginHistory()">
-            <div class="security-icon">
-              <ion-icon name="time-outline"></ion-icon>
-            </div>
-            <div class="security-info">
-              <div class="security-title">Login History</div>
-              <div class="security-subtitle">View recent account activity</div>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="security-arrow"></ion-icon>
-          </div>
         </div>
       </div>
     </div>
@@ -207,55 +186,24 @@
       </div>
     </div>
 
-    
-    <div class="cute-card qr-card">
-      <div class="card-header" (click)="toggleSection('qr')">
+
+    <div class="cute-card sharing-prompt-card">
+      <div class="card-header" (click)="toggleSection('sharing')">
         <div class="header-content">
           <div class="header-icon">
-            <ion-icon name="qr-code-outline"></ion-icon>
+            <ion-icon name="heart-outline"></ion-icon>
           </div>
           <div class="header-text">
-            <h2>Patient QR Code</h2>
-            <p>Share your profile with caregivers</p>
+            <h2>Sharing with caregivers</h2>
+            <p>How others can support this profile</p>
           </div>
         </div>
         <div class="expand-icon">
-          <ion-icon [name]="expandedSections['qr'] ? 'chevron-up' : 'chevron-down'"></ion-icon>
+          <ion-icon [name]="expandedSections['sharing'] ? 'chevron-up' : 'chevron-down'"></ion-icon>
         </div>
       </div>
-      
-      <div class="section-content" *ngIf="expandedSections['qr']">
-        <div class="qr-section">
-          <ion-button expand="block" fill="outline" (click)="toggleQRCode()" class="cute-button">
-            <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-            {{ showQRCode ? 'Hide QR Code' : 'Show QR Code' }}
-          </ion-button>
-          
-          <div *ngIf="showQRCode" class="qr-display">
-            <div class="qr-container" *ngIf="qrCodeImage; else qrPlaceholder">
-              <img [src]="qrCodeImage" alt="Patient QR Code" class="qr-image" />
-              <p class="qr-description">Scan this code to access patient profile</p>
-              
-              <div class="security-code-section">
-                <div class="security-label">Security Code:</div>
-                <div class="security-code">
-                  <code>{{ securityCode }}</code>
-                  <ion-button fill="clear" size="small" (click)="copySecurityCode()">
-                    <ion-icon name="copy-outline"></ion-icon>
-                  </ion-button>
-                </div>
-              </div>
-              
-              <small class="qr-data">{{ qrCodeData }}</small>
-            </div>
-            <ng-template #qrPlaceholder>
-              <div class="qr-placeholder">
-                <ion-icon name="qr-code-outline"></ion-icon>
-                <p>Generating QR Code...</p>
-              </div>
-            </ng-template>
-          </div>
-        </div>
+      <div class="section-content sharing-prompt" *ngIf="expandedSections['sharing']">
+        <p class="sharing-text">If a caregiver needs access, invite them from your care team or ask your clinic how they prefer to connect. You can still add trusted contacts below.</p>
       </div>
     </div>
 
@@ -279,15 +227,6 @@
       <div class="section-content" *ngIf="expandedSections['contacts']">
         <div class="contacts-section">
           <div class="contact-options">
-            <ion-button expand="block" fill="outline" (click)="scanQRCode()" [disabled]="isScanning" class="cute-button">
-              <ion-icon name="qr-code-outline" slot="start"></ion-icon>
-              {{ isScanning ? 'Scanning...' : 'Scan QR Code' }}
-            </ion-button>
-            
-            <div class="divider-text">
-              <span>OR</span>
-            </div>
-            
             <form (ngSubmit)="addContactByCode()" #contactForm="ngForm">
               <div class="form-field">
                 <ion-label>Security Code</ion-label>
@@ -351,8 +290,8 @@
         <ion-icon name="chevron-forward-outline" class="option-arrow"></ion-icon>
       </div>
       
-      <div class="option-item" (click)="logout()">
-        <div class="option-icon danger">
+      <div class="option-item option-item--logout" (click)="logout()">
+        <div class="option-icon logout-icon">
           <ion-icon name="log-out-outline"></ion-icon>
         </div>
         <div class="option-content">

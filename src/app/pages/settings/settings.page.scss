@@ -804,6 +804,15 @@ ion-button {
           display: flex;
           align-items: center;
           justify-content: center;
+
+      &.logout-icon {
+        background: linear-gradient(135deg, rgba(var(--app-primary-rgb), 0.95), rgba(var(--app-primary-rgb), 0.75));
+
+        ion-icon {
+          color: white;
+          font-size: 18px;
+        }
+      }
       
       &.warning {
         background: linear-gradient(135deg, #f59e0b, #fbbf24);
@@ -844,7 +853,35 @@ ion-button {
       color: var(--app-primary);
       font-size: 18px;
     }
+
+    &.option-item--logout {
+      background: rgba(255, 255, 255, 0.98);
+      border: 2px solid rgba(var(--app-primary-rgb), 0.2);
+
+      .option-title {
+        color: var(--app-primary);
+      }
+
+      .option-subtitle {
+        color: #64748b;
+      }
+
+      .option-arrow {
+        color: var(--app-primary);
+      }
+    }
   }
+}
+
+.sharing-prompt-card .sharing-prompt {
+  padding: 4px 4px 8px;
+}
+
+.sharing-prompt .sharing-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #475569;
 }
 
 

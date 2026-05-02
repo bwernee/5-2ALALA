@@ -817,77 +817,80 @@ ion-card, .glass-card, .game-card {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
 }
 
-// Global alert styling to match Name That Memory theme
+// Global alerts — ALALA light theme (Memory Flip / confirm-modal)
 ion-alert {
-  --backdrop-opacity: 0.4;
-  
+  --backdrop-opacity: 0.35;
+  --max-width: 92vw;
+
   .alert-wrapper {
-    background: radial-gradient(circle at top, rgba(255,255,255,0.15), transparent 55%),
-                rgba(15, 23, 42, 0.85) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.7) !important;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--app-modal-bg) !important;
+    border-radius: var(--app-modal-radius) !important;
+    box-shadow: var(--app-modal-shadow) !important;
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12) !important;
     padding: 8px !important;
+    backdrop-filter: blur(var(--app-overlay-blur));
+    -webkit-backdrop-filter: blur(var(--app-overlay-blur));
   }
-  
+
   .alert-head {
     padding: 16px 16px 8px !important;
-    
+
     .alert-title {
-      color: white !important;
-      font-weight: 700 !important;
+      color: var(--app-primary) !important;
+      font-weight: 800 !important;
       font-size: 18px !important;
     }
-    
+
     .alert-sub-title {
-      color: rgba(255, 255, 255, 0.7) !important;
+      color: var(--app-muted) !important;
     }
   }
-  
+
   .alert-message {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--app-muted) !important;
     padding: 8px 16px 16px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
+    line-height: 1.45 !important;
   }
-  
+
   .alert-input-wrapper {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(var(--app-primary-rgb), 0.06) !important;
     border-radius: 12px !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    
+    border: 1px solid rgba(var(--app-primary-rgb), 0.14) !important;
+
     .alert-input {
-      color: white !important;
-      
+      color: var(--app-text) !important;
+
       &::placeholder {
-        color: rgba(255, 255, 255, 0.5) !important;
+        color: var(--app-muted) !important;
       }
     }
   }
-  
+
   .alert-button-group {
-    padding: 8px 8px 8px !important;
+    padding: 8px !important;
     gap: 8px !important;
-    
+
     .alert-button {
-      border-radius: 12px !important;
-      font-weight: 600 !important;
+      border-radius: 14px !important;
+      font-weight: 700 !important;
       min-height: 44px !important;
       margin: 0 !important;
-      
+      text-transform: none !important;
+
       &.alert-button-role-cancel {
-        color: rgba(255, 255, 255, 0.7) !important;
-        background: rgba(255, 255, 255, 0.1) !important;
+        color: var(--app-text) !important;
+        background: rgba(var(--app-primary-rgb), 0.1) !important;
       }
-      
-      &:not(.alert-button-role-cancel) {
-        color: white !important;
-        background: var(--app-primary) !important;
+
+      &:not(.alert-button-role-cancel):not(.alert-button-role-destructive) {
+        color: var(--ion-color-primary-contrast) !important;
+        background: var(--app-gradient-button) !important;
       }
-      
+
       &.alert-button-role-destructive {
-        background: #dc2626 !important;
-        color: white !important;
+        color: #ffffff !important;
+        background: linear-gradient(180deg, #9b2c2c 0%, #7f1d1d 100%) !important;
       }
     }
   }

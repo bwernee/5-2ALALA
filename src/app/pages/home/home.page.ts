@@ -425,10 +425,10 @@ export class HomePage implements OnInit, OnDestroy {
   navigateToGame(gameType: string) {
     switch (gameType) {
       case 'name-that-memory':
-        this.router.navigate(['/name-that-memory-select']);
+        this.router.navigate(['/brain-game-category', 'name-that-memory']);
         break;
       case 'category-match':
-        this.router.navigate(['/category-match']);
+        this.router.navigate(['/brain-game-category', 'category-match']);
         break;
       case 'memory-matching':
         this.router.navigate(['/memory-matching']);

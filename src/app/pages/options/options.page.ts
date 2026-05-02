@@ -16,6 +16,6 @@ export class OptionsPage implements OnInit {
   }
 
   selectCategory(category: string) {
-    this.router.navigate(['/name-that-memory'], { queryParams: { category } });
+    void this.router.navigate(['/name-that-memory'], { queryParams: { builtin: category } });
   }
 }

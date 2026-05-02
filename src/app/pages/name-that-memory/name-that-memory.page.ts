@@ -14,7 +14,7 @@
  */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { ProgressPage } from '../progress/progress.page';
 
@@ -95,9 +95,6 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
   
   /** Whether patient mode is enabled (hides some controls) */
   isPatientMode = false;
-  
-  /** Whether the category picker modal is visible */
-  isCategoryPickerOpen = false;
   
   /** List of user-created custom categories */
   userCategories: CustomCategory[] = [];
@@ -185,12 +182,6 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
   // SUBSCRIPTIONS & TIMERS
   // ─────────────────────────────────────────────────────────────────────────────
   
-  /** Timer to watch for category changes in local storage */
-  private categoriesWatchTimer: any = null;
-  
-  /** Hash of the last-known categories (to detect changes) */
-  private lastCategoriesHash = '';
-  
   /** Firebase subscription cleanup function */
   private flashcardsUnsub?: any;
 
@@ -206,6 +197,7 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private firebaseService: FirebaseService
   ) {}
 
@@ -214,42 +206,60 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   ngOnInit() {
-    // Load patient mode from storage
     this.loadPatientModeFromStorage();
-    
-    // Load custom categories from local storage
     this.userCategories = this.getAllUserCategories();
-    
-    // Compute card counts per category
-    this.computeCounts();
-    
-    // Subscribe to Firebase flashcards for real-time updates
     this.attachFirebaseFlashcards();
-    
-    // Fetch an initial snapshot from Firebase
-    this.primeFromFirebaseOnce();
-    
-    // Show the category picker when the page opens
-    this.openCategoryPicker();
-    
-    // Listen for card deletion events to refresh counts
+
+    const qp = this.route.snapshot.queryParamMap;
+    const legacy = qp.get('category');
+    const hasBuiltin =
+      qp.get('builtin') === 'people' ||
+      qp.get('builtin') === 'places' ||
+      qp.get('builtin') === 'objects' ||
+      legacy === 'people' ||
+      legacy === 'places' ||
+      legacy === 'objects';
+    const hasCustom = !!qp.get('custom');
+    if (!hasBuiltin && !hasCustom) {
+      void this.router.navigate(['/brain-game-category', 'name-that-memory'], { replaceUrl: true });
+      return;
+    }
+
+    void this.primeFromFirebaseOnce().then(() => {
+      this.computeCounts();
+      this.applyRouteSelectionFromParams();
+    });
+
     window.addEventListener('card-deleted', () => {
       this.computeCounts();
     });
   }
 
   ionViewWillEnter() {
-    // Refresh categories and counts when returning to the page
     this.userCategories = this.getAllUserCategories();
     this.computeCounts();
-    this.openCategoryPicker();
   }
 
   ngOnDestroy() {
-    // Clean up timers and subscriptions
-    this.stopCategoriesWatcher();
     try { this.flashcardsUnsub?.(); } catch {}
     window.removeEventListener('card-deleted', () => {});
+  }
+
+  /** Apply ?builtin= / ?custom= / legacy ?category= after Firebase prime. */
+  private applyRouteSelectionFromParams(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const legacy = qp.get('category');
+    const builtinRaw =
+      qp.get('builtin') ||
+      (legacy === 'people' || legacy === 'places' || legacy === 'objects' ? legacy : null);
+    const custom = qp.get('custom');
+    if (builtinRaw === 'people' || builtinRaw === 'places' || builtinRaw === 'objects') {
+      this.selectedFilter = { type: 'builtin', value: builtinRaw };
+      this.setupNewRun();
+    } else if (custom) {
+      this.selectedFilter = { type: 'custom', value: custom };
+      this.setupNewRun();
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -275,98 +285,6 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════
-  // CATEGORY PICKER MODAL
-  // ═══════════════════════════════════════════════════════════════════════════════
-
-  /** Open the category picker modal */
-  openCategoryPicker() {
-    this.isCategoryPickerOpen = true;
-    this.startCategoriesWatcher();
-  }
-
-  /** Close the category picker modal */
-  closeCategoryPicker() {
-    this.isCategoryPickerOpen = false;
-    this.stopCategoriesWatcher();
-  }
-
-  /** Close the picker and navigate to Home */
-  closePickerToHome() {
-    this.closeCategoryPicker();
-    this.router.navigate(['/home']);
-  }
-
-  /** Close the picker and navigate to Brain Games */
-  dismissPickerToBrainGames() {
-    this.closeCategoryPicker();
-    this.router.navigate(['/brain-games']);
-  }
-
-  /** Select a built-in category (people/places/objects) */
-  chooseBuiltin(builtin: 'people' | 'places' | 'objects') {
-    this.selectedFilter = { type: 'builtin', value: builtin };
-    this.closeCategoryPicker();
-    this.setupNewRun();
-  }
-
-  /** Select a custom category by ID */
-  chooseCustom(categoryId: string) {
-    this.selectedFilter = { type: 'custom', value: categoryId };
-    this.closeCategoryPicker();
-    this.setupNewRun();
-  }
-
-  /** Handle dropdown selection for custom categories */
-  onCustomCategorySelect(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const categoryId = select.value;
-    if (categoryId) {
-      this.chooseCustom(categoryId);
-      select.value = ''; // Reset the dropdown
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // CATEGORY WATCHER (detects changes in local storage)
-  // ═══════════════════════════════════════════════════════════════════════════════
-
-  /** Start watching for category changes in local storage */
-  private startCategoriesWatcher() {
-    this.lastCategoriesHash = this.readCategoriesHash();
-    this.stopCategoriesWatcher();
-    
-    // Check every second for changes
-    this.categoriesWatchTimer = setInterval(() => {
-      const h = this.readCategoriesHash();
-      if (h !== this.lastCategoriesHash) {
-        this.lastCategoriesHash = h;
-        this.userCategories = this.getAllUserCategories();
-        this.computeCounts();
-      }
-    }, 1000);
-  }
-
-  /** Stop watching for category changes */
-  private stopCategoriesWatcher() {
-    if (this.categoriesWatchTimer) {
-      clearInterval(this.categoriesWatchTimer);
-      this.categoriesWatchTimer = null;
-    }
-  }
-
-  /** Read a simple hash used to detect category changes */
-  private readCategoriesHash(): string {
-    try {
-      const user = this.firebaseService.getCurrentUser();
-      const userSpecificKey = user ? `${CATEGORIES_KEY}_${user.uid}` : CATEGORIES_KEY;
-      const raw = localStorage.getItem(userSpecificKey) || '[]';
-      return `${raw.length}:${raw}`;
-    } catch { 
-      return '0'; 
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════════
   // GAME SETUP
   // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -378,9 +296,8 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
    * - Starts the first question
    */
   private setupNewRun() {
-    // If no category is selected, show the picker
     if (!this.selectedFilter) {
-      this.openCategoryPicker();
+      void this.router.navigate(['/brain-game-category', 'name-that-memory']);
       return;
     }
 
@@ -781,7 +698,7 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
     this.showGameComplete = false;
     this.showResult = false;
     this.shouldCompleteAfterResult = false;
-    this.router.navigate(['/home']);
+    void this.router.navigate(['/brain-games']);
   }
 
   /** Mag-navigate sa add flashcard page */
@@ -816,7 +733,7 @@ export class NameThatMemoryPage implements OnInit, OnDestroy {
 
   /** Mag-navigate balik sa home */
   goBack() {
-    this.router.navigate(['/home']);
+    void this.router.navigate(['/brain-games']);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════

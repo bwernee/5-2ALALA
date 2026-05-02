@@ -15,6 +15,6 @@ export class FlashcardGamesPage implements OnInit {
   }
 
   selectCategory(category: string) {
-    this.router.navigate(['/name-that-memory', category]);
+    void this.router.navigate(['/name-that-memory'], { queryParams: { builtin: category } });
   }
 }

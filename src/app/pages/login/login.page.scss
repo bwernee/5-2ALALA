@@ -39,8 +39,7 @@ ion-header ion-title {
 
 .login-content {
   font-family: 'Poppins', sans-serif;
-  --background: var(--app-bg-gradient);
-  --background: var(--app-bg-gradient);
+  --background: transparent;
 }
 
 .login-container {
@@ -53,40 +52,55 @@ ion-header ion-title {
   gap: 20px;
 }
 
-.background-animation {
+.auth-hero-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 0;
+  pointer-events: none;
+}
 
-  .floating-circle {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+.auth-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 
-    &.circle-1 {
-      width: 80px;
-      height: 80px;
-      top: 10%;
-      left: 10%;
-    }
+.auth-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(30, 41, 59, 0.12) 0%,
+    rgba(30, 41, 59, 0.28) 45%,
+    rgba(30, 41, 59, 0.62) 100%
+  );
+}
 
-    &.circle-2 {
-      width: 120px;
-      height: 120px;
-      top: 60%;
-      right: 10%;
-    }
+.login-container.auth-with-hero .header-section,
+.login-container.auth-with-hero .logo-section,
+.login-container.auth-with-hero .login-form {
+  position: relative;
+  z-index: 1;
+}
 
-    &.circle-3 {
-      width: 60px;
-      height: 60px;
-      top: 30%;
-      right: 30%;
-    }
-  }
+.header-section {
+  z-index: 2;
+  position: relative;
+  align-self: flex-start;
+  margin: -8px 0 0 -12px;
+}
+
+.back-btn {
+  --color: var(--app-primary);
+}
+
+.auth-with-hero .back-btn {
+  --color: #ffffff;
+  --background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
 }
 
 .welcome-section {
@@ -153,23 +167,28 @@ ion-header ion-title {
       margin-bottom: 15px;
 
       .logo-ring {
-        width: 100px;
-        height: 100px;
+        width: 108px;
+        height: 108px;
         margin: 0 auto;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0;
+        box-sizing: border-box;
+        overflow: hidden;
         animation: pulse 3s ease-in-out infinite;
 
         .app-logo-image {
-          width: 70px;
-          height: 70px;
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
+          max-height: 100%;
           object-fit: contain;
+          object-position: center;
+          display: block;
+          filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.28));
         }
       }
     }
@@ -188,6 +207,18 @@ ion-header ion-title {
     font-size: 14px;
     margin: 8px 0 0 0;
     font-weight: 300;
+  }
+}
+
+.auth-with-hero .logo-section {
+  .app-name {
+    color: #ffffff;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .tagline {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -261,6 +292,12 @@ ion-header ion-title {
       --border-color: var(--app-primary);
       --color: var(--app-primary);
       box-shadow: none;
+    }
+
+    .forgot-row {
+      text-align: right;
+      margin-top: -6px;
+      margin-bottom: 10px;
     }
 
     .divider {

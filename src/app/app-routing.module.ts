@@ -4,8 +4,7 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
+    loadChildren: () => import('./pages/landing/landing.module').then(m => m.LandingPageModule)
   },
   {
     path: 'login',
@@ -96,6 +95,10 @@ const routes: Routes = [
   {
     path: 'brain-games',
     loadChildren: () => import('./pages/brain-games/brain-games.module').then( m => m.BrainGamesPageModule)
+  },
+  {
+    path: 'brain-game-category/:game',
+    loadChildren: () => import('./pages/brain-game-category-select/brain-game-category-select.module').then(m => m.BrainGameCategorySelectPageModule)
   },
   {
     path: 'memory-flip',

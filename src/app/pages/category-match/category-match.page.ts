@@ -14,7 +14,7 @@
  */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { ProgressPage } from '../progress/progress.page';
 
@@ -90,9 +90,6 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
   
   /** Whether patient mode is enabled (hides some controls) */
   isPatientMode = false;
-  
-  /** Whether the category picker modal is visible */
-  isCategoryPickerOpen = false;
   
   /** List of user-created custom categories */
   userCategories: CustomCategory[] = [];
@@ -183,7 +180,8 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
   private gcUnsub?: any;
 
   constructor(
-    private router: Router, 
+    private router: Router,
+    private route: ActivatedRoute,
     private firebaseService: FirebaseService
   ) {}
 
@@ -192,26 +190,54 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   ngOnInit() {
-    // Load patient mode from storage
     this.loadPatientModeFromStorage();
-    
-    // Mag-subscribe sa Firebase flashcards para real-time updates
     this.attachFirebaseFlashcards();
-    
-    // Fetch an initial snapshot from Firebase
-    this.primeFromFirebaseOnce();
+    this.loadUserCategories();
+
+    const qp = this.route.snapshot.queryParamMap;
+    const legacy = qp.get('category');
+    const hasBuiltin =
+      qp.get('builtin') === 'people' ||
+      qp.get('builtin') === 'places' ||
+      qp.get('builtin') === 'objects' ||
+      legacy === 'people' ||
+      legacy === 'places' ||
+      legacy === 'objects';
+    const hasCustom = !!qp.get('custom');
+    if (!hasBuiltin && !hasCustom) {
+      void this.router.navigate(['/brain-game-category', 'category-match'], { replaceUrl: true });
+      return;
+    }
+
+    void this.primeFromFirebaseOnce().then(() => {
+      this.computeCounts();
+      this.applyRouteSelectionFromParams();
+    });
   }
 
   ngOnDestroy(): void {
-    // Clean up Firebase subscription
     try { this.gcUnsub?.(); } catch {}
   }
 
   ionViewWillEnter() {
-    // Load user categories and counts when returning to the page
     this.loadUserCategories();
     this.computeCounts();
-    this.openCategoryPicker();
+  }
+
+  private applyRouteSelectionFromParams(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const legacy = qp.get('category');
+    const builtinRaw =
+      qp.get('builtin') ||
+      (legacy === 'people' || legacy === 'places' || legacy === 'objects' ? legacy : null);
+    const custom = qp.get('custom');
+    if (builtinRaw === 'people' || builtinRaw === 'places' || builtinRaw === 'objects') {
+      this.selectedFilter = { type: 'builtin', value: builtinRaw };
+      this.setupNewRun();
+    } else if (custom) {
+      this.selectedFilter = { type: 'custom', value: custom };
+      this.setupNewRun();
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -236,10 +262,6 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // CATEGORY PICKER
-  // ═══════════════════════════════════════════════════════════════════════════════
-
   /** Load user categories from local storage */
   private loadUserCategories() {
     try {
@@ -250,54 +272,6 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
     } catch { 
       this.userCategories = []; 
     }
-  }
-
-  /** Open the category picker modal */
-  openCategoryPicker() {
-    this.isCategoryPickerOpen = true;
-  }
-
-  /** Close the category picker modal */
-  closeCategoryPicker() {
-    this.isCategoryPickerOpen = false;
-  }
-
-  /** Close the picker and navigate to Brain Games */
-  dismissPickerToBrainGames() {
-    this.closeCategoryPicker();
-    this.router.navigate(['/brain-games']);
-  }
-
-  /** Select a built-in category (people/places/objects) */
-  chooseBuiltin(builtin: 'people' | 'places' | 'objects') {
-    this.selectedFilter = { type: 'builtin', value: builtin };
-    this.closeCategoryPicker();
-    this.setupNewRun();
-  }
-
-  /** Select a custom category by ID */
-  chooseCustom(categoryId: string) {
-    this.selectedFilter = { type: 'custom', value: categoryId };
-    this.closeCategoryPicker();
-    this.setupNewRun();
-  }
-
-  /** Handle dropdown selection for custom categories */
-  onCustomCategorySelect(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const categoryId = select.value;
-    if (categoryId) {
-      this.chooseCustom(categoryId);
-      select.value = ''; // Reset the dropdown
-    }
-  }
-
-  /** Get the appropriate icon for a custom category */
-  getCategoryIcon(c: CustomCategory): string {
-    if (c.emoji === '👤' || c.emoji === '👥') return 'people-outline';
-    if (c.emoji === '📍' || c.emoji === '🏠') return 'location-outline';
-    if (c.emoji === '📦' || c.emoji === '🎁') return 'cube-outline';
-    return 'folder-outline';
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -312,6 +286,11 @@ export class CategoryMatchPage implements OnInit, OnDestroy {
    * - Starts the first question
    */
   private setupNewRun() {
+    if (!this.selectedFilter) {
+      void this.router.navigate(['/brain-game-category', 'category-match']);
+      return;
+    }
+
     // Load all cards and categories
     this.loadAllCardsAndCategories();
     

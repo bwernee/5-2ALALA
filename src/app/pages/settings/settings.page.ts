@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
-import * as QRCode from 'qrcode';
 import { ActionSheetController, AlertController } from '@ionic/angular';
 import { FirebaseService } from '../../services/firebase.service';
 import { ConfirmService } from '../../services/confirm.service';
@@ -13,9 +12,6 @@ import { ConfirmService } from '../../services/confirm.service';
 })
 export class SettingsPage implements OnInit {
   userData: any = {};
-  qrCodeData = '';
-  qrCodeImage = '';
-  showQRCode = false;
   isPatientMode: boolean = false;
 
   
@@ -57,15 +53,14 @@ export class SettingsPage implements OnInit {
   
   trustedContacts: any[] = [];
   contactSecurityCode = '';
-  isScanning = false;
   isAddingContact = false;
 
   
   expandedSections: { [key: string]: boolean } = {
     security: false,
     password: false,
-    qr: false,
     contacts: false,
+    sharing: false,
     options: false
   };
 
@@ -99,8 +94,6 @@ export class SettingsPage implements OnInit {
           this.securityCode = user.uid;
           this.userData.securityCode = user.uid;
         }
-        
-        await this.generateQRData();
         return;
       }
     } catch {}
@@ -111,7 +104,6 @@ export class SettingsPage implements OnInit {
     } else {
       this.ensureSecurityCode();
     }
-    this.generateQRData();
   }
 
   
@@ -120,28 +112,6 @@ export class SettingsPage implements OnInit {
     const stored = localStorage.getItem('userData');
     this.userData = stored ? JSON.parse(stored) : {};
   }
-
-  async generateQRData() {
-    const patientProfile = {
-      type: 'patient-profile',
-      appName: 'ALALA',
-      name: this.userData.name || '',
-      email: this.userData.email || '',
-      sec: this.securityCode          
-    };
-    this.qrCodeData = JSON.stringify(patientProfile);
-    try {
-      this.qrCodeImage = await QRCode.toDataURL(this.qrCodeData, {
-        width: 256,
-        margin: 2,
-        color: { dark: '#000000', light: '#FFFFFF' }
-      });
-    } catch (error) {
-      console.error('QR gen error', error);
-    }
-  }
-
-  
 
   private async ensureSecurityCode() {
     const validRe = new RegExp(`^[${this.ALPHABET}]{${this.CODE_LEN}}$`);
@@ -213,15 +183,6 @@ export class SettingsPage implements OnInit {
     }
   }
 
-  copySecurityCode() {
-    if (!this.securityCode) return;
-    navigator.clipboard?.writeText(this.securityCode)
-      .then(() => this.toast('Security code copied', 'success'))
-      .catch(() => {});
-  }
-
-  
-
   async openPhotoSheet() {
     const sheet = await this.actionSheetCtrl.create({
       header: 'Update Profile Picture',
@@ -245,7 +206,6 @@ export class SettingsPage implements OnInit {
       this.userData = { ...(this.userData || {}), photo: dataUrl };
       localStorage.setItem('userData', JSON.stringify(this.userData));
       window.dispatchEvent(new CustomEvent('user-profile-updated'));
-      await this.generateQRData();
       await this.toast('Profile photo updated', 'success');
     } catch {
       await this.toast('Could not load image', 'danger');
@@ -277,7 +237,6 @@ export class SettingsPage implements OnInit {
     this.userData = { ...(this.userData || {}), name };
     localStorage.setItem('userData', JSON.stringify(this.userData));
     window.dispatchEvent(new CustomEvent('user-profile-updated'));
-    await this.generateQRData();
     this.isEditingName = false;
     this.savingName = false;
     await this.toast('Name updated', 'success');
@@ -310,7 +269,6 @@ export class SettingsPage implements OnInit {
     this.userData = { ...(this.userData || {}), email };
     localStorage.setItem('userData', JSON.stringify(this.userData));
     window.dispatchEvent(new CustomEvent('user-profile-updated'));
-    await this.generateQRData();
     this.isEditingEmail = false;
     this.savingEmail = false;
     await this.toast('Email updated', 'success');
@@ -462,8 +420,6 @@ export class SettingsPage implements OnInit {
 
   
 
-  toggleQRCode() { this.showQRCode = !this.showQRCode; }
-
   goToPatientsDashboard() {
     this.router.navigate(['/patients-dashboard']);
   }
@@ -511,7 +467,7 @@ export class SettingsPage implements OnInit {
               localStorage.removeItem('selectedPatientId');
             } catch {}
 
-            this.router.navigate(['/login']);
+            this.router.navigate(['/']);
           }
         }
       ],
@@ -585,24 +541,6 @@ export class SettingsPage implements OnInit {
       localStorage.setItem('trustedContacts', JSON.stringify(this.trustedContacts));
     } catch (error) {
       console.error('Error saving trusted contacts:', error);
-    }
-  }
-
-  async scanQRCode() {
-    this.isScanning = true;
-    try {
-      
-      const alert = await this.alertCtrl.create({
-        header: 'QR Code Scanner',
-        message: 'QR code scanning will be available in a future update. For now, please use the security code option.',
-        buttons: ['OK']
-      });
-      await alert.present();
-    } catch (error) {
-      console.error('Error scanning QR code:', error);
-      await this.toast('Error scanning QR code', 'danger');
-    } finally {
-      this.isScanning = false;
     }
   }
 
@@ -836,14 +774,6 @@ export class SettingsPage implements OnInit {
   changePassword() {
     
     this.toast('Password change feature coming soon!', 'primary');
-  }
-
-  enableTwoFactor() {
-    this.toast('Two-factor authentication coming soon!', 'primary');
-  }
-
-  viewLoginHistory() {
-    this.toast('Login history feature coming soon!', 'primary');
   }
 
   async deletePatient() {
