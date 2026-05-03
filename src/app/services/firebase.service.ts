@@ -5,7 +5,91 @@ import { Firestore, doc, setDoc, getDoc, addDoc, collection, query, where, order
 import { onSnapshot, Unsubscribe } from '@firebase/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { CloudinaryService } from './cloudinary.service';
-import { calculateAge, formatFullName } from '../utils/patient-utils';
+import { calculateAge, formatFullName, readPatientDetailsDisplayNameFromLocalStorage } from '../utils/patient-utils';
+
+function readNickname(
+  info: Record<string, unknown> | undefined,
+  fallback: Record<string, unknown> | undefined
+): string | undefined {
+  const src = info || {};
+  const fb = fallback || {};
+  const raw = (src['nickname'] ?? src['nickName'] ?? fb['nickname'] ?? fb['nickName']) as string | undefined;
+  const t = (raw || '').trim();
+  return t || undefined;
+}
+
+// ─── Brain game daily streak (localStorage, per caregiver + patient) ────────
+
+interface BrainStreakState {
+  count: number;
+  lastYmd: string | null;
+}
+
+function brainStreakStorageKey(caregiverId: string, patientId: string): string {
+  return `alala_brain_streak_v2_${caregiverId}_${patientId}`;
+}
+
+function brainStreakLocalDateYmd(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function brainStreakParseYmdUtcNoon(ymd: string): number {
+  const [y, m, d] = ymd.split('-').map((x) => parseInt(x, 10));
+  return Date.UTC(y, m - 1, d);
+}
+
+function brainStreakYmdDiffDays(fromYmd: string, toYmd: string): number {
+  const a = brainStreakParseYmdUtcNoon(fromYmd);
+  const b = brainStreakParseYmdUtcNoon(toYmd);
+  return Math.round((b - a) / 86400000);
+}
+
+function readBrainStreak(caregiverId: string, patientId: string): BrainStreakState {
+  try {
+    const raw = localStorage.getItem(brainStreakStorageKey(caregiverId, patientId));
+    if (!raw) return { count: 0, lastYmd: null };
+    const j = JSON.parse(raw) as { count?: number; lastYmd?: string | null };
+    return {
+      count: Math.max(0, Number(j.count) || 0),
+      lastYmd: typeof j.lastYmd === 'string' ? j.lastYmd : null,
+    };
+  } catch {
+    return { count: 0, lastYmd: null };
+  }
+}
+
+function writeBrainStreak(caregiverId: string, patientId: string, s: BrainStreakState): void {
+  localStorage.setItem(brainStreakStorageKey(caregiverId, patientId), JSON.stringify(s));
+}
+
+function recordBrainStreakDayPlayed(caregiverId: string, patientId: string): BrainStreakState {
+  const today = brainStreakLocalDateYmd();
+  let { count, lastYmd } = readBrainStreak(caregiverId, patientId);
+
+  if (lastYmd === today) {
+    return { count, lastYmd: today };
+  }
+
+  if (lastYmd == null) {
+    count = 1;
+  } else {
+    const gap = brainStreakYmdDiffDays(lastYmd, today);
+    if (gap > 1) {
+      count = 1;
+    } else if (gap === 1) {
+      count = count + 1;
+    } else {
+      count = 1;
+    }
+  }
+
+  lastYmd = today;
+  writeBrainStreak(caregiverId, patientId, { count, lastYmd });
+  return { count, lastYmd };
+}
 
 /**
  * FirebaseService: central data layer for auth + Firestore + storage.
@@ -151,6 +235,26 @@ export class FirebaseService {
     const selectedPatientId = localStorage.getItem('selectedPatientId');
     if (selectedPatientId) return selectedPatientId;
     return this.getCurrentUser()?.uid ?? null;
+  }
+
+  /** Same caregiver + patient scope as game sessions / streak (for UI). */
+  getBrainStreakContext(): { caregiverId: string; patientId: string } | null {
+    const caregiverId = this.getCaregiverId();
+    const patientId = this.getPatientId();
+    if (!caregiverId || !patientId) return null;
+    return { caregiverId, patientId };
+  }
+
+  /** Streak days for Brain Games UI (0 if last play was more than a day ago). */
+  getBrainStreakDisplayCount(): number {
+    const ctx = this.getBrainStreakContext();
+    if (!ctx) return 0;
+    const { count, lastYmd } = readBrainStreak(ctx.caregiverId, ctx.patientId);
+    if (!lastYmd) return 0;
+    const today = brainStreakLocalDateYmd();
+    const gap = brainStreakYmdDiffDays(lastYmd, today);
+    if (gap === 0 || gap === 1) return count;
+    return 0;
   }
 
   // ─── Authentication & account lifecycle ─────────────────────────────────────
@@ -318,6 +422,7 @@ export class FirebaseService {
     lastName: string;
     dateOfBirth: string;
     sex?: string;
+    nickname: string;
     relationship?: string;
     notes?: string;
     emergencyContact?: string
@@ -329,35 +434,49 @@ export class FirebaseService {
     const firstName = (details.firstName || '').trim();
     const lastName = (details.lastName || '').trim();
     const dateOfBirth = (details.dateOfBirth || '').trim();
+    const nickname = (details.nickname || '').trim();
     if (!firstName || !lastName || !dateOfBirth) {
       throw new Error('Patient first name, last name, and birthday are required');
     }
+    if (!nickname) {
+      throw new Error('Display name is required');
+    }
 
     const patientDetailsRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'patientInfo', 'details');
-    await setDoc(patientDetailsRef, {
-      firstName,
-      lastName,
-      name: `${lastName}, ${firstName}`,
-      dateOfBirth,
-      age: null,
-      sex: details.sex || null,
-      relationship: details.relationship || null,
-      notes: details.notes || null,
-      emergencyContact: details.emergencyContact || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    await setDoc(
+      patientDetailsRef,
+      {
+        firstName,
+        lastName,
+        name: `${lastName}, ${firstName}`,
+        dateOfBirth,
+        age: null,
+        sex: details.sex || null,
+        nickname,
+        relationship: details.relationship || null,
+        notes: details.notes || null,
+        emergencyContact: details.emergencyContact || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
 
     // IMPORTANT: also update the patient root doc so patients list subscription updates immediately
     const patientRootRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid);
-    await setDoc(patientRootRef, this.sanitizeForFirestore({
-      firstName,
-      lastName,
-      name: `${lastName}, ${firstName}`,
-      dateOfBirth,
-      sex: details.sex || null,
-      updatedAt: new Date().toISOString()
-    }), { merge: true });
+    await setDoc(
+      patientRootRef,
+      this.sanitizeForFirestore({
+        firstName,
+        lastName,
+        name: `${lastName}, ${firstName}`,
+        dateOfBirth,
+        sex: details.sex || null,
+        nickname,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
   }
 
   
@@ -878,6 +997,15 @@ export class FirebaseService {
       localStorage.setItem(localKey, JSON.stringify(localSessions));
     } catch (e) {
       console.warn('Failed to cache game session locally:', e);
+    }
+
+    try {
+      const streakCtx = this.getBrainStreakContext();
+      if (streakCtx) {
+        recordBrainStreakDayPlayed(streakCtx.caregiverId, streakCtx.patientId);
+      }
+    } catch (e) {
+      console.warn('Brain streak update skipped:', e);
     }
   }
 
@@ -2822,12 +2950,32 @@ export class FirebaseService {
   }
 
   /** Get all patients for the current caregiver */
-  async getPatients(): Promise<Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string; createdAt?: string }>> {
+  async getPatients(): Promise<
+    Array<{
+      id: string;
+      name?: string;
+      nickname?: string;
+      photo?: string;
+      age?: number;
+      gender?: string;
+      dateOfBirth?: string;
+      createdAt?: string;
+    }>
+  > {
     const cgId = this.getCaregiverId();
     if (!cgId) throw new Error('User not authenticated');
 
     try {
-      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string; createdAt?: string }> = [];
+      const patients: Array<{
+        id: string;
+        name?: string;
+        nickname?: string;
+        photo?: string;
+        age?: number;
+        gender?: string;
+        dateOfBirth?: string;
+        createdAt?: string;
+      }> = [];
       
       // Get patients from the patients subcollection
       const patientsRef = collection(this.firestore, 'caregiver', cgId, 'patients');
@@ -2855,6 +3003,7 @@ export class FirebaseService {
           patientData.age = calculateAge(patientData.dateOfBirth) ?? info['age'] ?? patientDocData['age'] ?? undefined;
           patientData.gender = info['sex'] || info['gender'] || patientDocData['sex'] || patientDocData['gender'] || undefined;
           patientData.photo = info['photo'] || patientDocData['photo'] || undefined;
+          patientData.nickname = readNickname(info as Record<string, unknown>, patientDocData as Record<string, unknown>);
         } else {
           // Fallback: check patient document itself for data
           const firstName = patientDocData['firstName'] || '';
@@ -2864,6 +3013,7 @@ export class FirebaseService {
           patientData.age = calculateAge(patientData.dateOfBirth) ?? patientDocData['age'] ?? undefined;
           patientData.gender = patientDocData['sex'] || patientDocData['gender'] || undefined;
           patientData.photo = patientDocData['photo'] || undefined;
+          patientData.nickname = readNickname(undefined, patientDocData as Record<string, unknown>);
           
           // Also check if patientId matches caregiver's own ID and get their info
           if (patientId === cgId && !patientData.name) {
@@ -2900,7 +3050,8 @@ export class FirebaseService {
           age: calculateAge(dateOfBirth) ?? info['age'],
           gender: info['sex'] || info['gender'],
           photo: info['photo'] || cgData['photo'],
-          createdAt: cgData['createdAt']
+          createdAt: cgData['createdAt'],
+          nickname: readNickname(info as Record<string, unknown>, cgData as Record<string, unknown>),
         });
       }
       
@@ -2917,6 +3068,7 @@ export class FirebaseService {
     lastName: string;
     dateOfBirth: string;
     gender?: string;
+    nickname: string;
     medicalId?: string;
     notes?: string;
     photo?: string;
@@ -2930,6 +3082,10 @@ export class FirebaseService {
       const dateOfBirth = (patientData.dateOfBirth || '').trim();
       if (!firstName || !lastName || !dateOfBirth) {
         throw new Error('Patient first name, last name, and birthday are required');
+      }
+      const nickname = (patientData.nickname || '').trim();
+      if (!nickname) {
+        throw new Error('Display name is required');
       }
       const displayName = `${lastName}, ${firstName}`;
 
@@ -2946,6 +3102,7 @@ export class FirebaseService {
         name: displayName,
         dateOfBirth,
         sex: patientData.gender || null,
+        nickname,
         updatedAt: new Date().toISOString()
       });
 
@@ -2958,6 +3115,7 @@ export class FirebaseService {
         dateOfBirth,
         age: null,
         sex: patientData.gender || null,
+        nickname,
         medicalId: patientData.medicalId || null,
         notes: patientData.notes || null,
         photo: patientData.photo || null,
@@ -2975,8 +3133,62 @@ export class FirebaseService {
     }
   }
 
+  /**
+   * Display name for the selected patient (nickname preferred, then formatted name),
+   * aligned with Patients dashboard. Use for caregiver flows where `selectedPatientId` is set.
+   */
+  async getSelectedPatientDisplayName(): Promise<string> {
+    const cgId = this.getCaregiverId();
+    const pid = this.getPatientId();
+    if (!cgId || !pid) {
+      return readPatientDetailsDisplayNameFromLocalStorage() || 'there';
+    }
+    try {
+      const patientInfoRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'patientInfo', 'details');
+      const patientInfoSnap = await getDoc(patientInfoRef);
+      const patientRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid);
+      const patientSnap = await getDoc(patientRef);
+      const patientDocData = patientSnap.exists() ? patientSnap.data() : {};
+      const root = patientDocData as Record<string, unknown>;
+
+      if (patientInfoSnap.exists()) {
+        const info = patientInfoSnap.data() as Record<string, unknown>;
+        const nick = readNickname(info, root);
+        if (nick) return nick;
+        const firstName = String(info['firstName'] || root['firstName'] || '');
+        const lastName = String(info['lastName'] || root['lastName'] || '');
+        const formatted = formatFullName(lastName, firstName);
+        if (formatted) return formatted;
+        const name = String(info['name'] || root['name'] || '').trim();
+        if (name) return name;
+      } else if (patientSnap.exists()) {
+        const nick = readNickname(undefined, root);
+        if (nick) return nick;
+        const name = String(root['name'] || '').trim();
+        if (name) return name;
+      }
+    } catch (e) {
+      console.warn('getSelectedPatientDisplayName:', e);
+    }
+    const cached = readPatientDetailsDisplayNameFromLocalStorage();
+    if (cached) return cached;
+    return 'there';
+  }
+
   /** Subscribe to patients list changes */
-  subscribeToPatients(onChange: (patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string }>) => void): Unsubscribe {
+  subscribeToPatients(
+    onChange: (
+      patients: Array<{
+        id: string;
+        name?: string;
+        nickname?: string;
+        photo?: string;
+        age?: number;
+        gender?: string;
+        dateOfBirth?: string;
+      }>
+    ) => void
+  ): Unsubscribe {
     const cgId = this.getCaregiverId();
     if (!cgId) {
       console.warn('subscribeToPatients: no auth available');
@@ -2986,7 +3198,15 @@ export class FirebaseService {
     const patientsRef = collection(this.firestore, 'caregiver', cgId, 'patients');
     
     return onSnapshot(patientsRef, async (snapshot) => {
-      const patients: Array<{ id: string; name?: string; photo?: string; age?: number; gender?: string; dateOfBirth?: string }> = [];
+      const patients: Array<{
+        id: string;
+        name?: string;
+        nickname?: string;
+        photo?: string;
+        age?: number;
+        gender?: string;
+        dateOfBirth?: string;
+      }> = [];
       
       for (const patientDoc of snapshot.docs) {
         const patientId = patientDoc.id;
@@ -3007,6 +3227,7 @@ export class FirebaseService {
             patientData.age = calculateAge(patientData.dateOfBirth) ?? info['age'] ?? patientDocData['age'] ?? undefined;
             patientData.gender = info['sex'] || info['gender'] || patientDocData['sex'] || patientDocData['gender'] || undefined;
             patientData.photo = info['photo'] || patientDocData['photo'] || undefined;
+            patientData.nickname = readNickname(info as Record<string, unknown>, patientDocData as Record<string, unknown>);
           } else {
             // Fallback: check patient document itself for data
             const firstName = patientDocData['firstName'] || '';
@@ -3016,6 +3237,7 @@ export class FirebaseService {
             patientData.age = calculateAge(patientData.dateOfBirth) ?? patientDocData['age'] ?? undefined;
             patientData.gender = patientDocData['sex'] || patientDocData['gender'] || undefined;
             patientData.photo = patientDocData['photo'] || undefined;
+            patientData.nickname = readNickname(undefined, patientDocData as Record<string, unknown>);
             
             // Also check if patientId matches caregiver's own ID
             if (patientId === cgId && !patientData.name) {
@@ -3048,14 +3270,14 @@ export class FirebaseService {
           const firstName = info['firstName'] || cgData['firstName'] || '';
           const lastName = info['lastName'] || cgData['lastName'] || '';
           const dateOfBirth = info['dateOfBirth'] || cgData['dateOfBirth'] || null;
-
           patients.push({
             id: cgId,
             name: formatFullName(lastName, firstName) || info['name'] || cgData['name'],
             dateOfBirth: dateOfBirth || undefined,
             age: calculateAge(dateOfBirth) ?? info['age'],
             gender: info['sex'] || info['gender'],
-            photo: info['photo'] || cgData['photo']
+            photo: info['photo'] || cgData['photo'],
+            nickname: readNickname(info as Record<string, unknown>, cgData as Record<string, unknown>),
           });
         }
       } catch (err) {
@@ -3064,6 +3286,36 @@ export class FirebaseService {
       
       onChange(patients);
     });
+  }
+
+  /**
+   * Upload a profile image for a patient (from caregiver My Patients) and save the download URL
+   * on patientInfo/details and the patient root doc so the list subscription updates.
+   */
+  async updatePatientProfilePhoto(patientId: string, imageDataUrl: string): Promise<string> {
+    const cgId = this.getCaregiverId();
+    if (!cgId) throw new Error('User not authenticated');
+    const pid = (patientId || '').trim();
+    if (!pid) throw new Error('Patient is required');
+
+    const res = await fetch(imageDataUrl);
+    const blob = await res.blob();
+    if (!blob?.size) throw new Error('Invalid image');
+
+    const ext = blob.type.includes('png') ? 'png' : 'jpg';
+    const path = `profile/avatar_${Date.now()}.${ext}`;
+    const storageRef = ref(this.storage, `caregiver/${cgId}/patients/${pid}/${path}`);
+    const snapshot = await uploadBytes(storageRef, blob);
+    const url = await getDownloadURL(snapshot.ref);
+    const ts = new Date().toISOString();
+
+    const patientDetailsRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid, 'patientInfo', 'details');
+    await setDoc(patientDetailsRef, this.sanitizeForFirestore({ photo: url, updatedAt: ts }), { merge: true });
+
+    const patientRootRef = doc(this.firestore, 'caregiver', cgId, 'patients', pid);
+    await setDoc(patientRootRef, this.sanitizeForFirestore({ photo: url, updatedAt: ts }), { merge: true });
+
+    return url;
   }
 
   /** Delete a patient and all their data */

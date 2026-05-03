@@ -15,83 +15,140 @@
         </div>
       </div>
     </app-global-header>
-    
+
     <div class="header-section">
       <h1>Patient Details</h1>
       <p>Please provide information about the patient</p>
     </div>
 
-    
     <div class="form-section">
-      
+
+      <div class="form-group">
+        <label for="patientNickname">Display name</label>
+        <ion-item class="input-item" lines="none">
+          <ion-icon name="happy-outline" slot="start" aria-hidden="true"></ion-icon>
+          <ion-input
+            id="patientNickname"
+            [(ngModel)]="patientNickname"
+            placeholder="Name shown on My Patients"
+            type="text"
+            clearInput
+            autocomplete="off"
+            autocorrect="off"></ion-input>
+        </ion-item>
+      </div>
+
       <div class="form-group">
         <label for="patientFirstName">First Name</label>
-        <ion-item class="input-item">
-          <ion-icon name="person-outline" slot="start"></ion-icon>
+        <ion-item class="input-item" lines="none">
+          <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
           <ion-input
             id="patientFirstName"
             [(ngModel)]="patientFirstName"
             placeholder="Enter patient's first name"
             type="text"
             clearInput
-          ></ion-input>
+            autocomplete="off"
+            autocorrect="off"></ion-input>
         </ion-item>
       </div>
 
       <div class="form-group">
         <label for="patientLastName">Last Name</label>
-        <ion-item class="input-item">
-          <ion-icon name="person-outline" slot="start"></ion-icon>
+        <ion-item class="input-item" lines="none">
+          <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
           <ion-input
             id="patientLastName"
             [(ngModel)]="patientLastName"
             placeholder="Enter patient's last name"
             type="text"
             clearInput
-          ></ion-input>
+            autocomplete="off"
+            autocorrect="off"></ion-input>
         </ion-item>
       </div>
 
-      
       <div class="form-group">
-        <label for="patientBirthday">Birthday</label>
-        <ion-item class="input-item">
-          <ion-icon name="calendar-outline" slot="start"></ion-icon>
-          <ion-datetime-button datetime="patientBirthdayPicker"></ion-datetime-button>
+        <label for="patientBirthdayInput">Birthday</label>
+        <ion-item class="input-item input-item--birthday" lines="none">
+          <ion-icon name="calendar-outline" slot="start" aria-hidden="true"></ion-icon>
+          <ion-input
+            id="patientBirthdayInput"
+            [(ngModel)]="birthdayDisplay"
+            (ionBlur)="onBirthdayManualBlur()"
+            placeholder="MM/DD/YYYY"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            autocorrect="off"
+            class="birthday-text-input"></ion-input>
+          <ion-button
+            slot="end"
+            fill="clear"
+            class="calendar-trigger"
+            type="button"
+            (click)="openBirthdayPopover($event)"
+            aria-label="Open calendar">
+            <ion-icon name="calendar-outline" slot="icon-only"></ion-icon>
+          </ion-button>
         </ion-item>
       </div>
 
-      <ion-modal [keepContentsMounted]="true">
+      <ion-popover
+        [isOpen]="birthdayPopoverOpen"
+        [event]="birthdayPopoverEvent"
+        (didDismiss)="onBirthdayPopoverDismiss()"
+        reference="event"
+        side="left"
+        alignment="center"
+        size="auto"
+        cssClass="compact-birthday-popover"
+        [arrow]="true"
+        [backdropDismiss]="true"
+        [dismissOnSelect]="false">
         <ng-template>
-          <ion-datetime
-            id="patientBirthdayPicker"
-            presentation="date"
-            [(ngModel)]="patientBirthday"
-            preferWheel="false"
-            showDefaultButtons="true">
-          </ion-datetime>
+          <div class="compact-birthday-inner ion-padding">
+            <ion-datetime
+              presentation="date"
+              [(ngModel)]="patientBirthday"
+              [max]="maxBirthDate"
+              [min]="minBirthDate"
+              preferWheel="false"
+              firstDayOfWeek="0">
+            </ion-datetime>
+            <div class="compact-birthday-actions">
+              <ion-button fill="clear" size="small" (click)="closeBirthdayPopover()">Cancel</ion-button>
+              <ion-button size="small" (click)="confirmBirthdayPopover()">Done</ion-button>
+            </div>
+          </div>
         </ng-template>
-      </ion-modal>
+      </ion-popover>
 
-      
       <div class="form-group">
         <label for="patientSex">Sex</label>
-        <ion-segment class="app-segment" [(ngModel)]="patientSex">
-          <ion-segment-button value="Male"><ion-label>Male</ion-label></ion-segment-button>
-          <ion-segment-button value="Female"><ion-label>Female</ion-label></ion-segment-button>
-          <ion-segment-button value="Other"><ion-label>Other</ion-label></ion-segment-button>
-        </ion-segment>
+        <ion-item class="input-item input-item--select" lines="none">
+          <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+          <ion-select
+            id="patientSex"
+            [(ngModel)]="patientSex"
+            interface="popover"
+            placeholder="Select sex"
+            toggleIcon="chevron-down-outline"
+            expandedIcon="chevron-up-outline"
+            aria-label="Patient sex">
+            <ion-select-option value="Male">Male</ion-select-option>
+            <ion-select-option value="Female">Female</ion-select-option>
+          </ion-select>
+        </ion-item>
       </div>
     </div>
 
-    
     <div class="button-section">
       <ion-button
         expand="block"
         class="save-button"
         (click)="savePatientDetails()"
-        [disabled]="isLoading"
-      >
+        [disabled]="isLoading">
         <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
         <span *ngIf="!isLoading">SAVE & CONTINUE</span>
       </ion-button>
@@ -101,11 +158,9 @@
         fill="outline"
         class="back-button"
         (click)="goBack()"
-        [disabled]="isLoading"
-      >
+        [disabled]="isLoading">
         BACK
       </ion-button>
     </div>
   </div>
 </ion-content>
-

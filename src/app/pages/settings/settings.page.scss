@@ -890,8 +890,8 @@ ion-button {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
   
@@ -1505,8 +1505,8 @@ ion-button {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
   

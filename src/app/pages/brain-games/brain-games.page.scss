@@ -1,5 +1,26 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import '../../../theme/brain-ui-shared.scss';
+
+/* Clean white → lavender → purple (no photo) */
+ion-content.lavender-content.brain-games-content {
+  --ion-background-color: #f8f5fc;
+  --background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #faf8ff 26%,
+    #eee6fa 58%,
+    rgba(var(--app-primary-rgb), 0.16) 100%
+  );
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #faf8ff 26%,
+    #eee6fa 58%,
+    rgba(var(--app-primary-rgb), 0.16) 100%
+  );
+  -webkit-text-size-adjust: 100%;
+}
 
 .lavender-content {
   --ion-background-color: var(--app-bg-1);
@@ -323,9 +344,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid rgba(var(--app-primary-rgb), 0.1);
-  box-shadow: 0 -4px 20px rgba(var(--app-primary-rgb), 0.1);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
 }
@@ -335,8 +355,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
 }
@@ -377,28 +397,28 @@
 
 
 .caregiver-bottom-nav .nav-item {
-  color: #6b7280;
-  
+  color: rgba(255, 255, 255, 0.78);
+
   &:hover {
-    background: rgba(var(--app-primary-rgb), 0.1);
-    color: var(--app-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
   }
-  
+
   &.active {
-    background: rgba(var(--app-primary-rgb), 0.1);
-    color: var(--app-primary);
-    
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+
     .nav-icon {
-      background: rgba(var(--app-primary-rgb), 0.2);
-      box-shadow: 0 0 20px rgba(var(--app-primary-rgb), 0.3);
-      
+      background: #fff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.75);
+
       ion-icon {
         color: var(--app-primary);
       }
     }
-    
+
     .nav-label {
-      color: var(--app-primary);
+      color: #fff;
     }
   }
 }
@@ -431,19 +451,19 @@
   .nav-icon {
     width: 50px;
     height: 50px;
-    background: rgba(var(--app-primary-rgb), 0.1);
-    border: 2px solid rgba(var(--app-primary-rgb), 0.2);
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.28);
     border-radius: 50%;
-    
+
     ion-icon {
-      color: var(--app-primary);
+      color: #fff;
       font-size: 24px;
       font-weight: bold;
     }
   }
-  
+
   .nav-label {
-    color: #525252;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 600;
     font-size: 0.8rem;
   }
@@ -476,17 +496,17 @@
 
 
 .caregiver-bottom-nav .nav-icon {
-  color: var(--app-primary);
-  background: rgba(var(--app-primary-rgb), 0.1);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 50%;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   ion-icon {
-    color: var(--app-primary);
+    color: #fff;
     font-size: 18px;
   }
 }
@@ -505,7 +525,7 @@
 
 
 .caregiver-bottom-nav .nav-label {
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 

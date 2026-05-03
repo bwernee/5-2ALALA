@@ -1,115 +1,92 @@
-.bgcat-content {
-  --ion-background-color: var(--app-bg-1);
-  background: var(--app-bg-gradient);
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import '../../../theme/brain-ui-shared.scss';
+
+ion-content.lavender-content.brain-game-category-content {
+  --background: transparent !important;
+  --ion-background-color: transparent !important;
+  background: transparent !important;
+  -webkit-text-size-adjust: 100%;
 }
 
-.bgcat-wrap {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  padding: 12px;
-  gap: 12px;
+ion-content.lavender-content.brain-game-category-content::part(background) {
+  background: transparent !important;
+}
+
+.bgcat-hero-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bgcat-hero-bg__img {
+  position: absolute;
+  left: -6%;
+  top: -6%;
+  width: 112%;
+  height: 112%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(22px) saturate(1.06);
+  transform: scale(1.02);
+  -webkit-transform: scale(1.02);
+}
+
+.bgcat-hero-bg__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 245, 252, 0.26) 0%,
+    rgba(244, 240, 250, 0.32) 45%,
+    rgba(240, 236, 248, 0.38) 100%
+  );
+}
+
+button.brain-game-row.bgcat-row {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  margin: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
   box-sizing: border-box;
 }
 
-.welcome-icon {
-  background: linear-gradient(135deg, var(--app-primary), var(--app-primary));
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(var(--app-primary-rgb), 0.3);
-
-  ion-icon {
-    color: white;
-    font-size: 20px;
-  }
-}
-
-.panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.93);
-  border-radius: 18px;
-  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
-  box-shadow: 0 10px 30px rgba(var(--app-primary-rgb), 0.12);
-  padding: 18px;
-  min-height: 0;
-}
-
-.panel-title {
-  margin: 0 0 14px;
-  font-size: 20px;
+.bgcat-subhead {
+  margin: 0;
+  font-size: clamp(1.05rem, 3.6vw, 1.2rem);
   font-weight: 800;
-  color: var(--app-text);
-  text-align: center;
-  line-height: 1.2;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-.btn-grid {
-  display: grid;
-  gap: 12px;
-}
-
-ion-button.big-btn {
-  --border-radius: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
-  font-size: 17px;
-  font-weight: 800;
-  text-transform: none;
-}
-
-ion-button.big-btn.secondary {
-  --background: rgba(var(--app-primary-rgb), 0.12);
-  --color: var(--app-primary);
-}
-
-.btn-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-}
-
-.btn-line {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-weight: 800;
-
-  ion-icon {
-    font-size: 22px;
-  }
-}
-
-.btn-meta {
-  font-size: 12px;
-  font-weight: 600;
-  opacity: 0.88;
-}
-
-.divider-label {
-  margin: 16px 0 10px;
-  font-size: 12px;
+.bgcat-divider {
+  margin: 4px 0 0;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6b7280;
+  color: #5c5c5c;
   text-align: center;
 }
 
-.hint {
-  margin-top: 14px;
-  color: #6b7280;
-  font-size: 14px;
+.bgcat-hint {
+  margin: 4px 0 0;
+  padding: 0 4px;
+  color: #5c5c5c;
+  font-size: clamp(0.88rem, 3vw, 0.95rem);
+  font-weight: 500;
   line-height: 1.5;
   text-align: center;
+}
+
+/* Title in row is a span — match h2 spacing from shared */
+.bgcat-row .brain-game-row__title {
+  display: block;
 }

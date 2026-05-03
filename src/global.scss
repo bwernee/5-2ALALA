@@ -61,6 +61,21 @@ ion-content::part(background) {
   background: var(--app-bg-gradient) !important;
 }
 
+/* Home + Brain Games: show blurred landing art (overrides “force home style” above) */
+ion-content.lavender-content.home-screen-content,
+ion-content.lavender-content.brain-games-content,
+ion-content.lavender-content.brain-game-category-content {
+  --background: transparent !important;
+  --ion-background-color: transparent !important;
+  background: transparent !important;
+}
+
+ion-content.lavender-content.home-screen-content::part(background),
+ion-content.lavender-content.brain-games-content::part(background),
+ion-content.lavender-content.brain-game-category-content::part(background) {
+  background: transparent !important;
+}
+
 /* Some themes apply background on scroll part instead */
 ion-content::part(scroll) {
   background: transparent !important;
@@ -925,6 +940,41 @@ ion-action-sheet {
       }
     }
   }
+}
+
+/* Small anchored popover for birthday calendar (not full-screen) */
+ion-popover.compact-birthday-popover {
+  --width: min(304px, calc(100vw - 24px));
+  /* ion-popover .popover-content uses overflow: auto — keep max-height above
+     calendar + custom footer so nothing scrolls inside the popover */
+  --max-height: min(560px, 92vh);
+}
+
+ion-popover.compact-birthday-popover::part(content) {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.compact-birthday-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.compact-birthday-inner ion-datetime {
+  width: 100%;
+  max-width: 100%;
+}
+
+.compact-birthday-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(var(--app-primary-rgb, 121, 68, 148), 0.12);
 }
 
 @import "@ionic/angular/css/core.css";

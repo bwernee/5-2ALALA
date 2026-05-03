@@ -1,5 +1,5 @@
 <ion-content class="lavender-content game-home-screen ntm-screen" [fullscreen]="true" [scrollY]="false">
-  <div class="ntm-layout lavender-container app-container">
+  <div class="ntm-layout lavender-container app-container" [class.ntm-layout--empty]="gameCards.length === 0">
     <app-global-header>
       <div gh-left>
         <div class="app-header__leading">
@@ -27,18 +27,27 @@
       </div>
     </div>
 
-    <div *ngIf="gameCards.length === 0" class="empty-state empty-state--rich">
-      <div class="empty-card">
-        <div class="empty-badge" aria-hidden="true">
-          <ion-icon name="images-outline"></ion-icon>
+    <div *ngIf="gameCards.length === 0" class="empty-state empty-state--illustrated">
+      <div class="empty-state__blob" aria-hidden="true"></div>
+      <div class="empty-state__card">
+        <span class="empty-state__pin empty-state__pin--tr" aria-hidden="true">
+          <ion-icon name="person-outline"></ion-icon>
+        </span>
+        <span class="empty-state__pin empty-state__pin--bl" aria-hidden="true">
+          <ion-icon name="location-outline"></ion-icon>
+        </span>
+        <div class="empty-state__card-inner">
+          <ion-icon name="images" class="empty-state__main-icon" aria-hidden="true"></ion-icon>
         </div>
-        <h2 class="empty-title">Ready for your first memory?</h2>
-        <p class="empty-subtitle">Add a photo to People, Places, or Objects—then come back and play.</p>
-        <ion-button class="empty-btn" (click)="goToAddFlashcard()">
-          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-          Add a photo
-        </ion-button>
       </div>
+      <h2 class="empty-state__title">No memories yet</h2>
+      <p class="empty-state__copy">
+        Add a photo to People, Places, or Objects—then come back and play.
+      </p>
+      <button type="button" class="empty-state__cta" (click)="goToAddFlashcard()">
+        <ion-icon name="add" aria-hidden="true"></ion-icon>
+        Add a photo
+      </button>
     </div>
 
     <div *ngIf="gameCards.length > 0" class="game-container">

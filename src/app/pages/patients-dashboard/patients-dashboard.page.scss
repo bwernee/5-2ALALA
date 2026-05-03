@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import '../../../theme/empty-state-illustrated.scss';
 
 .lavender-content {
   --ion-background-color: var(--app-bg-1);
@@ -170,6 +171,42 @@
     option {
       background: white;
       color: var(--app-text);
+    }
+  }
+
+  &.input-wrapper--birthday {
+    padding-right: 8px;
+    gap: 8px;
+
+    input {
+      min-width: 0;
+    }
+
+    .calendar-trigger-btn {
+      --color: var(--app-primary);
+      --padding-start: 6px;
+      --padding-end: 6px;
+      margin: 0;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 22px;
+      }
+    }
+  }
+
+  &.input-wrapper--select {
+    ion-select {
+      flex: 1;
+      width: 100%;
+      max-width: 100%;
+      --padding-top: 0;
+      --padding-bottom: 0;
+      --padding-start: 0;
+      --padding-end: 0;
+      font-size: 15px;
+      color: var(--app-text);
+      --icon-color: var(--app-primary);
     }
   }
 }
@@ -492,58 +529,589 @@
   }
 }
 
-.empty-state {
-  grid-column: 1 / -1;
+// ─── My Patients dashboard (list + preview, ALALA palette only) ─────────────
+$dash-text: var(--app-text);
+$dash-muted: #6b7280;
+$dash-pill-bg: #ece8e2;
+$dash-icon: #5c5c5c;
+
+.patients-dashboard-inner {
+  padding-bottom: 120px;
+}
+
+.patients-dashboard-inner.patients-dashboard--empty {
+  position: relative;
+  overflow: hidden;
+  min-height: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: min(320px, 85vw);
+    height: min(320px, 85vw);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    filter: blur(56px);
+  }
+
+  &::before {
+    background: rgba(var(--app-primary-rgb), 0.38);
+    top: -12%;
+    right: -18%;
+  }
+
+  &::after {
+    background: rgba(var(--app-primary-rgb), 0.28);
+    bottom: 8%;
+    left: -22%;
+  }
+}
+
+.patients-page-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
   text-align: center;
-  
-  .empty-icon {
-    width: 120px;
-    height: 120px;
-    background: linear-gradient(135deg, rgba(var(--app-primary-rgb), 0.1) 0%, rgba(var(--app-primary-rgb), 0.05) 100%);
-    border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.patients-page-brand__logo {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+
+.patients-page-heading {
+  margin: 4px 0 16px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.patients-page-title {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(1.65rem, 5vw, 2rem);
+  font-weight: 700;
+  color: $dash-text;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.patients-page-subtitle {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: $dash-muted;
+  line-height: 1.4;
+}
+
+.patients-search-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.patients-search-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+
+  ion-icon {
+    font-size: 20px;
+    color: $dash-muted;
+    flex-shrink: 0;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    color: $dash-text;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+}
+
+.patients-filter-btn {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    font-size: 22px;
+    color: $dash-icon;
+  }
+
+  &--active {
+    border-color: rgba(var(--app-primary-rgb), 0.35);
+    box-shadow: 0 0 0 2px rgba(var(--app-primary-rgb), 0.12);
+  }
+}
+
+.patients-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: $dash-muted;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+
+  &--on {
+    background: $dash-pill-bg;
+    color: $dash-icon;
+    border-color: transparent;
+    font-weight: 600;
+  }
+}
+
+.patients-layout {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  position: relative;
+  z-index: 1;
+
+  @media (min-width: 960px) {
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 20px;
+  }
+}
+
+.patients-layout--empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Fill viewport under header area; lavender-container uses padding-bottom ~120px */
+  min-height: calc(100vh - 140px);
+  min-height: calc(100dvh - 140px);
+
+  .patients-list-column {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 24px;
-    
-    ion-icon {
-      font-size: 64px;
-      color: var(--app-primary);
-      opacity: 0.5;
-    }
+    width: 100%;
+    flex: 0 0 auto;
   }
-  
-  h2 {
-    margin: 0 0 8px 0;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--app-text);
+}
+
+.patients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.patient-card--row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 14px;
+  padding: 16px 14px;
+  text-align: left;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(var(--app-primary-rgb), 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 18px 40px rgba(0, 0, 0, 0.1),
+      0 4px 12px rgba(var(--app-primary-rgb), 0.08);
   }
-  
-  p {
-    margin: 0 0 24px 0;
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.patient-card__avatar {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(var(--app-primary-rgb), 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(var(--app-primary-rgb), 0.2);
+  -webkit-tap-highlight-color: transparent;
+
+  &--has-photo {
+    background: #f3f4f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--app-primary);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.patient-card__avatar-icon {
+  font-size: 28px;
+  color: var(--app-primary);
+  opacity: 0.85;
+}
+
+.patient-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-card__name-row {
+  margin-bottom: 4px;
+}
+
+.patient-card__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--app-primary);
+  line-height: 1.25;
+}
+
+.patient-card__legal {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: $dash-muted;
+  line-height: 1.3;
+}
+
+.patient-card__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.patient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: $dash-pill-bg;
+  font-size: 12px;
+  font-weight: 500;
+  color: $dash-icon;
+
+  ion-icon {
     font-size: 14px;
-    color: #6b7280;
+    color: $dash-icon;
   }
-  
-  .add-first-patient-btn {
-    --background: linear-gradient(135deg, var(--app-primary) 0%, #9c6bb0 100%);
-    --color: white;
-    --border-radius: 16px;
-    --padding-start: 24px;
-    --padding-end: 24px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
+}
+
+.patient-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patient-meta-line {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: $dash-muted;
+}
+
+.patient-meta-label {
+  font-weight: 600;
+  color: $dash-icon;
+  margin-right: 4px;
+}
+
+.patient-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.patient-action-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  color: $dash-icon;
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    color: $dash-icon;
+  }
+
+  &--delete ion-icon {
+    font-size: 20px;
+  }
+
+  &:active {
+    opacity: 0.75;
+  }
+}
+
+.patients-no-results {
+  padding: 28px 16px;
+  text-align: center;
+  color: $dash-muted;
+  font-size: 14px;
+}
+
+.patient-preview-panel {
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 28px rgba(0, 0, 0, 0.07);
+  display: none;
+
+  @media (min-width: 960px) {
+    display: block;
+    position: sticky;
+    top: 12px;
+  }
+}
+
+.patient-preview-panel__label {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $dash-muted;
+}
+
+.patient-preview-panel__name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $dash-text;
+  line-height: 1.25;
+}
+
+.patient-preview-panel__legal {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: $dash-muted;
+  line-height: 1.35;
+}
+
+.patient-preview-panel__sub {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: $dash-muted;
+}
+
+.patients-fab {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  z-index: 900;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow:
+    0 4px 14px rgba(var(--app-primary-rgb), 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    font-size: 30px;
     font-weight: 600;
-    box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.3);
-    
-    ion-icon {
-      margin-right: 8px;
+  }
+
+  &--with-footer {
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  &:not(.patients-fab--with-footer) {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+/* Bottom nav — same purple bar as Home / Progress */
+.caregiver-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
+  z-index: 1000;
+  padding: 8px 0;
+
+  .nav-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 100%;
+    margin: 0 auto;
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+
+        .nav-icon {
+          background: #fff;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.75);
+
+          ion-icon {
+            color: var(--app-primary);
+          }
+        }
+      }
+
+      &.caregiver-mode .nav-icon {
+        width: 55px;
+        height: 55px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.35);
+        border-radius: 50%;
+
+        ion-icon {
+          color: #fff;
+          font-size: 26px;
+        }
+      }
+
+      .nav-icon {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 50%;
+
+        ion-icon {
+          color: #fff;
+          font-size: 18px;
+        }
+      }
+
+      .home-icon {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.2);
+
+        ion-icon {
+          font-size: 20px;
+        }
+      }
+
+      .progress-icon ion-icon {
+        font-size: 18px;
+      }
+
+      .nav-label {
+        margin-top: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.82);
+      }
     }
   }
 }

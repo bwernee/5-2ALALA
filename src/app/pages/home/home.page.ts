@@ -14,7 +14,10 @@ import { ConfirmService } from '../../services/confirm.service';
 })
 export class HomePage implements OnInit, OnDestroy {
   isPatientMode = false;
-  isProgressExpanded = false;
+  greetingName = 'there';
+  streakDays = 0;
+  /** First name (or short name) for “Welcome, …” */
+  welcomeFirstName = 'there';
 
   
   userPhoto = '';
@@ -27,11 +30,6 @@ export class HomePage implements OnInit, OnDestroy {
     avgTime: 0
   };
 
-  toggleProgressDropdown() {
-    this.isProgressExpanded = !this.isProgressExpanded;
-  }
-
-  
   private profileListener?: (e: any) => void;
   private sessionsUnsub?: Unsubscribe;
   private caregiverToggleListener?: (e: any) => void;
@@ -50,6 +48,7 @@ export class HomePage implements OnInit, OnDestroy {
     this.loadUserProfile();
     this.loadTodayStats();
     this.attachRealtimeToday();
+    this.refreshStreakAndGreeting();
 
     
     this.profileListener = () => this.loadUserProfile();
@@ -62,7 +61,30 @@ export class HomePage implements OnInit, OnDestroy {
     window.addEventListener('user-logged-in', (e: any) => {
       this.loadUserProfile();
       this.loadTodayStats();
+      this.refreshStreakAndGreeting();
     });
+  }
+
+  private refreshStreakAndGreeting() {
+    this.streakDays = this.firebaseService.getBrainStreakDisplayCount();
+    void this.loadGreetingName();
+  }
+
+  private async loadGreetingName() {
+    try {
+      this.greetingName = await this.firebaseService.getSelectedPatientDisplayName();
+    } catch {
+      this.greetingName = 'there';
+    }
+    this.syncWelcomeFirstName();
+    this.cdr.markForCheck();
+  }
+
+  private syncWelcomeFirstName(): void {
+    const usePatient = this.isPatientMode && this.greetingName && this.greetingName !== 'there';
+    const raw = (usePatient ? this.greetingName : (this.userName || '').trim()) || 'Guest';
+    const first = raw.split(/\s+/).filter(Boolean)[0] || 'there';
+    this.welcomeFirstName = /^guest$/i.test(first) ? 'there' : first;
   }
 
   ngOnDestroy(): void {
@@ -78,6 +100,7 @@ export class HomePage implements OnInit, OnDestroy {
   ionViewWillEnter() {
     this.loadTodayStats();
     this.loadUserProfile();
+    this.refreshStreakAndGreeting();
 
     
     try {
@@ -95,6 +118,7 @@ export class HomePage implements OnInit, OnDestroy {
   private activatePatientModeDirectly() {
     this.isPatientMode = true;
     localStorage.setItem('patientMode', 'true');
+    this.syncWelcomeFirstName();
     void this.confirmService.notify('Patient Mode enabled');
     window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
   }
@@ -242,12 +266,14 @@ export class HomePage implements OnInit, OnDestroy {
       }
       
       
+      this.syncWelcomeFirstName();
       this.cdr.detectChanges();
       
     } catch (e) {
       console.warn('Error loading user profile:', e);
       this.userPhoto = '';
       this.userName = 'User';
+      this.syncWelcomeFirstName();
     }
   }
 
@@ -323,6 +349,7 @@ export class HomePage implements OnInit, OnDestroy {
           handler: () => {
             this.isPatientMode = true;
             localStorage.setItem('patientMode', 'true');
+            this.syncWelcomeFirstName();
             void this.confirmService.notify('Patient Mode enabled');
             window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: true }));
           }
@@ -404,6 +431,7 @@ export class HomePage implements OnInit, OnDestroy {
 
     this.isPatientMode = false;
     localStorage.setItem('patientMode', 'false');
+    this.syncWelcomeFirstName();
     await this.confirmService.notify('Standard Mode enabled');
     
     window.dispatchEvent(new CustomEvent('patientMode-changed', { detail: false }));

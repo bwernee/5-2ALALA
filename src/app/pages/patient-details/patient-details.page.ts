@@ -2,6 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { ConfirmService } from '../../services/confirm.service';
+import { birthdayPopoverViewportEvent } from '../../utils/compact-birthday-popover.utils';
+import {
+  PATIENT_MIN_BIRTH_YMD,
+  formatUsDateFromYmd,
+  isoNoonFromYmd,
+  normalizeDateOnlyFromIso,
+  parseManualPatientBirthday,
+  patientBirthdayForSave
+} from '../../utils/patient-birthday.utils';
 
 @Component({
   selector: 'app-patient-details',
@@ -12,10 +21,27 @@ import { ConfirmService } from '../../services/confirm.service';
 export class PatientDetailsPage implements OnInit {
   patientFirstName: string = '';
   patientLastName: string = '';
+  patientNickname: string = '';
+  /** ISO string for ion-datetime (e.g. 2001-05-15T12:00:00.000Z). */
   patientBirthday: string = '';
+  /** Manual field: MM/DD/YYYY */
+  birthdayDisplay: string = '';
   patientSex: string = '';
   isLoading: boolean = false;
   userId: string = '';
+  birthdayPopoverOpen = false;
+  birthdayPopoverEvent: Event | undefined;
+
+  readonly maxBirthDate = new Date().toISOString();
+  readonly minBirthDate = PATIENT_MIN_BIRTH_YMD;
+
+  private get minBirthDateObj(): Date {
+    return new Date(this.minBirthDate + 'T12:00:00.000Z');
+  }
+
+  private get maxBirthDateObj(): Date {
+    return new Date(this.maxBirthDate);
+  }
 
   constructor(
     private router: Router,
@@ -24,7 +50,6 @@ export class PatientDetailsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    
     this.userId = localStorage.getItem('userId') || '';
     if (!this.userId) {
       alert('User ID not found. Please sign up again.');
@@ -32,14 +57,67 @@ export class PatientDetailsPage implements OnInit {
     }
   }
 
+  openBirthdayPopover(ev: Event): void {
+    const parsed = parseManualPatientBirthday(
+      (this.birthdayDisplay || '').trim(),
+      this.maxBirthDateObj,
+      this.minBirthDateObj
+    );
+    if (parsed) {
+      this.patientBirthday = isoNoonFromYmd(parsed);
+    } else if (!this.patientBirthday) {
+      this.patientBirthday = isoNoonFromYmd(
+        normalizeDateOnlyFromIso(new Date().toISOString())
+      );
+    }
+    this.birthdayPopoverEvent = birthdayPopoverViewportEvent(ev);
+    this.birthdayPopoverOpen = true;
+  }
+
+  closeBirthdayPopover(): void {
+    this.birthdayPopoverOpen = false;
+  }
+
+  confirmBirthdayPopover(): void {
+    this.syncDisplayFromPicker();
+    this.birthdayPopoverOpen = false;
+  }
+
+  onBirthdayPopoverDismiss(): void {
+    this.birthdayPopoverOpen = false;
+    this.birthdayPopoverEvent = undefined;
+  }
+
+  onBirthdayManualBlur(): void {
+    const ymd = parseManualPatientBirthday(
+      (this.birthdayDisplay || '').trim(),
+      this.maxBirthDateObj,
+      this.minBirthDateObj
+    );
+    if (ymd) {
+      this.patientBirthday = isoNoonFromYmd(ymd);
+      this.birthdayDisplay = formatUsDateFromYmd(ymd);
+    }
+  }
+
+  private syncDisplayFromPicker(): void {
+    const ymd = normalizeDateOnlyFromIso((this.patientBirthday || '').toString().trim());
+    if (ymd.length >= 10) {
+      this.birthdayDisplay = formatUsDateFromYmd(ymd.slice(0, 10));
+    }
+  }
+
   async savePatientDetails() {
-    
     const firstName = (this.patientFirstName || '').trim();
     const lastName = (this.patientLastName || '').trim();
-    const dateOfBirth = (this.patientBirthday || '').toString().trim();
+    const dateOfBirth = patientBirthdayForSave(
+      this.birthdayDisplay,
+      this.patientBirthday,
+      this.maxBirthDateObj,
+      this.minBirthDateObj
+    );
     const sex = (this.patientSex || '').trim();
 
-    
     if (!firstName) {
       await this.confirmService.confirm({
         title: 'Missing information',
@@ -63,7 +141,7 @@ export class PatientDetailsPage implements OnInit {
     if (!dateOfBirth) {
       await this.confirmService.confirm({
         title: 'Missing information',
-        message: 'Please select the patient’s birthday.',
+        message: 'Please enter a valid birthday (MM/DD/YYYY) or pick a date from the calendar.',
         confirmText: 'OK',
         cancelText: 'Close'
       });
@@ -74,6 +152,17 @@ export class PatientDetailsPage implements OnInit {
       await this.confirmService.confirm({
         title: 'Missing information',
         message: 'Please select the patient’s sex.',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+      return;
+    }
+
+    const nickname = (this.patientNickname || '').trim();
+    if (!nickname) {
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please enter a display name (shown on My Patients).',
         confirmText: 'OK',
         cancelText: 'Close'
       });
@@ -91,29 +180,26 @@ export class PatientDetailsPage implements OnInit {
       });
       if (!ok) return;
 
-      
       const patientDetails = {
         firstName,
         lastName,
+        nickname,
         name: `${lastName}, ${firstName}`,
         dateOfBirth,
         sex: sex
       };
 
-      
       await this.firebaseService.savePatientDetails({
         firstName,
         lastName,
         dateOfBirth,
-        sex
+        sex,
+        nickname
       });
 
-      
       localStorage.setItem('patientDetails', JSON.stringify(patientDetails));
 
-      
       this.router.navigate(['/home']);
-
     } catch (error: any) {
       console.error('Error saving patient details:', error);
       await this.confirmService.confirm({
@@ -131,6 +217,8 @@ export class PatientDetailsPage implements OnInit {
     return !!(
       (this.patientFirstName || '').trim() ||
       (this.patientLastName || '').trim() ||
+      (this.patientNickname || '').trim() ||
+      (this.birthdayDisplay || '').trim() ||
       (this.patientBirthday || '').trim() ||
       (this.patientSex || '').trim()
     );
@@ -156,4 +244,3 @@ export class PatientDetailsPage implements OnInit {
     void this.onBackTapped();
   }
 }
-

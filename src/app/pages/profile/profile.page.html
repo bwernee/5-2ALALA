@@ -99,7 +99,7 @@
           </div>
         </div>
         
-        <div class="detail-item" *ngIf="!patientInfo || (!getPatientDisplayName() && !patientInfo.gender && !patientInfo.username)">
+        <div class="detail-item" *ngIf="showPatientInfoPlaceholder()">
           <div class="detail-content">
             <span class="detail-value" style="color: #999; font-style: italic;">Patient information will be displayed here once available.</span>
           </div>
@@ -107,7 +107,7 @@
       </div>
     </div>
 
-    <div class="cute-card patient-section" *ngIf="patientInfo">
+    <div class="cute-card patient-section" *ngIf="!isPatientMode">
       <div class="card-header">
         <div class="header-content">
           <div class="header-icon">
@@ -125,6 +125,10 @@
       </div>
 
       <div class="patient-details" *ngIf="isEditingPatient">
+        <ion-item>
+          <ion-label position="stacked">Display name</ion-label>
+          <ion-input [(ngModel)]="editNickname" type="text" placeholder="Shown on My Patients"></ion-input>
+        </ion-item>
         <ion-item>
           <ion-label position="stacked">First Name</ion-label>
           <ion-input [(ngModel)]="editFirstName" type="text"></ion-input>
@@ -219,6 +223,12 @@
           <div class="detail-content">
             <span class="detail-label">Account Created</span>
             <span class="detail-value">{{ accountCreated ? (accountCreated | date:'MMM dd, yyyy') : 'Not available' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-item" *ngIf="!caregiverInfo">
+          <div class="detail-content">
+            <span class="detail-value" style="color: #999; font-style: italic;">Caregiver information is unavailable. Please sign in again.</span>
           </div>
         </div>
       </div>

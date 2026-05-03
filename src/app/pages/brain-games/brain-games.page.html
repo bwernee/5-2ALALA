@@ -1,72 +1,99 @@
-<ion-content class="lavender-content" [scrollY]="false" fullscreen>
-
-  <div class="lavender-container">
-    
-    <app-global-header>
-      <div gh-left>
-        <ion-buttons>
-          <ion-button class="back-btn" fill="clear" (click)="goBack()">
-            <ion-icon name="arrow-back-outline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <div class="welcome-icon">
-          <ion-icon name="game-controller-outline"></ion-icon>
-        </div>
-      </div>
-      <div gh-center>
-        <div class="app-header__body">
-          <h1 class="app-header__title">Brain Games</h1>
-          <p class="app-header__subtitle">Fun cognitive exercises to boost your memory</p>
-        </div>
-      </div>
-    </app-global-header>
-
-    
-    <div class="main-actions">
-      <div class="action-card name-memory-action" routerLink="/brain-game-category/name-that-memory">
-        <div class="card-glow"></div>
-        <div class="action-icon">
-          <ion-icon name="bulb-outline"></ion-icon>
-        </div>
-        <div class="action-text">
-          <h2>Name That Memory</h2>
-          <p>Identify people and places</p>
-        </div>
-      </div>
-
-      <div class="action-card category-action" routerLink="/brain-game-category/category-match">
-        <div class="card-glow"></div>
-        <div class="action-icon">
-          <ion-icon name="swap-horizontal-outline"></ion-icon>
-        </div>
-        <div class="action-text">
-          <h2>Category Match</h2>
-          <p>Sort items by category</p>
-        </div>
-      </div>
-
-      <div class="action-card category-action" routerLink="/memory-flip">
-        <div class="card-glow"></div>
-        <div class="action-icon">
-          <ion-icon name="grid-outline"></ion-icon>
-        </div>
-        <div class="action-text">
-          <h2>Memory Flip</h2>
-          <p>Match the same emojis</p>
-        </div>
-      </div>
-
-      <div class="action-card category-action" routerLink="/memory-recall-challenge">
-        <div class="card-glow"></div>
-        <div class="action-icon">
-          <ion-icon name="sparkles-outline"></ion-icon>
-        </div>
-        <div class="action-text">
-          <h2>Memory Recall</h2>
-          <p>Study then recall calmly</p>
-        </div>
-      </div>
+<ion-content class="lavender-content brain-games-content" [scrollY]="true" fullscreen>
+  <div class="lavender-container brain-games-wrap">
+    <div class="brain-top-bar">
+      <ion-button class="brain-back-btn" fill="clear" (click)="goBack()" aria-label="Back">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
     </div>
 
+    <section class="brain-streak-card" aria-label="Active streak">
+      <div class="brain-streak-card__text">
+        <p class="brain-streak-card__label">Active streak</p>
+        <p class="brain-streak-card__value">{{ streakDays }} {{ streakDays === 1 ? 'Day' : 'Days' }}</p>
+      </div>
+      <ion-icon class="brain-streak-card__flame" name="flame-outline" aria-hidden="true"></ion-icon>
+    </section>
+
+    <header class="brain-section-head">
+      <h1 class="brain-section-head__title">Brain Games</h1>
+      <span class="brain-pill">Play Daily</span>
+    </header>
+
+    <div class="brain-game-list" role="list">
+      <a class="brain-game-row" routerLink="/brain-game-category/name-that-memory" role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--thumb" aria-hidden="true">
+          <img
+            src="assets/brain-games/name-that-memory.png"
+            alt=""
+            class="brain-game-row__icon-img"
+            decoding="async" />
+        </div>
+        <div class="brain-game-row__body">
+          <h2 class="brain-game-row__title">Name That Memory</h2>
+          <p class="brain-game-row__desc">Identify people and places</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </a>
+
+      <a class="brain-game-row" routerLink="/brain-game-category/category-match" role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--thumb" aria-hidden="true">
+          <img
+            src="assets/brain-games/category-match.png"
+            alt=""
+            class="brain-game-row__icon-img"
+            decoding="async" />
+        </div>
+        <div class="brain-game-row__body">
+          <h2 class="brain-game-row__title">Category Match</h2>
+          <p class="brain-game-row__desc">Sort items by category</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </a>
+
+      <a class="brain-game-row" routerLink="/memory-flip" role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--thumb" aria-hidden="true">
+          <img
+            src="assets/brain-games/memory-flip.png"
+            alt=""
+            class="brain-game-row__icon-img"
+            decoding="async" />
+        </div>
+        <div class="brain-game-row__body">
+          <h2 class="brain-game-row__title">Memory Flip</h2>
+          <p class="brain-game-row__desc">Match the same emojis</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </a>
+
+      <a class="brain-game-row" routerLink="/memory-recall-challenge" role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--thumb" aria-hidden="true">
+          <img
+            src="assets/brain-games/memory-recall.png"
+            alt=""
+            class="brain-game-row__icon-img"
+            decoding="async" />
+        </div>
+        <div class="brain-game-row__body">
+          <h2 class="brain-game-row__title">Memory Recall</h2>
+          <p class="brain-game-row__desc">Study then recall calmly</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </a>
+    </div>
+
+    <section class="brain-encourage-card" aria-label="Encouragement">
+      <h2 class="brain-encourage-card__title">Keep it up, {{ greetingName }}!</h2>
+      <p class="brain-encourage-card__copy">
+        Playing games for just 15 minutes a day can improve cognitive focus by 20%.
+      </p>
+    </section>
   </div>
 </ion-content>

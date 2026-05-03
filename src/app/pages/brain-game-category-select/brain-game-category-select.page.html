@@ -1,64 +1,103 @@
-<ion-content class="bgcat-content" [scrollY]="false" fullscreen>
-  <div class="bgcat-wrap">
-    <app-global-header>
-      <div gh-left>
-        <ion-buttons>
-          <ion-button class="back-btn" fill="clear" (click)="goBack()" aria-label="Back">
-            <ion-icon name="arrow-back-outline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <div class="welcome-icon" aria-hidden="true">
-          <ion-icon name="layers-outline"></ion-icon>
-        </div>
-      </div>
-      <div gh-center>
-        <div class="app-header__body">
-          <h1 class="app-header__title">{{ pageTitle }}</h1>
-          <p class="app-header__subtitle">{{ subtitle }}</p>
-        </div>
-      </div>
-    </app-global-header>
+<ion-content class="lavender-content brain-game-category-content" [scrollY]="true" fullscreen>
+  <div class="bgcat-hero-bg" aria-hidden="true">
+    <img
+      src="assets/landing-welcome-bg.png"
+      alt=""
+      class="bgcat-hero-bg__img"
+      decoding="async" />
+    <div class="bgcat-hero-bg__veil"></div>
+  </div>
 
-    <div class="panel">
-      <h2 class="panel-title">Pick a memory set</h2>
-      <div class="btn-grid">
-        <ion-button class="big-btn" expand="block" (click)="pickBuiltin('people')">
-          <div class="btn-stack">
-            <span class="btn-line"><ion-icon name="people-outline"></ion-icon> People</span>
-            <span class="btn-meta">{{ counts.people }} cards</span>
-          </div>
-        </ion-button>
-        <ion-button class="big-btn" expand="block" (click)="pickBuiltin('places')">
-          <div class="btn-stack">
-            <span class="btn-line"><ion-icon name="location-outline"></ion-icon> Places</span>
-            <span class="btn-meta">{{ counts.places }} cards</span>
-          </div>
-        </ion-button>
-        <ion-button class="big-btn" expand="block" (click)="pickBuiltin('objects')">
-          <div class="btn-stack">
-            <span class="btn-line"><ion-icon name="cube-outline"></ion-icon> Objects</span>
-            <span class="btn-meta">{{ counts.objects }} cards</span>
-          </div>
-        </ion-button>
-      </div>
-
-      <ng-container *ngIf="userCategories?.length">
-        <p class="divider-label">Your categories</p>
-        <div class="btn-grid">
-          <ion-button
-            *ngFor="let c of userCategories"
-            class="big-btn secondary"
-            expand="block"
-            (click)="pickCustom(c.id)">
-            <div class="btn-stack">
-              <span class="btn-line">{{ c.name }}</span>
-              <span class="btn-meta">{{ counts.custom[c.id] || 0 }} cards</span>
-            </div>
-          </ion-button>
-        </div>
-      </ng-container>
-
-      <p class="hint">Photos in the set you choose will appear in the game.</p>
+  <div class="lavender-container brain-games-wrap">
+    <div class="brain-top-bar">
+      <ion-button class="brain-back-btn" fill="clear" (click)="goBack()" aria-label="Back">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
     </div>
+
+    <header class="brain-section-head">
+      <h1 class="brain-section-head__title">{{ pageTitle }}</h1>
+      <span class="brain-pill">{{ subtitle }}</span>
+    </header>
+
+    <h2 class="bgcat-subhead">Pick a memory set</h2>
+
+    <div class="brain-game-list" role="list">
+      <button
+        type="button"
+        class="brain-game-row bgcat-row"
+        (click)="pickBuiltin('people')"
+        role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--deep">
+          <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+        </div>
+        <div class="brain-game-row__body">
+          <span class="brain-game-row__title">People</span>
+          <p class="brain-game-row__desc">{{ counts.people }} cards in this set</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="brain-game-row bgcat-row"
+        (click)="pickBuiltin('places')"
+        role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--mid">
+          <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+        </div>
+        <div class="brain-game-row__body">
+          <span class="brain-game-row__title">Places</span>
+          <p class="brain-game-row__desc">{{ counts.places }} cards in this set</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="brain-game-row bgcat-row"
+        (click)="pickBuiltin('objects')"
+        role="listitem">
+        <div class="brain-game-row__icon brain-game-row__icon--soft">
+          <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
+        </div>
+        <div class="brain-game-row__body">
+          <span class="brain-game-row__title">Objects</span>
+          <p class="brain-game-row__desc">{{ counts.objects }} cards in this set</p>
+        </div>
+        <span class="brain-game-row__play" aria-hidden="true">
+          <ion-icon name="play"></ion-icon>
+        </span>
+      </button>
+    </div>
+
+    <ng-container *ngIf="userCategories?.length">
+      <p class="bgcat-divider">Your categories</p>
+      <div class="brain-game-list" role="list">
+        <button
+          *ngFor="let c of userCategories"
+          type="button"
+          class="brain-game-row bgcat-row"
+          (click)="pickCustom(c.id)"
+          role="listitem">
+          <div class="brain-game-row__icon brain-game-row__icon--slate">
+            <ion-icon name="folder-outline" aria-hidden="true"></ion-icon>
+          </div>
+          <div class="brain-game-row__body">
+            <span class="brain-game-row__title">{{ c.name }}</span>
+            <p class="brain-game-row__desc">{{ counts.custom[c.id] || 0 }} cards in this set</p>
+          </div>
+          <span class="brain-game-row__play" aria-hidden="true">
+            <ion-icon name="play"></ion-icon>
+          </span>
+        </button>
+      </div>
+    </ng-container>
+
+    <p class="bgcat-hint">Photos in the set you choose will appear in the game.</p>
   </div>
 </ion-content>

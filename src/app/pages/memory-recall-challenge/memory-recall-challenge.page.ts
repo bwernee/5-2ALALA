@@ -5,10 +5,21 @@ import { FirebaseService } from '../../services/firebase.service';
 import { ProgressPage } from '../progress/progress.page';
 
 type Phase = 'study' | 'distraction' | 'recall' | 'result';
-type DistractionType = 'color' | 'tap-emoji' | 'tap-fruits' | 'tap-among-3';
+/** Quick calm task — color match (saved for analytics). */
+type DistractionType = 'color';
+
+/** Distinct solids only — no similar shades (red / blue / green / yellow). */
+type CalmColorId = 'red' | 'blue' | 'green' | 'yellow';
+
+interface CalmColorOption {
+  id: CalmColorId;
+  hex: string;
+  label: string;
+}
 
 interface RecallCard {
   id: number;
+  /** Image URL under `src/assets/` (e.g. `assets/memory-recall/apple.png`). */
   emoji: string;
   isSelected: boolean;
   isCorrect?: boolean;
@@ -34,23 +45,39 @@ export class MemoryRecallChallengePage implements OnDestroy {
   isBusy = false;
   feedbackMessage = '';
 
-  private readonly emojiPool = ['⭐', '😊', '🍎', '🚗', '🏠', '🌙'];
+  /** Fixed catalog — each round picks a random subset in `startNewRound` / distractions. */
+  private readonly imagePool = [
+    'assets/memory-recall/apple.png',
+    'assets/memory-recall/moon.png',
+    'assets/memory-recall/car.png',
+    'assets/memory-recall/tulips.png',
+    'assets/memory-recall/blocks.png',
+    'assets/memory-recall/clock.png',
+    'assets/memory-recall/beach-ball.png',
+    'assets/memory-recall/socks.png',
+    'assets/memory-recall/butterfly.png',
+    'assets/memory-recall/sewing-machine.png',
+    'assets/memory-recall/dog.png',
+    'assets/memory-recall/cat.png',
+  ];
   private feedbackTimeoutId: number | null = null;
   private sessionStartedAtMs: number | null = null;
 
-  // Distraction phase (calm, no pressure, varied)
+  // Distraction phase — color match (reference + 4 choices)
   distractionType: DistractionType = 'color';
   distractionPrompt = '';
   distractionCompleted = false;
-  private lastDistractionType: DistractionType | null = null;
 
-  // Distraction: choose correct color
-  colorTarget: 'purple' | 'blue' = 'purple';
+  /** Fixed order: large touch targets, clearly different hues. */
+  readonly calmColorOptions: CalmColorOption[] = [
+    { id: 'red', hex: '#C62828', label: 'Red' },
+    { id: 'blue', hex: '#1565C0', label: 'Blue' },
+    { id: 'green', hex: '#2E7D32', label: 'Green' },
+    { id: 'yellow', hex: '#F9A825', label: 'Yellow' },
+  ];
 
-  // Distraction: tap matching emojis / tap all fruits
-  distractionCards: RecallCard[] = [];
-  distractionTargetEmoji = '';
-  distractionTargetSet: string[] = [];
+  referenceColorId: CalmColorId = 'red';
+  wrongHighlightId: CalmColorId | null = null;
 
   constructor(
     private router: Router,
@@ -91,15 +118,13 @@ export class MemoryRecallChallengePage implements OnDestroy {
     this.isBusy = false;
     this.feedbackMessage = '';
 
-    this.studyCards = this.pickUniqueEmojis(4);
+    this.studyCards = this.pickUniqueImages(3);
     this.recallCards = [];
     this.selectedAnswers = [];
     this.score = 0;
     this.falseSelections = 0;
 
     this.distractionCompleted = false;
-    this.distractionCards = [];
-    this.distractionTargetEmoji = '';
     this.setupDistraction();
   }
 
@@ -111,60 +136,36 @@ export class MemoryRecallChallengePage implements OnDestroy {
     this.feedbackMessage = '';
   }
 
-  onColorChoice(choice: 'purple' | 'blue') {
-    if (this.phase !== 'distraction') return;
-    if (this.isBusy) return;
-    if (this.distractionType !== 'color') return;
-    if (this.distractionCompleted) return;
-
-    const isCorrect = choice === this.colorTarget;
-    this.isBusy = true;
-
-    this.setFeedback(isCorrect ? 'Good job 😊' : 'Nice try 😊', 900);
-
-    if (isCorrect) {
-      this.distractionCompleted = true;
-      window.setTimeout(() => this.goToRecall(), 900);
-      return;
-    }
-
-    // Gentle: allow trying again, no penalties.
-    window.setTimeout(() => {
-      this.isBusy = false;
-    }, 700);
+  get referenceColorHex(): string {
+    return this.calmColorOptions.find(c => c.id === this.referenceColorId)?.hex ?? '#1565C0';
   }
 
-  onTapDistractionCard(cardId: number) {
+  onCalmColorPick(choice: CalmColorId) {
     if (this.phase !== 'distraction') return;
     if (this.isBusy) return;
-    if (this.distractionType === 'color') return;
     if (this.distractionCompleted) return;
 
-    const card = this.distractionCards.find(c => c.id === cardId);
-    if (!card) return;
-
-    const isTarget = this.distractionTargetSet.length
-      ? this.distractionTargetSet.includes(card.emoji)
-      : card.emoji === this.distractionTargetEmoji;
-
-    if (!isTarget) {
-      this.setFeedback('It’s okay 😊 try again gently', 1200);
+    if (choice === this.referenceColorId) {
+      this.isBusy = true;
+      this.wrongHighlightId = null;
+      this.distractionCompleted = true;
+      this.setFeedback('Good job!', 900);
+      window.setTimeout(() => this.goToRecall(), 900);
       return;
     }
 
-    // Mark target card as selected (visual only).
-    card.isSelected = true;
-
-    const allTargetsSelected = this.distractionCards
-      .filter(c => (this.distractionTargetSet.length ? this.distractionTargetSet.includes(c.emoji) : c.emoji === this.distractionTargetEmoji))
-      .every(c => c.isSelected);
-
-    if (allTargetsSelected) {
-      this.distractionCompleted = true;
-      this.setFeedback('Good job 😊', 900);
-      this.isBusy = true;
-      window.setTimeout(() => this.goToRecall(), 900);
+    this.isBusy = true;
+    this.wrongHighlightId = choice;
+    this.feedbackMessage = 'That was a good try';
+    if (this.feedbackTimeoutId !== null) {
+      window.clearTimeout(this.feedbackTimeoutId);
     }
+    this.feedbackTimeoutId = window.setTimeout(() => {
+      this.feedbackMessage = '';
+      this.wrongHighlightId = null;
+      this.isBusy = false;
+      this.feedbackTimeoutId = null;
+    }, 1500);
   }
 
   toggleRecallCard(cardId: number) {
@@ -221,85 +222,29 @@ export class MemoryRecallChallengePage implements OnDestroy {
   }
 
   private setupDistraction() {
-    // Rotate/randomize to keep it varied but simple.
-    const pool: DistractionType[] = ['color', 'tap-emoji', 'tap-fruits', 'tap-among-3'];
-    const types = this.lastDistractionType ? pool.filter(t => t !== this.lastDistractionType) : pool;
-    this.distractionType = types[Math.floor(Math.random() * types.length)];
-    this.lastDistractionType = this.distractionType;
+    this.distractionType = 'color';
     this.distractionCompleted = false;
     this.isBusy = false;
-    this.distractionTargetSet = [];
-
-    if (this.distractionType === 'color') {
-      this.colorTarget = Math.random() < 0.5 ? 'purple' : 'blue';
-      this.distractionPrompt = this.colorTarget === 'purple' ? 'Tap the purple button' : 'Tap the blue button';
-      this.distractionCards = [];
-      this.distractionTargetEmoji = '';
-      return;
-    }
-
-    if (this.distractionType === 'tap-fruits') {
-      // Fruits set: 🍎 🍌 🍇
-      this.distractionTargetSet = ['🍎', '🍌', '🍇'];
-      this.distractionTargetEmoji = '';
-      this.distractionPrompt = 'Tap all fruits 🍎 🍌 🍇';
-      this.distractionCards = this.buildTapDeckFromSet(this.distractionTargetSet, 3, 3);
-      return;
-    }
-
-    if (this.distractionType === 'tap-emoji') {
-      this.distractionTargetEmoji = Math.random() < 0.5 ? '⭐' : '😊';
-      this.distractionTargetSet = [];
-      this.distractionPrompt = `Tap all ${this.distractionTargetEmoji} emojis`;
-      this.distractionCards = this.buildTapDeck(this.distractionTargetEmoji, 3, 3);
-      return;
-    }
-
-    // tap-among-3: pick the correct emoji among 3 options
-    const options = this.shuffle(this.emojiPool).slice(0, 3);
-    this.distractionTargetEmoji = options[Math.floor(Math.random() * options.length)];
-    this.distractionTargetSet = [this.distractionTargetEmoji];
-    this.distractionPrompt = `Tap the ${this.distractionTargetEmoji} emoji`;
-    this.distractionCards = options.map((emoji, idx) => ({ id: idx, emoji, isSelected: false }));
-  }
-
-  private buildTapDeck(targetEmoji: string, targetCount: number, distractorCount: number): RecallCard[] {
-    const distractorPool = this.emojiPool.filter(e => e !== targetEmoji);
-    const distractors = this.shuffle(distractorPool).slice(0, distractorCount);
-
-    const deck = this.shuffle([
-      ...new Array(targetCount).fill(targetEmoji),
-      ...distractors,
-    ]);
-
-    return deck.map((emoji, idx) => ({
-      id: idx,
-      emoji,
-      isSelected: false,
-    }));
-  }
-
-  private buildTapDeckFromSet(targetSet: string[], targetCount: number, distractorCount: number): RecallCard[] {
-    const distractorPool = this.emojiPool.filter(e => !targetSet.includes(e));
-    const distractors = this.shuffle(distractorPool).slice(0, distractorCount);
-    const targets = this.shuffle(targetSet).slice(0, Math.min(targetCount, targetSet.length));
-    const deck = this.shuffle([...targets, ...distractors]);
-    return deck.map((emoji, idx) => ({ id: idx, emoji, isSelected: false }));
+    this.wrongHighlightId = null;
+    const roll = Math.floor(Math.random() * this.calmColorOptions.length);
+    this.referenceColorId = this.calmColorOptions[roll].id;
+    this.distractionPrompt = 'Tap the same color below.';
   }
 
   private goToRecall() {
     this.isBusy = false;
     this.feedbackMessage = '';
+    this.wrongHighlightId = null;
     this.phase = 'recall';
     this.buildRecallDeck();
   }
 
   private buildRecallDeck() {
     const correct = [...this.studyCards];
-    const distractors = this.emojiPool.filter(e => !correct.includes(e));
+    const distractors = this.imagePool.filter(e => !correct.includes(e));
 
-    // Larger set: 4 correct + 2 distractors = 6 cards (clean grid).
-    const deckEmojis = this.shuffle([...correct, ...distractors.slice(0, 2)]);
+    // 3 studied + 3 distractors = 6 cards (clean 3×2 grid).
+    const deckEmojis = this.shuffle([...correct, ...distractors.slice(0, 3)]);
 
     this.recallCards = deckEmojis.map((emoji, idx) => ({
       id: idx,
@@ -340,8 +285,8 @@ export class MemoryRecallChallengePage implements OnDestroy {
     await ProgressPage.saveGameSession(this.firebaseService, sessionData as any);
   }
 
-  private pickUniqueEmojis(count: number): string[] {
-    return this.shuffle(this.emojiPool).slice(0, count);
+  private pickUniqueImages(count: number): string[] {
+    return this.shuffle([...this.imagePool]).slice(0, count);
   }
 
   private shuffle<T>(arr: T[]): T[] {

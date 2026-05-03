@@ -1,6 +1,27 @@
-.mrc-content {
-  --ion-background-color: var(--app-bg-1);
-  background: var(--app-bg-gradient);
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Same white → purple gradient as Brain Games (no photo) */
+.mrc-content.lavender-content {
+  --ion-text-color: var(--app-text);
+  --ion-background-color: #f8f5fc;
+  --background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #faf8ff 26%,
+    #eee6fa 58%,
+    rgba(var(--app-primary-rgb), 0.16) 100%
+  );
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #faf8ff 26%,
+    #eee6fa 58%,
+    rgba(var(--app-primary-rgb), 0.16) 100%
+  );
+  font-family: 'Poppins', sans-serif;
+  height: 100%;
+  position: relative;
+  -webkit-text-size-adjust: 100%;
   --overflow: hidden !important;
 }
 
@@ -10,8 +31,8 @@
   height: 100vh;
   padding: 12px;
   gap: 12px;
+  position: relative;
 }
-
 .stage {
   flex: 1;
   display: flex;
@@ -25,27 +46,31 @@
 }
 
 .panel {
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 18px;
-  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
-  box-shadow: 0 10px 30px rgba(var(--app-primary-rgb), 0.12);
-  padding: 18px;
+  background: #fff;
+  border-radius: clamp(18px, 4vw, 22px);
+  border: none;
+  box-shadow:
+    0 2px 8px rgba(17, 24, 39, 0.06),
+    0 12px 28px rgba(17, 24, 39, 0.08),
+    0 0 0 1px rgba(var(--app-primary-rgb), 0.08);
+  padding: clamp(16px, 4vw, 20px);
   width: min(560px, 94vw);
 }
 
 .panel-title {
   margin: 0 0 10px;
-  font-size: 22px;
+  font-size: clamp(1.15rem, 4vw, 1.35rem);
   font-weight: 800;
-  color: var(--app-text);
+  color: var(--app-primary);
   text-align: center;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .instruction {
   margin: 0 0 12px;
-  color: #6b7280;
-  font-size: 14px;
+  color: #5c5c5c;
+  font-size: clamp(13px, 3.2vw, 15px);
   font-weight: 600;
   text-align: center;
   line-height: 1.5;
@@ -59,41 +84,46 @@
 }
 
 .grid-study {
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
 }
 
 .grid-recall {
   grid-template-columns: repeat(3, minmax(96px, 1fr));
 }
 
-.grid-distraction {
-  grid-template-columns: repeat(3, minmax(96px, 1fr));
-}
-
 @media (max-width: 420px) {
-  .grid-recall {
+  .grid-study {
     grid-template-columns: repeat(2, minmax(110px, 1fr));
   }
-  .grid-distraction {
+  .grid-recall {
     grid-template-columns: repeat(2, minmax(110px, 1fr));
   }
 }
 
 .study-card,
 .recall-card {
-  border-radius: 18px;
-  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
-  background: white;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  border-radius: clamp(16px, 4vw, 18px);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.1);
+  background: #fff;
+  box-shadow:
+    0 2px 8px rgba(17, 24, 39, 0.05),
+    0 8px 20px rgba(var(--app-primary-rgb), 0.08);
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.emoji {
-  font-size: clamp(46px, 9.5vw, 64px);
-  line-height: 1;
+.mrc-face__img {
+  width: 82%;
+  height: 82%;
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(17, 24, 39, 0.12));
 }
 
 .recall-card {
@@ -112,20 +142,19 @@
   background: rgba(208, 244, 222, 1);
 }
 
-.recall-card.blocked,
-.big-choice.blocked {
+.recall-card.blocked {
   pointer-events: none;
 }
 
 .feedback {
   align-self: center;
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
+  background: rgba(var(--app-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
   border-radius: 999px;
   padding: 8px 14px;
-  color: #6b7280;
+  color: var(--app-primary);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
   min-height: 38px;
   display: flex;
@@ -139,36 +168,95 @@
   visibility: visible;
 }
 
-.btn-row {
+/* —— Quick calm task: color match —— */
+.panel--calm-task {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  max-height: min(86vh, 620px);
+}
+
+.instruction--calm {
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.calm-reference-card {
+  width: 100%;
+  max-width: 260px;
+  padding: 16px;
+  margin: 4px 0 8px;
+  border-radius: clamp(16px, 4vw, 20px);
+  background: linear-gradient(180deg, #ffffff 0%, #faf8fc 100%);
+  border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+  box-shadow: 0 4px 16px rgba(var(--app-primary-rgb), 0.12);
+}
+
+.calm-reference-swatch {
+  width: 100%;
+  min-height: 128px;
+  border-radius: 16px;
+  border: 2px solid rgba(17, 24, 39, 0.12);
+  box-sizing: border-box;
+}
+
+.feedback--calm {
+  margin: 8px 0 10px;
+  min-height: 42px;
+}
+
+.calm-swatches {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 14px;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 4px;
 }
 
-.big-choice {
-  border: none;
-  border-radius: 16px;
-  padding: 18px 14px;
-  font-size: 18px;
-  font-weight: 800;
+.calm-swatch {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  min-height: 78px;
+  border-radius: 18px;
+  border: 3px solid rgba(17, 24, 39, 0.16);
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.1);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
 }
 
-.big-choice.purple {
-  background: linear-gradient(180deg, #7a36a5 0%, #5c2782 100%);
-  color: white;
+.calm-swatch--yellow {
+  border-color: rgba(17, 24, 39, 0.26);
 }
 
-.big-choice.blue {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
+.calm-swatch:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.calm-swatch:disabled {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.calm-swatch--wrong {
+  box-shadow:
+    0 0 0 4px #e53935,
+    0 8px 18px rgba(17, 24, 39, 0.12);
+  border-color: #c62828;
 }
 
 ion-button.big-btn {
-  --border-radius: 16px;
+  --border-radius: clamp(16px, 4vw, 18px);
   --padding-top: 18px;
   --padding-bottom: 18px;
+  --background: linear-gradient(145deg, var(--app-primary-shade, var(--app-primary)), var(--app-primary));
+  --background-activated: var(--app-primary);
+  --box-shadow: 0 8px 22px rgba(var(--app-primary-rgb), 0.35);
   font-size: 18px;
   font-weight: 800;
   text-transform: none;
@@ -177,23 +265,6 @@ ion-button.big-btn {
 ion-button.secondary {
   --background: rgba(var(--app-primary-rgb), 0.12);
   --color: var(--app-primary);
-}
-
-.result-pills {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 10px 0 14px;
-}
-
-.pill {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 999px;
-  border: 2px solid rgba(var(--app-primary-rgb), 0.10);
-  padding: 8px 14px;
-  font-size: 14px;
-  color: var(--app-text);
 }
 
 .btn-col {

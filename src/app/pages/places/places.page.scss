@@ -1,6 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap');
 
-.lavender-container { padding: 12px; margin-bottom: 12px; }
+.lavender-container {
+  flex-shrink: 0;
+  padding: 12px;
+  margin-bottom: 12px;
+}
 
 .welcome-section {
   flex-shrink: 0;
@@ -54,30 +58,123 @@
 
 .game-home-screen {
   --ion-background-color: transparent;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3ecff 50%, #f9f2ff 100%);
+  background: var(--app-bg-gradient);
   font-family: 'Nunito', sans-serif;
-  min-height: 100vh; max-height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
   padding: 10px 10px 140px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: placesFloat 20s ease-in-out infinite;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
-.page-body { position: relative; z-index: 2; min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; }
+.page-body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 80px;
+}
 
+/* Match People empty state (rich card) */
 .empty-state {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: 20px; background: transparent;
-  .empty-icon { font-size: 80px; color: var(--app-primary); margin-bottom: 24px; }
-  .empty-title { font-size: 28px; font-weight: 700; color: var(--app-primary); margin-bottom: 12px; }
-  .empty-subtitle { font-size: 16px; color: var(--app-primary); margin-bottom: 32px; opacity: 0.85; }
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 12px 24px;
+
+  &--rich .empty-card {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 22px;
+    border: 2px solid rgba(var(--app-primary-rgb), 0.12);
+    box-shadow: 0 14px 40px rgba(var(--app-primary-rgb), 0.14);
+    padding: 28px 22px 26px;
+  }
+
+  .empty-badge {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 18px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(var(--app-primary-rgb), 0.12), rgba(var(--app-primary-rgb), 0.22));
+    border: 2px solid rgba(var(--app-primary-rgb), 0.15);
+
+    ion-icon {
+      font-size: 36px;
+      color: var(--app-primary);
+    }
+  }
+
+  .empty-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--app-text);
+    margin: 0 0 10px;
+    line-height: 1.25;
+  }
+
+  .empty-subtitle {
+    font-size: 15px;
+    color: #64748b;
+    margin: 0 auto 22px;
+    line-height: 1.55;
+    max-width: 320px;
+  }
+
   .empty-btn {
     --color: white;
     --background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 100%);
-    --border-radius: 24px;
-    --padding-start: 32px; --padding-end: 32px;
-    font-weight: 600; height: 48px;
-    box-shadow: 0 8px 24px rgba(var(--app-primary-rgb), 0.3);
+    --border-radius: 16px;
+    font-weight: 700;
+    height: 48px;
+    box-shadow: 0 8px 22px rgba(var(--app-primary-rgb), 0.28);
+  }
+}
+
+@keyframes placesFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1.5%, 1.5%);
   }
 }
 

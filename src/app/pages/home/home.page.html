@@ -1,124 +1,100 @@
-<ion-content class="lavender-content" [scrollY]="true" [fullscreen]="false" [forceOverscroll]="true">
+<ion-content
+  class="lavender-content home-screen-content"
+  [scrollY]="true"
+  [fullscreen]="false"
+  [forceOverscroll]="true">
+  <div class="home-screen-bg" aria-hidden="true"></div>
 
-  <div class="lavender-container">
-    
-    
-    <app-global-header>
-      <div gh-left>
-        <div class="welcome-icon">
-          <img src="assets/ALALA_logo.png" alt="ALALA logo" class="logo-image" />
-        </div>
+  <div class="lavender-container home-screen-wrap home-screen-wrap--v2">
+    <div class="home-top-bar">
+      <div class="home-top-bar__brand">
+        <img src="assets/ALALA_logo.png" alt="ALALA" class="home-top-bar__logo" />
       </div>
-      <div gh-center>
-        <div class="app-header__body">
-          <h1 class="app-header__title">Welcome to ALALA!</h1>
-          <p class="app-header__subtitle">Your magical memory companion</p>
-        </div>
-      </div>
-      <div gh-right>
-        <ion-button routerLink="/settings" class="settings-btn" fill="clear" *ngIf="!isPatientMode" aria-label="Settings">
-          <ion-icon name="settings-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </app-global-header>
-    <div class="cute-card progress-card" *ngIf="!isPatientMode">
-      <div class="card-header" (click)="toggleProgressDropdown()">
-        <div class="header-content">
-          <div class="header-icon">
-            <ion-icon name="analytics-outline"></ion-icon>
-          </div>
-          <div class="header-text">
-            <h2>Today's Progress</h2>
-            <p>Your amazing achievements!</p>
-          </div>
-        </div>
-        <div class="expand-icon">
-          <ion-icon [name]="isProgressExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
-        </div>
-      </div>
-      
-      <div class="progress-content" *ngIf="isProgressExpanded">
-        <div class="stats-container" style="display: flex; flex-direction: row; gap: 8px; margin-bottom: 16px;">
-          <div class="stat-card accuracy-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 100px; padding: 12px 8px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 14px; border: 2px solid rgba(121, 68, 148, 0.1);">
-            <div class="stat-icon" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              <ion-icon name="checkmark-circle-outline" style="font-size: 18px; color: white;"></ion-icon>
-            </div>
-            <div class="stat-content" style="text-align: center;">
-              <span class="stat-number" style="display: block; font-size: 16px; font-weight: 700; color: #2d1b69;">{{ todayStats.accuracy }}%</span>
-              <span class="stat-label" style="display: block; font-size: 11px; color: #6b7280; font-weight: 500;">Accuracy</span>
-            </div>
-          </div>
-          
-          <div class="stat-card cards-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 100px; padding: 12px 8px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 14px; border: 2px solid rgba(121, 68, 148, 0.1);">
-            <div class="stat-icon" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: linear-gradient(135deg, #794494, #9b6db0); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              <ion-icon name="library-outline" style="font-size: 18px; color: white;"></ion-icon>
-            </div>
-            <div class="stat-content" style="text-align: center;">
-              <span class="stat-number" style="display: block; font-size: 16px; font-weight: 700; color: #2d1b69;">{{ todayStats.cardsToday }}</span>
-              <span class="stat-label" style="display: block; font-size: 11px; color: #6b7280; font-weight: 500;">Cards</span>
-            </div>
-          </div>
-          
-          <div class="stat-card time-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 100px; padding: 12px 8px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 14px; border: 2px solid rgba(121, 68, 148, 0.1);">
-            <div class="stat-icon" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              <ion-icon name="time-outline" style="font-size: 18px; color: white;"></ion-icon>
-            </div>
-            <div class="stat-content" style="text-align: center;">
-              <span class="stat-number" style="display: block; font-size: 16px; font-weight: 700; color: #2d1b69;">{{ todayStats.avgTime }}s</span>
-              <span class="stat-label" style="display: block; font-size: 11px; color: #6b7280; font-weight: 500;">Avg Time</span>
-            </div>
-          </div>
-        </div>
-        
-        <ion-button 
-          expand="block" 
-          fill="outline" 
-          class="cute-button"
-          routerLink="/progress">
-          <ion-icon slot="start" name="analytics-outline"></ion-icon>
-          View Full Report 
-        </ion-button>
-      </div>
-    </div>
-    
-    <div class="main-actions">
-      <div class="action-card primary-action" routerLink="/brain-games">
-        <div class="card-glow"></div>
-        <div class="action-icon">
-          <ion-icon name="game-controller-outline"></ion-icon>
-        </div>
-        <div class="action-text">
-          <h2>Play Brain Games</h2>
-          <p>Train your memory with fun exercises</p>
-        </div>
-      </div>
-
-      <div class="action-grid">
-        <div class="action-card memory-action" routerLink="/memory-categories">
-          <div class="action-icon">
-            <ion-icon name="albums-outline"></ion-icon>
-          </div>
-          <div class="action-text">
-            <h3>Memory Cards</h3>
-            <p>People, Places, Objects</p>
-          </div>
-        </div>
-
-        <div class="action-card media-action" routerLink="/media-albums">
-          <div class="action-icon">
-            <ion-icon name="images-outline"></ion-icon>
-          </div>
-          <div class="action-text">
-            <h3>Media Albums</h3>
-            <p>Photos & Videos</p>
-          </div>
-        </div>
-      </div>
+      <ion-button
+        *ngIf="!isPatientMode"
+        routerLink="/settings"
+        class="home-top-bar__settings"
+        fill="clear"
+        aria-label="Settings">
+        <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
+      </ion-button>
     </div>
 
-    
-    
+    <section class="home-welcome-card" aria-label="Welcome">
+      <div class="home-welcome-card__main">
+        <h2 class="home-welcome-card__greeting">Welcome, {{ welcomeFirstName }}</h2>
+        <p class="home-welcome-card__sub">You're doing great today.</p>
+      </div>
+      <div class="home-welcome-card__streak" aria-label="Brain games day streak">
+        <ion-icon name="flame" class="home-welcome-card__streak-flame" aria-hidden="true"></ion-icon>
+        <span class="home-welcome-card__streak-num">{{ streakDays }}</span>
+        <span class="home-welcome-card__streak-label">Day streak</span>
+      </div>
+    </section>
 
+    <p class="home-section-eyebrow">Action hub</p>
+    <a
+      routerLink="/brain-games"
+      class="home-action-hub"
+      aria-label="Brain games, begin now">
+      <div class="home-action-hub__grid">
+        <div class="home-action-hub__copy">
+          <span class="home-action-hub__badge">Daily highlight</span>
+          <h3 class="home-action-hub__title">Brain Games</h3>
+          <p class="home-action-hub__desc">
+            Let's sharpen your mind today for a brighter tomorrow.
+          </p>
+          <span class="home-action-hub__cta"><span class="home-action-hub__cta-text">Begin now</span></span>
+        </div>
+        <div class="home-action-hub__visual" aria-hidden="true">
+          <div class="home-action-hub__visual-base"></div>
+          <div class="home-action-hub__visual-img-wrap">
+            <img
+              src="assets/home-brain-games-hero.png"
+              alt=""
+              class="home-action-hub__hero-img"
+              decoding="async" />
+          </div>
+          <div class="home-action-hub__visual-blend home-action-hub__visual-blend--split"></div>
+          <div class="home-action-hub__visual-blend home-action-hub__visual-blend--vignette"></div>
+        </div>
+      </div>
+    </a>
+
+    <div class="home-resources-head">
+      <p class="home-section-eyebrow home-section-eyebrow--row">Resources</p>
+    </div>
+
+    <div class="home-resources-grid" role="list">
+      <a class="home-resource-tile" routerLink="/memory-categories" role="listitem">
+        <div class="home-resource-tile__art">
+          <div class="home-resource-tile__img-stage">
+            <img
+              src="assets/home-resource-memory-cards.png"
+              alt=""
+              class="home-resource-tile__img"
+              decoding="async" />
+          </div>
+        </div>
+        <div class="home-resource-tile__meta">
+          <span class="home-resource-tile__label">Memory Cards</span>
+        </div>
+      </a>
+      <a class="home-resource-tile" routerLink="/media-albums" role="listitem">
+        <div class="home-resource-tile__art">
+          <div class="home-resource-tile__img-stage">
+            <img
+              src="assets/home-resource-media-albums.png"
+              alt=""
+              class="home-resource-tile__img"
+              decoding="async" />
+          </div>
+        </div>
+        <div class="home-resource-tile__meta">
+          <span class="home-resource-tile__label">Media Albums</span>
+        </div>
+      </a>
+    </div>
   </div>
 </ion-content>
 

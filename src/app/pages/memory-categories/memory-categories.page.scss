@@ -395,24 +395,23 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid rgba(var(--app-primary-rgb), 0.1);
-  box-shadow: 0 -4px 20px rgba(var(--app-primary-rgb), 0.1);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
-  
+
   .nav-container {
     display: flex;
     justify-content: space-around;
     align-items: center;
     max-width: 100%;
     margin: 0 auto;
-    
+
     .nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: #6b7280;
+      color: rgba(255, 255, 255, 0.75);
       font-size: 0.75rem;
       font-weight: 500;
       text-decoration: none;
@@ -420,60 +419,60 @@
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s ease;
-      
+
       &:hover {
-        color: var(--app-primary);
-        background: rgba(var(--app-primary-rgb), 0.1);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
       }
-      
+
       &.active {
-        color: var(--app-primary);
-        background: rgba(var(--app-primary-rgb), 0.1);
-        
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+
         .nav-icon {
-          background: rgba(var(--app-primary-rgb), 0.2);
-          box-shadow: 0 0 20px rgba(var(--app-primary-rgb), 0.3);
+          background: #fff;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.75);
           animation: glow 2s ease-in-out infinite alternate;
-          
+
           ion-icon {
             color: var(--app-primary);
           }
         }
       }
-      
+
       &.caregiver-mode {
         &.active {
           .nav-icon {
             background: #f59e0b;
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
             animation: glow 2s ease-in-out infinite alternate;
-            
+
             ion-icon {
-              color: white;
+              color: #fff;
             }
           }
         }
-        
+
         .nav-icon {
           width: 50px;
           height: 50px;
-          background: rgba(var(--app-primary-rgb), 0.1);
-          border: 2px solid rgba(var(--app-primary-rgb), 0.2);
+          background: rgba(255, 255, 255, 0.12);
+          border: 2px solid rgba(255, 255, 255, 0.28);
           border-radius: 50%;
-          
+
           ion-icon {
             font-size: 24px;
             font-weight: bold;
-            color: var(--app-primary);
+            color: #fff;
           }
         }
-        
+
         .nav-label {
           font-weight: 600;
           font-size: 0.8rem;
         }
       }
-      
+
       .nav-icon {
         position: relative;
         width: 40px;
@@ -481,17 +480,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(var(--app-primary-rgb), 0.1);
+        background: rgba(255, 255, 255, 0.12);
         border-radius: 50%;
         transition: all 0.3s ease;
-        
+
         ion-icon {
-          color: var(--app-primary);
+          color: #fff;
           font-size: 18px;
           transition: all 0.3s ease;
         }
       }
-      
+
       .nav-label {
         margin-top: 2px;
         font-size: 0.7rem;
@@ -507,8 +506,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary) 50%, var(--app-primary) 100%);
-  box-shadow: 0 -4px 20px rgba(var(--app-primary-rgb), 0.3);
+  background: var(--app-gradient-nav);
+  box-shadow: 0 -8px 28px rgba(var(--app-primary-rgb), 0.28);
   z-index: 1000;
   padding: 8px 0;
   

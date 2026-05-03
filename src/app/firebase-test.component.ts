@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { FirebaseService } from './services/firebase.service';
 
 @Component({
@@ -13,8 +15,8 @@ import { FirebaseService } from './services/firebase.service';
         </button>
       </div>
       
-      <div *ngIf="connectionStatus" [style.color]="connectionStatus.success ? 'green' : 'red'">
-        {{ connectionStatus.message }}
+      <div *ngIf="connectionStatus" [style.color]="connectionStatus?.success ? 'green' : 'red'">
+        {{ connectionStatus?.message }}
       </div>
       
       <div style="margin-top: 20px;" *ngIf="connectionStatus?.success">
@@ -26,8 +28,8 @@ import { FirebaseService } from './services/firebase.service';
           <button (click)="testAuth()" [disabled]="testing">Test Login</button>
         </div>
 
-        <div *ngIf="authResult" [style.color]="authResult.success ? 'green' : 'red'">
-          {{ authResult.message }}
+        <div *ngIf="authResult" [style.color]="authResult?.success ? 'green' : 'red'">
+          {{ authResult?.message }}
         </div>
 
         <div style="margin-top: 20px;" *ngIf="authResult?.success">
@@ -36,15 +38,15 @@ import { FirebaseService } from './services/firebase.service';
           <button (click)="testProgress()" [disabled]="testing">Update Progress</button>
           <button (click)="loadUserData()" [disabled]="testing">Load User Data</button>
 
-          <div *ngIf="dataResult" [style.color]="dataResult.success ? 'green' : 'red'">
-            {{ dataResult.message }}
+          <div *ngIf="dataResult" [style.color]="dataResult?.success ? 'green' : 'red'">
+            {{ dataResult?.message }}
           </div>
         </div>
       </div>
     </div>
   `,
   standalone: true,
-  imports: []
+  imports: [CommonModule, FormsModule],
 })
 export class FirebaseTestComponent {
   testing = false;

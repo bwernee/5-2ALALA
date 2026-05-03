@@ -1,82 +1,145 @@
-<ion-content class="lavender-content" [scrollY]="true" fullscreen>
-  <div class="lavender-container">
-    <!-- Welcome Section -->
-    <app-global-header>
-      <div gh-left>
-        <div class="welcome-icon">
-          <ion-icon name="people-outline"></ion-icon>
-        </div>
+<ion-content class="lavender-content patients-dashboard-page" [scrollY]="true" fullscreen>
+  <div
+    class="lavender-container patients-dashboard-inner"
+    [class.patients-dashboard--empty]="!isLoading && displayPatients.length === 0"
+  >
+    <header class="patients-page-heading" *ngIf="isLoading || displayPatients.length > 0">
+      <div class="patients-page-brand">
+        <img class="patients-page-brand__logo" src="assets/ALALA_logo.png" alt="" />
       </div>
-      <div gh-center>
-        <div class="app-header__body">
-          <h1 class="app-header__title">My Patients</h1>
-          <p class="app-header__subtitle">Manage and access your patients</p>
-        </div>
-      </div>
-      <div gh-right>
-        <ion-button class="add-btn" fill="clear" (click)="addPatient()" aria-label="Add Patient">
-          <ion-icon name="add-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </app-global-header>
+      <h1 class="patients-page-title">My Patients</h1>
+      <p class="patients-page-subtitle">Manage and access your patient records.</p>
+    </header>
 
-    <!-- Loading State -->
+    <div class="patients-search-row" *ngIf="!isLoading && displayPatients.length > 0">
+      <div class="patients-search-field">
+        <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        <input
+          type="search"
+          [(ngModel)]="patientSearch"
+          placeholder="Search patients..."
+          autocomplete="off"
+          aria-label="Search patients"
+        />
+      </div>
+      <button
+        type="button"
+        class="patients-filter-btn"
+        (click)="toggleGenderFilters()"
+        [class.patients-filter-btn--active]="showGenderFilters || genderFilter !== 'all'"
+        aria-label="Filter by sex"
+      >
+        <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
+
+    <div class="patients-filter-chips" *ngIf="!isLoading && displayPatients.length > 0 && showGenderFilters">
+      <button type="button" class="filter-chip" [class.filter-chip--on]="genderFilter === 'Male'" (click)="setGenderFilter('Male')">Male</button>
+      <button type="button" class="filter-chip" [class.filter-chip--on]="genderFilter === 'Female'" (click)="setGenderFilter('Female')">Female</button>
+    </div>
+
     <div *ngIf="isLoading" class="loading-container">
       <ion-spinner name="crescent"></ion-spinner>
       <p>Loading patients...</p>
     </div>
 
-    <!-- Patients Grid -->
-    <div *ngIf="!isLoading" class="patients-grid">
-      <!-- Patient Cards -->
-      <div 
-        *ngFor="let patient of displayPatients" 
-        class="patient-card"
-        (click)="selectPatient(patient)">
-        <div class="patient-card-content">
-          <div class="patient-avatar" [class.has-photo]="getPatientPhoto(patient)">
-            <img *ngIf="getPatientPhoto(patient)" [src]="getPatientPhoto(patient)" [alt]="patient.name || 'Patient'">
-            <span *ngIf="!getPatientPhoto(patient)" class="patient-initials">{{ getPatientInitials(patient) }}</span>
-          </div>
-          <div class="patient-info">
-            <h3>{{ patient.name }}</h3>
-            <div class="patient-details">
-              <span *ngIf="patient.age" class="detail-item">
-                <ion-icon name="calendar-outline"></ion-icon>
-                {{ patient.age }} years
-              </span>
-              <span *ngIf="patient.gender" class="detail-item">
-                <ion-icon name="person-outline"></ion-icon>
-                {{ patient.gender }}
-              </span>
+    <div *ngIf="!isLoading" class="patients-layout" [class.patients-layout--empty]="displayPatients.length === 0">
+      <div class="patients-list-column">
+        <div class="patients-list" *ngIf="displayPatients.length > 0">
+          <article
+            *ngFor="let patient of filteredPatients; trackBy: trackByPatientId"
+            class="patient-card--row"
+            (click)="selectPatient(patient)"
+          >
+            <button
+              type="button"
+              class="patient-card__avatar"
+              [class.patient-card__avatar--has-photo]="!!getPatientPhoto(patient)"
+              (click)="onPatientAvatarClick(patient, $event)"
+              [attr.aria-label]="'Choose profile photo for ' + getPatientDisplayName(patient)"
+            >
+              <img *ngIf="getPatientPhoto(patient)" [src]="getPatientPhoto(patient)" alt="" />
+              <ion-icon *ngIf="!getPatientPhoto(patient)" name="person" class="patient-card__avatar-icon"></ion-icon>
+            </button>
+            <div class="patient-card__body">
+              <div class="patient-card__name-row">
+                <h3 class="patient-card__name">{{ getPatientDisplayName(patient) }}</h3>
+              </div>
+              <p class="patient-card__legal" *ngIf="getPatientLegalLine(patient)">{{ getPatientLegalLine(patient) }}</p>
+              <div class="patient-card__pills">
+                <span class="patient-pill" *ngIf="patient.gender">
+                  <ion-icon [name]="genderIconName(patient)" aria-hidden="true"></ion-icon>
+                  {{ patient.gender }}
+                </span>
+                <span class="patient-pill" *ngIf="patient.age != null">
+                  <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                  {{ patient.age }} years
+                </span>
+              </div>
+            </div>
+            <div class="patient-card__actions" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="patient-action-btn patient-action-btn--delete"
+                (click)="onDeletePatientClicked(patient, $event)"
+                aria-label="Delete patient"
+              >
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div *ngIf="displayPatients.length > 0 && filteredPatients.length === 0" class="patients-no-results">
+          <p>No patients match your search or filter.</p>
+        </div>
+
+        <div *ngIf="displayPatients.length === 0" class="empty-state empty-state--illustrated">
+          <div class="empty-state__blob" aria-hidden="true"></div>
+          <div class="empty-state__card">
+            <span class="empty-state__pin empty-state__pin--tr" aria-hidden="true">
+              <ion-icon name="person-add-outline"></ion-icon>
+            </span>
+            <span class="empty-state__pin empty-state__pin--bl" aria-hidden="true">
+              <ion-icon name="folder-outline"></ion-icon>
+            </span>
+            <div class="empty-state__card-inner">
+              <ion-icon name="people" class="empty-state__main-icon" aria-hidden="true"></ion-icon>
             </div>
           </div>
-          <div class="patient-action">
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </div>
-          <button
-            type="button"
-            class="patient-delete"
-            (click)="onDeletePatientClicked(patient, $event)"
-            aria-label="Delete patient">
-            <ion-icon name="trash-outline"></ion-icon>
+          <h2 class="empty-state__title">No Patients Yet</h2>
+          <p class="empty-state__copy">
+            Add your first patient to get started. You'll be able to track their health, notes, and schedules here.
+          </p>
+          <button type="button" class="empty-state__cta" (click)="addPatient()">
+            <ion-icon name="add" aria-hidden="true"></ion-icon>
+            Add Patient
           </button>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div *ngIf="displayPatients.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <ion-icon name="people-outline"></ion-icon>
-        </div>
-        <h2>No Patients Yet</h2>
-        <p>Add your first patient to get started</p>
-        <ion-button (click)="addPatient()" class="add-first-patient-btn">
-          <ion-icon name="add-outline" slot="start"></ion-icon>
-          Add Patient
-        </ion-button>
-      </div>
+      <aside class="patient-preview-panel" *ngIf="previewPatient && displayPatients.length > 0">
+        <p class="patient-preview-panel__label">Quick preview</p>
+        <h2 class="patient-preview-panel__name">{{ getPatientDisplayName(previewPatient) }}</h2>
+        <p class="patient-preview-panel__legal" *ngIf="getPatientLegalLine(previewPatient)">{{ getPatientLegalLine(previewPatient) }}</p>
+        <p class="patient-preview-panel__sub" *ngIf="previewPatient.age != null || previewPatient.gender">
+          <span *ngIf="previewPatient.gender">{{ previewPatient.gender }}</span>
+          <span *ngIf="previewPatient.gender && previewPatient.age != null"> · </span>
+          <span *ngIf="previewPatient.age != null">{{ previewPatient.age }} years</span>
+        </p>
+      </aside>
     </div>
+
+    <button
+      *ngIf="!isLoading && displayPatients.length > 0"
+      type="button"
+      class="patients-fab"
+      [class.patients-fab--with-footer]="showFooter"
+      (click)="addPatient()"
+      aria-label="Add patient"
+    >
+      <ion-icon name="add"></ion-icon>
+    </button>
   </div>
 
   <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelAddPatient()">
@@ -91,6 +154,19 @@
       </div>
 
       <div class="modal-body">
+        <div class="form-group">
+          <label for="newPatientNickname">DISPLAY NAME</label>
+          <div class="input-wrapper">
+            <ion-icon name="happy-outline"></ion-icon>
+            <input
+              id="newPatientNickname"
+              [(ngModel)]="newPatientNickname"
+              placeholder="Shown first on My Patients"
+              type="text"
+            />
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="patientFirstName">FIRST NAME</label>
           <div class="input-wrapper">
@@ -118,35 +194,78 @@
         </div>
 
         <div class="form-group">
-          <label for="patientBirthday">BIRTHDAY</label>
-          <div class="input-wrapper">
-            <ion-icon name="calendar-outline"></ion-icon>
-            <ion-datetime-button datetime="newPatientBirthdayPicker"></ion-datetime-button>
+          <label for="newPatientBirthdayInput">BIRTHDAY</label>
+          <div class="input-wrapper input-wrapper--birthday">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="newPatientBirthdayInput"
+              [(ngModel)]="newPatientBirthdayDisplay"
+              (blur)="onNewPatientBirthdayBlur()"
+              placeholder="MM/DD/YYYY"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+            />
+            <ion-button
+              type="button"
+              fill="clear"
+              class="calendar-trigger-btn"
+              (click)="openNewPatientBirthdayPopover($event)"
+              aria-label="Open calendar"
+            >
+              <ion-icon name="calendar-outline" slot="icon-only"></ion-icon>
+            </ion-button>
           </div>
         </div>
 
-        <ion-modal [keepContentsMounted]="true">
+        <ion-popover
+          [isOpen]="newPatientBirthdayPopoverOpen"
+          [event]="newPatientBirthdayPopoverEvent"
+          (didDismiss)="onNewPatientBirthdayPopoverDismiss()"
+          reference="event"
+          side="left"
+          alignment="center"
+          size="auto"
+          cssClass="compact-birthday-popover"
+          [arrow]="true"
+          [backdropDismiss]="true"
+          [dismissOnSelect]="false"
+        >
           <ng-template>
-            <ion-datetime
-              id="newPatientBirthdayPicker"
-              presentation="date"
-              [(ngModel)]="newPatientBirthday"
-              preferWheel="false"
-              showDefaultButtons="true">
-            </ion-datetime>
+            <div class="compact-birthday-inner ion-padding">
+              <ion-datetime
+                presentation="date"
+                [(ngModel)]="newPatientBirthday"
+                [max]="newPatientMaxBirth"
+                [min]="newPatientMinBirth"
+                preferWheel="false"
+                firstDayOfWeek="0"
+              ></ion-datetime>
+              <div class="compact-birthday-actions">
+                <ion-button fill="clear" size="small" (click)="closeNewPatientBirthdayPopover()">Cancel</ion-button>
+                <ion-button size="small" (click)="confirmNewPatientBirthdayPopover()">Done</ion-button>
+              </div>
+            </div>
           </ng-template>
-        </ion-modal>
+        </ion-popover>
 
         <div class="form-group">
-          <label for="patientSex">SEX</label>
-          <div class="input-wrapper">
-            <ion-icon name="person-circle-outline"></ion-icon>
+          <label for="newPatientSex">SEX</label>
+          <div class="input-wrapper input-wrapper--select">
+            <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+            <ion-select
+              id="newPatientSex"
+              [(ngModel)]="newPatientSex"
+              interface="popover"
+              placeholder="Select sex"
+              toggleIcon="chevron-down-outline"
+              expandedIcon="chevron-up-outline"
+              aria-label="Patient sex"
+            >
+              <ion-select-option value="Male">Male</ion-select-option>
+              <ion-select-option value="Female">Female</ion-select-option>
+            </ion-select>
           </div>
-          <ion-segment class="app-segment" [(ngModel)]="newPatientSex">
-            <ion-segment-button value="Male"><ion-label>Male</ion-label></ion-segment-button>
-            <ion-segment-button value="Female"><ion-label>Female</ion-label></ion-segment-button>
-            <ion-segment-button value="Other"><ion-label>Other</ion-label></ion-segment-button>
-          </ion-segment>
         </div>
       </div>
 

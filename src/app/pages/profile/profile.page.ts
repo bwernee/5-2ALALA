@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FirebaseService } from '../../services/firebase.service';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { AlertController } from '@ionic/angular';
+import { AlertController, ViewWillEnter } from '@ionic/angular';
 import { calculateAge, formatFullName } from '../../utils/patient-utils';
 import { ConfirmService } from '../../services/confirm.service';
 
@@ -18,6 +18,7 @@ interface PatientInfo {
   lastName?: string;
   dateOfBirth?: string;
   name?: string; // legacy fallback
+  nickname?: string;
   gender?: string;
   username?: string;
 }
@@ -28,7 +29,7 @@ interface PatientInfo {
   styleUrls: ['./profile.page.scss'],
   standalone: false
 })
-export class ProfilePage implements OnInit {
+export class ProfilePage implements OnInit, ViewWillEnter {
   
   caregiverInfo: CaregiverInfo | null = null;
   patientInfo: PatientInfo | null = null;
@@ -38,6 +39,7 @@ export class ProfilePage implements OnInit {
   private patientDocId: string = '';
 
   isEditingPatient = false;
+  editNickname = '';
   editFirstName = '';
   editLastName = '';
   editBirthday = '';
@@ -54,9 +56,18 @@ export class ProfilePage implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadProfileData();
-    this.loadPatientInfo();
+    void this.refreshProfileScreen();
     this.checkPatientMode();
+  }
+
+  ionViewWillEnter() {
+    void this.refreshProfileScreen();
+    this.checkPatientMode();
+  }
+
+  private async refreshProfileScreen() {
+    await this.loadProfileData();
+    await this.loadPatientInfo();
   }
 
   goBack() {
@@ -169,27 +180,100 @@ export class ProfilePage implements OnInit {
 
   private async loadProfileData() {
     try {
-      
-      const user = await this.firebaseService.getCurrentUser();
+      const user = this.firebaseService.getCurrentUser();
+      if (!user) {
+        this.caregiverInfo = null;
+        return;
+      }
+
+      const profile = await this.firebaseService.getUserProfile(user.uid);
+      const rootName = (profile?.name || '').trim();
+      const rootEmail = (profile?.email || user.email || '').trim();
+      const docPhone = (
+        (profile as unknown as { phoneNumber?: string })?.phoneNumber || ''
+      ).trim();
+      const nested = profile?.caregiverInfo;
+
+      let name =
+        (nested?.name || '').trim() ||
+        rootName ||
+        (user.displayName || '').trim() ||
+        this.nameFromUserDataLocal() ||
+        'Caregiver';
+      let email =
+        (nested?.contactEmail || '').trim() ||
+        rootEmail ||
+        (user.email || '').trim() ||
+        this.emailFromUserDataLocal() ||
+        '';
+      let phone =
+        (nested?.contactPhone || '').trim() ||
+        docPhone ||
+        (user.phoneNumber || '').trim() ||
+        this.phoneFromUserDataLocal() ||
+        undefined;
+
+      if (!email) email = 'No email provided';
+
+      this.caregiverInfo = {
+        name,
+        email,
+        phone: phone || undefined
+      };
+
+      if (user.metadata?.creationTime) {
+        this.accountCreated = new Date(user.metadata.creationTime);
+      } else if (profile?.createdAt) {
+        this.accountCreated = new Date(profile.createdAt);
+      }
+    } catch {
+      const user = this.firebaseService.getCurrentUser();
       if (user) {
         this.caregiverInfo = {
-          name: user.displayName || 'Caregiver',
-          email: user.email || 'No email provided',
-          phone: user.phoneNumber || undefined
+          name: user.displayName || this.nameFromUserDataLocal() || 'Caregiver',
+          email: user.email || this.emailFromUserDataLocal() || 'No email provided',
+          phone: user.phoneNumber || this.phoneFromUserDataLocal() || undefined
         };
-        
-        
-        if (user.metadata?.creationTime) {
-          this.accountCreated = new Date(user.metadata.creationTime);
-        }
       }
-    } catch (error) {
+    }
+  }
+
+  private nameFromUserDataLocal(): string {
+    try {
+      const raw = localStorage.getItem('userData');
+      if (!raw) return '';
+      const u = JSON.parse(raw) as { name?: string; firstName?: string; lastName?: string };
+      const n = (u.name || '').trim();
+      if (n) return n;
+      return [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  private emailFromUserDataLocal(): string {
+    try {
+      const raw = localStorage.getItem('userData');
+      if (!raw) return '';
+      return ((JSON.parse(raw) as { email?: string }).email || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  private phoneFromUserDataLocal(): string {
+    try {
+      const raw = localStorage.getItem('userData');
+      if (!raw) return '';
+      return ((JSON.parse(raw) as { phoneNumber?: string }).phoneNumber || '').trim();
+    } catch {
+      return '';
     }
   }
 
   private async loadPatientInfo() {
     try {
-      const user = await this.firebaseService.getCurrentUser();
+      const user = this.firebaseService.getCurrentUser();
       if (!user) {
         console.error('No user found');
         return;
@@ -214,6 +298,7 @@ export class ProfilePage implements OnInit {
             lastName: parsed.lastName || undefined,
             dateOfBirth: parsed.dateOfBirth || parsed.birthday || undefined,
             name: parsed.name || undefined,
+            nickname: parsed.nickname || undefined,
             gender: parsed.sex || parsed.gender,
             username: parsed.username || undefined
           };
@@ -234,7 +319,8 @@ export class ProfilePage implements OnInit {
           lastName: patientData['lastName'] || undefined,
           dateOfBirth: patientData['dateOfBirth'] || undefined,
           name: patientData['name'] || '',
-          gender: patientData['sex'] || patientData['gender'] || '', 
+          nickname: patientData['nickname'] || undefined,
+          gender: patientData['sex'] || patientData['gender'] || '',
           username: patientData['username'] || undefined
         };
         
@@ -245,6 +331,7 @@ export class ProfilePage implements OnInit {
             lastName: this.patientInfo.lastName || '',
             dateOfBirth: this.patientInfo.dateOfBirth || '',
             name: this.getPatientDisplayName(),
+            nickname: this.patientInfo.nickname || '',
             sex: this.patientInfo.gender || '',
             username: this.patientInfo.username
           }));
@@ -261,18 +348,112 @@ export class ProfilePage implements OnInit {
             lastName: patientData2['lastName'] || undefined,
             dateOfBirth: patientData2['dateOfBirth'] || undefined,
             name: patientData2['name'] || 'Patient Name',
+            nickname: patientData2['nickname'] || undefined,
             gender: patientData2['sex'] || patientData2['gender'] || '',
             username: patientData2['username'] || undefined
           };
         }
       }
+
+      await this.hydratePatientFromCaregiverAccount(user.uid, patientId, selectedPatientId);
     } catch (error) {
       console.error('Error loading patient info:', error);
     }
   }
 
+  /**
+   * Signup stores caregiver first/last name on `caregiver/{uid}` but often not under
+   * `patients/{uid}/patientInfo/details` until Edit Profile saves. Fill the patient card
+   * from that account doc when viewing your own default patient.
+   */
+  private async hydratePatientFromCaregiverAccount(
+    caregiverUid: string,
+    patientId: string,
+    selectedPatientId: string | null
+  ) {
+    const isOwnDefaultPatient = !selectedPatientId || selectedPatientId === caregiverUid;
+    if (!isOwnDefaultPatient) return;
+
+    const profile = await this.firebaseService.getUserProfile(caregiverUid);
+    if (!profile) return;
+
+    const p = this.patientInfo;
+    const hasPatientSubdoc =
+      !!p &&
+      !!(
+        (p.firstName || '').trim() ||
+        (p.lastName || '').trim() ||
+        (p.dateOfBirth || '').trim() ||
+        (p.nickname || '').trim() ||
+        ((p.name || '').trim() && (p.name || '').trim() !== 'Patient Name')
+      );
+
+    if (hasPatientSubdoc) return;
+
+    const nested = profile.patientInfo;
+    const next: PatientInfo = { ...(p || {}) };
+
+    if (nested) {
+      next.dateOfBirth = next.dateOfBirth || nested.dateOfBirth;
+      next.gender = next.gender || nested.gender;
+      next.name = (next.name || nested.name || '').trim() || undefined;
+      next.nickname = (next.nickname || nested.name || '').trim() || undefined;
+      if (!(next.firstName || '').trim() && !(next.lastName || '').trim() && nested.name) {
+        const parts = nested.name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+          next.firstName = parts[0];
+          next.lastName = parts.slice(1).join(' ');
+        } else {
+          next.firstName = nested.name.trim();
+        }
+      }
+    }
+
+    next.firstName = (next.firstName || profile.firstName || '').trim() || undefined;
+    next.lastName = (next.lastName || profile.lastName || '').trim() || undefined;
+    next.dateOfBirth = next.dateOfBirth || profile.dateOfBirth;
+    next.name =
+      (next.name || profile.name || formatFullName(profile.lastName, profile.firstName) || '').trim() ||
+      undefined;
+
+    if (!(next.nickname || '').trim()) {
+      const friendly = [next.firstName, next.lastName].filter(Boolean).join(' ').trim();
+      if (friendly) next.nickname = friendly;
+      else if (next.name) next.nickname = next.name.replace(/^([^,]+),\s*(.+)$/, '$2 $1').trim() || next.name;
+    }
+
+    const hasAnything =
+      (next.firstName || '').trim() ||
+      (next.lastName || '').trim() ||
+      (next.dateOfBirth || '').trim() ||
+      (next.nickname || '').trim() ||
+      (next.name || '').trim() ||
+      (next.gender || '').trim();
+
+    if (hasAnything) {
+      this.patientInfo = next;
+    }
+  }
+
+  /** Hide “empty” placeholder when we already show real name / fields from account or Firestore. */
+  showPatientInfoPlaceholder(): boolean {
+    const p = this.patientInfo;
+    if (!p) return true;
+    if ((p.dateOfBirth || '').trim()) return false;
+    if ((p.gender || '').trim()) return false;
+    if ((p.username || '').trim()) return false;
+    if ((p.firstName || '').trim() || (p.lastName || '').trim()) return false;
+    if ((p.nickname || '').trim()) return false;
+    const legal = formatFullName(p.lastName, p.firstName) || (p.name || '').toString().trim();
+    if (legal && legal !== 'Patient Name') return false;
+    const disp = this.getPatientDisplayName();
+    return !disp || disp === 'Patient Name';
+  }
+
   getPatientDisplayName(): string {
     const p = this.patientInfo || {};
+    const nick = (p.nickname || '').trim();
+    if (nick) return nick;
     return (
       formatFullName(p.lastName, p.firstName) ||
       (p.name || '').toString().trim() ||
@@ -287,12 +468,20 @@ export class ProfilePage implements OnInit {
   }
 
   startEditPatient() {
-    if (!this.patientInfo) return;
+    if (this.isPatientMode) return;
     this.isEditingPatient = true;
-    this.editFirstName = (this.patientInfo.firstName || '').toString();
-    this.editLastName = (this.patientInfo.lastName || '').toString();
-    this.editBirthday = (this.patientInfo.dateOfBirth || '').toString();
-    this.editSex = (this.patientInfo.gender || '').toString();
+    const p = this.patientInfo;
+    this.editNickname = (p?.nickname || '').toString();
+    this.editFirstName = (p?.firstName || '').toString();
+    this.editLastName = (p?.lastName || '').toString();
+    this.editBirthday = (p?.dateOfBirth || '').toString();
+    let sex = (p?.gender || '').toString();
+    if (sex === 'Other') sex = '';
+    this.editSex = sex;
+    if (!this.editNickname.trim()) {
+      const guess = `${this.editFirstName} ${this.editLastName}`.trim();
+      if (guess) this.editNickname = guess;
+    }
   }
 
   cancelEditPatient() {
@@ -301,12 +490,14 @@ export class ProfilePage implements OnInit {
   }
 
   private hasEditDraft(): boolean {
+    const nick = (this.editNickname || '').trim();
     const fn = (this.editFirstName || '').trim();
     const ln = (this.editLastName || '').trim();
     const dob = (this.editBirthday || '').trim();
     const sex = (this.editSex || '').trim();
     const p = this.patientInfo || {};
     return (
+      nick !== ((p.nickname || '').toString().trim()) ||
       fn !== ((p.firstName || '').toString().trim()) ||
       ln !== ((p.lastName || '').toString().trim()) ||
       dob !== ((p.dateOfBirth || '').toString().trim()) ||
@@ -331,11 +522,22 @@ export class ProfilePage implements OnInit {
 
   async saveEditedPatient() {
     if (this.isSavingPatient) return;
+    let nickname = (this.editNickname || '').trim();
     const firstName = (this.editFirstName || '').trim();
     const lastName = (this.editLastName || '').trim();
     const dateOfBirth = (this.editBirthday || '').trim();
     const sex = (this.editSex || '').trim();
 
+    if (!nickname) nickname = `${firstName} ${lastName}`.trim();
+    if (!nickname) {
+      await this.confirmService.confirm({
+        title: 'Missing information',
+        message: 'Please enter a display name (or first and last name).',
+        confirmText: 'OK',
+        cancelText: 'Close'
+      });
+      return;
+    }
     if (!firstName) return;
     if (!lastName) return;
     if (!dateOfBirth) return;
@@ -351,15 +553,17 @@ export class ProfilePage implements OnInit {
     this.isSavingPatient = true;
     try {
       await this.firebaseService.savePatientDetails(
-        { firstName, lastName, dateOfBirth, sex },
+        { firstName, lastName, dateOfBirth, sex, nickname },
         this.patientDocId
       );
 
       this.patientInfo = {
         ...(this.patientInfo || {}),
+        nickname,
         firstName,
         lastName,
         dateOfBirth,
+        name: `${lastName}, ${firstName}`,
         gender: sex
       };
 
@@ -371,6 +575,7 @@ export class ProfilePage implements OnInit {
           lastName,
           dateOfBirth,
           name: `${lastName}, ${firstName}`,
+          nickname,
           sex
         }));
       }

@@ -37,16 +37,27 @@
     </button>
   </div>
   
-  <div class="page-body" style="padding-bottom: 80px;">
+  <div class="page-body">
     
-    <div *ngIf="!currentCard" class="empty-state">
-      <ion-icon class="empty-icon" name="cube-outline"></ion-icon>
-      <h2 class="empty-title">No Objects yet</h2>
-      <p class="empty-subtitle" *ngIf="!isPatientMode">Tap the + to add an object.</p>
-      <ion-button class="empty-btn" [routerLink]="['/add-flashcard']" [queryParams]="{ defaultCategory: 'objects' }" *ngIf="!isPatientMode">
-        <ion-icon name="add" slot="start"></ion-icon>
-        Add Object
-      </ion-button>
+    <div *ngIf="!currentCard" class="empty-state empty-state--rich">
+      <div class="empty-card">
+        <div class="empty-badge" aria-hidden="true">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <h2 class="empty-title">Ready for your first object?</h2>
+        <p class="empty-subtitle" *ngIf="!isPatientMode">
+          Add a name and photo below—or tap + in the header when you’re ready.
+        </p>
+        <p class="empty-subtitle" *ngIf="isPatientMode">No objects have been added yet.</p>
+        <ion-button
+          class="empty-btn"
+          [routerLink]="['/add-flashcard']"
+          [queryParams]="{ defaultCategory: 'objects' }"
+          *ngIf="!isPatientMode">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Add an object
+        </ion-button>
+      </div>
     </div>
 
     
